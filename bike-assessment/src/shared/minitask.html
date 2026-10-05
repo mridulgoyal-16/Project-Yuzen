@@ -1,0 +1,18 @@
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       Confirm dialog — shared chrome, outside every screen
+       One task of each kind can be parked, so this only appears when the task
+       being started collides with the one already parked on the SAME listing.
+       The minimised card itself lives inside the listing template's dock (see
+       #qMini) because it belongs to whichever list is showing.
+       ══════════════════════════════════════════════════════════════════════ -->
+  <div class="scrim" id="dlgScrim"></div>
+  <section class="dialog" id="dlg" role="alertdialog" aria-modal="true"
+           aria-labelledby="dlgTitle" aria-describedby="dlgBody">
+    <p class="dialog__title" id="dlgTitle">Start a new task?</p>
+    <p class="dialog__body t-body-md" id="dlgBody"></p>
+    <div class="dialog__actions">
+      <button class="btn-primary t-label-md700" id="dlgGo"><span>Discard and start new</span></button>
+      <button class="btn-secondary t-label-md700" id="dlgCancel">Cancel</button>
+    </div>
+  </section>

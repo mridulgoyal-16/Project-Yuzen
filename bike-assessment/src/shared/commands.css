@@ -1,0 +1,119 @@
+/* ── Bike commands sheet ─────────────────────────────────────────────────────
+   A sheet that stays. It sits below the ⋮ sheet and the confirm dialog in the
+   stack (31) but above every screen, so an options sheet opened on top of it
+   still covers it — and above the minimised-task card, which is furniture on a
+   listing rather than something you work through.
+
+   No .scrim rule of its own, deliberately. The whole point is that the screen
+   behind stays live: a scrim would eat the taps this sheet exists to leave
+   alone. That also means it can never be "dismissed by tapping outside", so the
+   grabber is the only way out and has to be obvious.
+   ─────────────────────────────────────────────────────────────────────────── */
+.cmdsheet{
+  position:absolute;left:0;right:0;bottom:0;
+  background:var(--surface-inverse);
+  border-radius:var(--s6) var(--s6) 0 0;
+  /* Its own shadow, because there is no scrim to separate it from the screen
+     underneath — without one the tiles read as part of whatever is behind.
+
+     Only while it is open. Parked, the sheet sits exactly on the frame's bottom
+     edge and translateY(100%) takes the BOX off-screen but not the shadow it
+     casts upward — 24px of blur bleeding back into the last rows of every
+     screen, which read as a soft grey arc no one could account for. It fades in
+     with the sheet rather than being switched, so nothing snaps at the start of
+     the slide. */
+  box-shadow:0 -8px 24px rgba(0,0,0,0);
+  transition:transform .3s var(--ease-out), box-shadow .3s var(--ease-out);
+  padding-bottom:var(--s9);
+  transform:translateY(100%);
+  z-index:29;
+  /* Inert until opened, so a closed sheet parked off-screen cannot swallow a tap
+     aimed at the bottom of the screen behind it. */
+  pointer-events:none;
+}
+.cmdsheet.is-open{transform:translateY(0);pointer-events:auto;box-shadow:0 -8px 24px rgba(0,0,0,.12)}
+.cmdsheet--dragging{transition:none}
+
+.cmdsheet__grabzone{
+  padding:var(--s2) 40px var(--s4);display:flex;justify-content:center;
+  touch-action:none;cursor:grab;
+}
+.cmdsheet__head{
+  display:flex;align-items:baseline;justify-content:space-between;
+  gap:var(--s4);padding:0 var(--s6) var(--s4);
+}
+.cmdsheet__bike{
+  font-weight:500;font-size:12px;line-height:16px;
+  color:var(--content-secondary);white-space:nowrap;
+}
+
+/* ── Tiles ───────────────────────────────────────────────────────────────────
+   The same construction as the dashboard's, re-declared here rather than shared
+   out of screens/rnm/style.css: those rules are scoped under #scrRnm, and
+   unscoping them would leak .cmd, .cmd-btn and .cmd-title across a document that
+   already has an unscoped .card/.item/.row problem from screens/assess.
+   ─────────────────────────────────────────────────────────────────────────── */
+.cmdsheet .cmd-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);
+  column-gap:15px;row-gap:var(--s4);
+  padding:0 var(--s6);
+}
+.cmdsheet .cmd{
+  position:relative;min-width:0;overflow:hidden;
+  border-radius:var(--s4);background:var(--surface-secondary);
+  text-align:left;
+}
+.cmdsheet .cmd--stack{
+  height:124px;padding:var(--s4) 0;
+  display:flex;flex-direction:column;align-items:center;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+.cmdsheet .cmd--stack:active{background:var(--surface-disabled)}
+.cmdsheet .cmd--stack .cmd-title{margin-top:var(--s2)}
+.cmdsheet .cmd--stack .cmd-state{margin-top:4px}
+.cmdsheet .cmd--wide{
+  grid-column:span 2;height:80px;
+  display:flex;align-items:center;gap:var(--s4);padding:0 var(--s4);
+}
+.cmdsheet .cmd--wide .cmd-text{
+  flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:var(--s2);
+}
+.cmdsheet .cmd--viewall{
+  height:80px;border:0;cursor:pointer;padding:var(--s4) 0;
+  display:flex;flex-direction:column;align-items:center;
+  -webkit-tap-highlight-color:transparent;
+  transition:transform 120ms ease;
+}
+.cmdsheet .cmd--viewall:active{transform:scale(.97)}
+.cmdsheet .cmd--viewall .cmd-state{margin-top:var(--s2);color:var(--content-primary)}
+.cmdsheet .cmd-title{
+  font-weight:500;font-size:14px;line-height:16px;color:var(--content-primary);
+}
+.cmdsheet .cmd-state{
+  font-weight:500;font-size:12px;line-height:16px;
+  color:var(--content-secondary);white-space:nowrap;
+}
+.cmdsheet .cmd-btn{
+  position:relative;flex-shrink:0;width:48px;height:48px;
+  display:flex;align-items:center;justify-content:center;
+  border:0;padding:0;border-radius:200px;
+  background:var(--content-inverse);color:var(--content-primary);
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+  transition:background-color 160ms ease,color 160ms ease,transform 120ms ease;
+}
+.cmdsheet .cmd-btn:active{transform:scale(.9)}
+.cmdsheet .cmd-btn .glyph{display:block;width:24px;height:24px;fill:currentColor}
+.cmdsheet .cglyph{display:block;width:24px;height:24px}
+.cmdsheet .cglyph--seat-closed{width:15.61px;height:21.19px}
+.cmdsheet .cglyph--seat-open{width:16.73px;height:22.19px}
+.cmdsheet .cmd-btn.is-lit{
+  background:var(--surface-secondary);
+  box-shadow:inset 0 0 0 1.5px var(--content-primary);
+  color:var(--content-primary);
+}
+/* The shackle swings rather than cutting between two images. */
+.cmdsheet .lock-shackle{
+  transform-origin:12px 8.5px;
+  transition:transform 260ms var(--ease-out);
+}
+.cmdsheet .cmd-btn.is-unlocked .lock-shackle{transform:rotate(-24deg) translateY(-1px)}

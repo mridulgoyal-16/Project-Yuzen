@@ -1,0 +1,108 @@
+/* ═══ BIKE VITALS CARD — one component, every host ═══════════════════════════
+   Figma 2470:40693 (dashboard) and 2470:40592 (commands sheet) are the same
+   node: a 342x68 white card, 2px border, radius 16, holding four 64px columns
+   over hairline rules with a forward arrow on the end.
+
+   It is written once here rather than per screen because the two frames draw it
+   identically, and the last time this screen had two copies of one control they
+   drifted. Hosts differ only in where they place it — the card itself never
+   changes shape.
+
+   The readings are 12/500 on content/secondary with a 20px glyph above, which is
+   a step down from the old 72px strip: the card is 60 tall and has a border to
+   pay for, so the glyph loses 4px and the label its own line height.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* space-between, not flexible gaps. Every child is a fixed width and the free
+   space is split equally between all six gaps, which is what lands the readings
+   on 16 / 112 / 208 and the rules on 96 / 192 / 288 — the frame's positions.
+   The rules used to be the flexible element with a border-right, which drew each
+   line at the END of its gap, hard against the reading that followed instead of
+   midway between two. */
+.vcard{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  /* 68 — Figma 2875:23149, up from 60. Sagar opened the card out: the reading
+     is a 20px glyph over a 16px label, 36 tall, and 68 with a 2px border either
+     side leaves it 14 of air top and bottom where 60 left it 10. Nothing inside
+     moved; the box grew around it.
+
+     Changed on the COMPONENT, so both hosts get it — the dashboard and the Bike
+     commands sheet draw the same node, and a card that is 68 on one screen and
+     60 on the other is exactly the drift this file exists to prevent. */
+  height: 68px;
+  /* 14, not 16. box-sizing is border-box, so the 2px border is inside the
+     declared width and padding starts after it — 16px of padding put the first
+     reading on 18 where the frame draws it on 16. */
+  padding: 0 calc(var(--s4) - 2px);
+  background: var(--surface-inverse);
+  border: 2px solid var(--border-primary);
+  border-radius: 16px;
+  box-sizing: border-box;
+}
+
+/* Each reading is a fixed 64px column so the four sit on the frame's grid
+   whatever the label says — "Connected" and "75%" are nowhere near the same
+   width, and centring them in shared space would move the rules. */
+.vcard__item{
+  flex: 0 0 64px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  border: 0;
+  background: none;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.vcard__item i{
+  display: block;
+  width: 20px;
+  height: 20px;
+  background: currentColor;
+  color: var(--content-primary);
+  -webkit-mask: var(--glyph) center / contain no-repeat;
+  mask: var(--glyph) center / contain no-repeat;
+}
+.vcard__item span{
+  font-weight: 500;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--content-secondary);
+  white-space: nowrap;
+}
+
+/* A 1px line, not a flexible spacer — see the note on .vcard above. */
+.vcard__rule{
+  flex: 0 0 1px;
+  align-self: center;
+  height: 20px;
+  background: var(--border-primary);
+}
+
+/* Last in the row and half a column wide — it is an affordance, not a reading,
+   so it does not get the 64px a value needs. */
+.vcard__more{
+  flex: 0 0 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 20px;
+  border: 0;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.vcard__more img{ display: block; width: 20px; height: 20px; }
+
+.vcard__item:active,
+.vcard__more:active{ opacity: .6; }
+
+/* Hosts place it; the card never carries its own margin. The sheet insets it on
+   the same 24px its grid uses, so the two stack on one edge. */
+.cmdsheet .vcard{ margin: 0 var(--s6) var(--s4); }

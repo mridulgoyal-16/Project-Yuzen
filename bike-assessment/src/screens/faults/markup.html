@@ -1,0 +1,65 @@
+  <!-- ══════════════════════════════════════════════════════════════════════
+       SCREEN 2 — Mark faults
+       ══════════════════════════════════════════════════════════════════════ -->
+  <section class="screen screen--faults" id="scrFaults" data-pos="right" aria-label="Mark penalties">
+
+    <header class="appbar" id="faultsAppbar">
+      <div class="appbar__row">
+        <div class="appbar__lhs">
+          <div class="leading-action">
+            <button class="icon-btn" id="faultsBack" aria-label="Back">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M10.4538 12L14.5269 16.0731C14.6654 16.2116 14.7362 16.3856 14.7394 16.5952C14.7426 16.8048 14.6718 16.982 14.5269 17.1269C14.382 17.2718 14.2064 17.3442 14 17.3442C13.7936 17.3442 13.618 17.2718 13.4731 17.1269L8.97888 12.6327C8.88528 12.5391 8.81925 12.4404 8.7808 12.3365C8.74233 12.2327 8.7231 12.1205 8.7231 12C8.7231 11.8795 8.74233 11.7673 8.7808 11.6635C8.81925 11.5596 8.88528 11.4609 8.97888 11.3673L13.4731 6.8731C13.6116 6.73463 13.7856 6.6638 13.9952 6.6606C14.2048 6.65738 14.382 6.72822 14.5269 6.8731C14.6718 7.01797 14.7442 7.1936 14.7442 7.4C14.7442 7.6064 14.6718 7.78203 14.5269 7.9269L10.4538 12Z" fill="#222222"/></svg>
+            </button>
+          </div>
+          <div class="appbar__titles">
+            <p class="t-label-md"><span data-bike-id>543210</span><span class="appbar__suffix" aria-hidden="true">&nbsp;/ Mark penalties</span></p>
+          </div>
+        </div>
+        <!-- The Customer photos pill stood here. Removed: the photographs are
+             open whenever this screen is, so the control's only job was to take
+             them away — and a toggle whose off state nobody wants is a button
+             that can only make the page worse. The carousel below is opened by
+             enterFaults and there is nothing left to press. -->
+        <button class="icon-btn appbar__more" id="faultsMore" data-opt-more aria-label="More options"
+                aria-haspopup="dialog" aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 20C11.45 20 10.9792 19.8042 10.5875 19.4125C10.1958 19.0208 10 18.55 10 18C10 17.45 10.1958 16.9792 10.5875 16.5875C10.9792 16.1958 11.45 16 12 16C12.55 16 13.0208 16.1958 13.4125 16.5875C13.8042 16.9792 14 17.45 14 18C14 18.55 13.8042 19.0208 13.4125 19.4125C13.0208 19.8042 12.55 20 12 20ZM12 14C11.45 14 10.9792 13.8042 10.5875 13.4125C10.1958 13.0208 10 12.55 10 12C10 11.45 10.1958 10.9792 10.5875 10.5875C10.9792 10.1958 11.45 10 12 10C12.55 10 13.0208 10.1958 13.4125 10.5875C13.8042 10.9792 14 11.45 14 12C14 12.55 13.8042 13.0208 13.4125 13.4125C13.0208 13.8042 12.55 14 12 14ZM12 8C11.45 8 10.9792 7.80417 10.5875 7.4125C10.1958 7.02083 10 6.55 10 6C10 5.45 10.1958 4.97917 10.5875 4.5875C10.9792 4.19583 11.45 4 12 4C12.55 4 13.0208 4.19583 13.4125 4.5875C13.8042 4.97917 14 5.45 14 6C14 6.55 13.8042 7.02083 13.4125 7.4125C13.0208 7.80417 12.55 8 12 8Z" fill="currentColor"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- The other half of the same strip — see shared/steptabs.js. -->
+    <nav class="steptabs" id="faultsTabs" role="tablist" aria-label="Assessment"></nav>
+
+    <section class="carousel" id="carousel" aria-hidden="true" aria-label="Customer's photos">
+      <div class="carousel__inner">
+        <div class="track" id="track"></div>
+        <div class="carousel__scrim"></div>
+        <div class="carousel__label t-label-xs">Customer&rsquo;s photos</div>
+        <div class="dots" id="dots"></div>
+      </div>
+    </section>
+
+    <main class="fscroll" id="fscroll">
+      <div class="listhead" id="faultsHead">
+        <h2 class="t-title-page">Mark penalties</h2>
+      </div>
+      <div class="flist" id="flist"></div>
+    </main>
+
+    <div class="fempty" id="fempty" hidden>
+      <p class="t-label-md700">Assessment pending</p>
+      <p class="t-body-sm">Penalty options appear here for the faults you mark.</p>
+    </div>
+
+    <!-- The step CTA. It is NOT the Done button that used to stand here: that
+         one said "Done", closed nothing and went where the back arrow already
+         went. This one names the next step of the assessment and goes there —
+         see RnM.nextStepLabel in screens/rnm/script.js — and it only appears once
+         every fault on screen has a penalty against it, because until then the
+         thing it is offering to move on from is not finished. -->
+    <div class="ffooter" id="ffooter">
+      <div class="stepbanner" id="faultsBanner" hidden></div>
+      <button class="btn-primary t-label-md700" id="faultsNext"><span>Next</span></button>
+    </div>
+  </section>
+

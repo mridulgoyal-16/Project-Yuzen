@@ -1,0 +1,25 @@
+
+
+  <!-- ── Shared chrome, outside every screen ───────────────────────────────
+       The toast and the camera input belong to no screen: Mark faults and Bike
+       photos both capture through the same input, and anything can toast. They
+       close the phone frame, so this file is always last in HTML_ORDER — the
+       frame's opening tag is in frame.html and its closing tag is here, rather
+       than trailing off the last screen that happens to exist. -->
+  <div class="toast" id="toast"></div>
+
+  <input type="file" id="cameraInput" class="visually-hidden" accept="image/*" capture="environment" tabindex="-1" aria-hidden="true">
+
+  <!-- Install offer. Hidden until Chrome says the app is installable, which it
+       only does in a browser, only over https, and never once installed — so on
+       an iPhone and inside the installed app this is permanently absent. It sits
+       where Chrome's own infobar would have, and it replaces that infobar rather
+       than joining it (install.js calls preventDefault). -->
+  <div class="pwa-install" id="pwaInstall" hidden>
+    <span class="pwa-install__text">Install this on your home screen</span>
+    <button class="pwa-install__go" type="button" data-install-go>Install</button>
+    <button class="pwa-install__no" type="button" data-install-no aria-label="Not now">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.4 19 5 17.6l5.6-5.6L5 6.4 6.4 5l5.6 5.6L17.6 5 19 6.4 13.4 12l5.6 5.6-1.4 1.4-5.6-5.6Z" fill="currentColor"/></svg>
+    </button>
+  </div>
+</div>

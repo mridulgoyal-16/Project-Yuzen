@@ -1,0 +1,60 @@
+  <!-- ══════════════════════════════════════════════════════════════════════
+       NOTE COMPLAINT — the token's first Service step
+
+       Opened by Start on the token detail page. Two things get written down
+       here: what the customer said, and what the captain makes of it. They are
+       separate fields on purpose — the customer's words are evidence and the
+       captain's are a judgement, and a single box would blur which is which by
+       the time a mechanic reads it.
+
+       The field is Barun's from token-details (.fb__field there), carried over
+       so the captain types into the same control in both prototypes.
+       ══════════════════════════════════════════════════════════════════════ -->
+  <section class="screen" id="scrComplaint" data-pos="right"
+           aria-label="Note complaint">
+    <header class="appbar">
+      <div class="appbar__row">
+        <!-- appbar__lhs, not appbar__lead: the lead variant is scoped to
+               #scrIssues, so borrowing the name here brought no rules with
+               it and the badge fell out of the row. -->
+          <div class="appbar__lhs">
+          <div class="leading-action">
+            <button class="icon-btn" id="cpBack" aria-label="Back to the token">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M10.4538 12L14.5269 16.0731C14.6654 16.2116 14.7362 16.3856 14.7394 16.5952C14.7426 16.8048 14.6718 16.982 14.5269 17.1269C14.382 17.2718 14.2064 17.3442 14 17.3442C13.7936 17.3442 13.618 17.2718 13.4731 17.1269L8.97888 12.6327C8.88528 12.5391 8.81925 12.4404 8.7808 12.3365C8.74233 12.2327 8.7231 12.1205 8.7231 12C8.7231 11.8795 8.74233 11.7673 8.7808 11.6635C8.81925 11.5596 8.88528 11.4609 8.97888 11.3673L13.4731 6.8731C13.6116 6.73463 13.7856 6.6638 13.9952 6.6606C14.2048 6.65738 14.382 6.72822 14.5269 6.8731C14.6718 7.01797 14.7442 7.1936 14.7442 7.4C14.7442 7.6064 14.6718 7.78203 14.5269 7.9269L10.4538 12Z" fill="#222222"/></svg>
+            </button>
+          </div>
+          <!-- The token badge travels with the name, so the page you land on is
+               visibly the token you opened. Same 48px circle as the queue. -->
+          <span class="cp-token" id="cpToken">08</span>
+          <div class="appbar__title">
+            <p class="t-label-md"><span id="cpName">Rakesh Kumar</span><span
+               class="muted"> / Note complaint</span></p>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="cp-body" id="cpBody">
+      <!-- 1. What the customer said. -->
+      <h2 class="t-heading-sm">Customer feedback</h2>
+      <div class="fb__field" data-cpfield>
+        <input class="fb__input" id="cpCustomerInput" type="text"
+               placeholder="Enter feedback.." autocomplete="off">
+        <button class="fb__mic" id="cpCustomerMic" type="button"
+                aria-label="Dictate the customer's feedback"></button>
+      </div>
+
+      <!-- 2. What the captain makes of it. Same control, different author. -->
+      <h2 class="t-heading-sm">Report your feedback</h2>
+      <div class="fb__field" data-cpfield>
+        <input class="fb__input" id="cpCaptainInput" type="text"
+               placeholder="Enter feedback.." autocomplete="off">
+        <button class="fb__mic" id="cpCaptainMic" type="button"
+                aria-label="Dictate your feedback"></button>
+      </div>
+    </main>
+
+    <div class="ffooter is-shown">
+      <button class="btn-primary t-label-md700" id="cpDone"><span>Done</span></button>
+    </div>
+  </section>

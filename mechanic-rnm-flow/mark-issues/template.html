@@ -1,0 +1,985 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Yuzen · Mark Issues</title>
+<style>
+__SHELL_CSS__
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Mark Issues — Figma 2052:16043 (grid), 2014:14800 (marked tile),
+                 2052:16205 (sheet), 1993:30539 (zone rows)
+   The furniture above this line is lifted from mechanic-checks so the screens
+   stitch without drift. Everything below is this screen.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+:root{ --tabs-h:56px; }
+
+/* ── App bar: trailing search ─────────────────────────────────────────────── */
+/* The frame centres "Mark Issues" with a back arrow and search either side. This
+   keeps the flow's app bar instead — `543210 / Mark Issues`, back left — and
+   gives the right edge to search, which is the one action the frame has there. */
+.appbar__row{justify-content:space-between}
+.appbar__lead{display:flex;align-items:center;flex:1 1 auto;min-width:0}
+.appbar__title p{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.trailing-action{height:48px;display:flex;align-items:center;flex:0 0 auto}
+
+/* ── Tabs ─────────────────────────────────────────────────────────────────────
+   The qc-task-list strip, structure for structure: a scrollable row of plain
+   labels with ONE underline element that slides between them, rather than a rule
+   per tab that fades in and out. 55px of tabs over a 1px border makes the 56 the
+   frame draws. Pinned under the app bar — the zone you are working in should not
+   scroll away mid-list. */
+.tabs-wrap{
+  position:absolute;left:0;top:var(--header-h);width:100%;
+  background:var(--surface-inverse);z-index:6;
+  border-bottom:1px solid var(--border-primary);
+  transition:top 260ms var(--ease-out);
+}
+
+/* ── Scrolled: the app bar goes, the tabs stay ────────────────────────────────
+   Scroll down and the app bar slides up out of the way, the tabs rise to sit
+   under the status bar, and the footer drops off the bottom. What is left is the
+   zone you are in and the parts — which is all the screen is for once you are
+   working in it.
+
+   The tabs do NOT go with it. They are the one piece of chrome that has to stay:
+   the mosaic gives no clue which zone you are looking at, so losing the tabs would
+   leave a wall of photographs with no label. The status bar stays too — it is the
+   device, not the screen.
+
+   The app bar is translated rather than shrunk so its contents move as one, and
+   the scroller's top is animated on the same clock so the list follows it up
+   instead of leaving a gap that closes late. */
+/* --status-h is this screen's own: the shell has --header-h (117 = 44 + 72 + 1)
+   but never names the 44 on its own, and both rules below need it. */
+:root{ --status-h:44px; }
+
+/* .appbar wraps the status bar AND the title row, so translating it would take
+   the status bar with it — that is the device, not the screen. The ROW moves, and
+   .appbar clips so the row slides out of sight behind the status bar rather than
+   over it: the status bar is an earlier sibling, so without the clip the row would
+   paint on top of the clock on its way past. Height is pinned to --header-h first,
+   because clipping a box that was sized by its contents would collapse it. */
+.appbar{
+  height:var(--header-h);overflow:hidden;
+  transition:height 260ms var(--ease-out);
+}
+/* The box has to shrink, not just clip. .appbar is z-index 20 with a white fill,
+   so a 117px-tall one left behind covers the tabs as they rise to 44 — which is
+   exactly what it did on the first cut: everything measured correctly and the
+   screen showed a white gap where the tabs were, hidden underneath.
+   Its hairline goes with it; the tabs carry their own, and two 1px rules stacked
+   under the status bar read as a mistake. */
+.is-scrolled .appbar{height:var(--status-h);border-bottom-color:transparent}
+.appbar__row{transition:transform 260ms var(--ease-out)}
+/* A full --header-h, not the 73 that looks right. The row starts 44 down inside
+   the box, so moving it 73 lands it at -29..43 — which is INSIDE the collapsed
+   44px box, sitting on top of the clock, because the row is a later sibling than
+   the status bar. 117 takes it to -73..-1, clear of the box entirely. */
+.is-scrolled .appbar__row{transform:translateY(calc(-1 * var(--header-h)))}
+.is-scrolled .tabs-wrap{top:var(--status-h)}
+.scroll{transition:top 260ms var(--ease-out)}
+.is-scrolled .scroll{top:calc(var(--status-h) + var(--tabs-h))}
+.tabs{
+  display:flex;align-items:center;height:55px;position:relative;
+  overflow-x:auto;overflow-y:hidden;
+  scrollbar-width:none;scroll-behavior:smooth;
+  -webkit-overflow-scrolling:touch;
+}
+.tabs::-webkit-scrollbar{display:none}
+.tab{
+  flex-shrink:0;height:55px;padding:16px;
+  border:0;background:none;font-family:inherit;cursor:pointer;
+  font-size:16px;font-weight:500;line-height:24px;
+  color:var(--content-secondary);white-space:nowrap;
+  -webkit-tap-highlight-color:transparent;
+  transition:color 180ms ease;
+}
+/* First tab is inset 24px from the frame edge, per the design. */
+.tab:first-of-type{padding-left:var(--s6)}
+.tab.is-active{color:var(--content-primary)}
+.tabs-underline{
+  position:absolute;bottom:0;left:0;height:2px;width:0;
+  border-radius:1px;background:var(--content-primary);
+  transition:transform 220ms cubic-bezier(.4,0,.2,1),
+             width     220ms cubic-bezier(.4,0,.2,1);
+}
+
+.scroll{top:calc(var(--header-h) + var(--tabs-h))}
+
+/* ── Recommended: the mosaic ──────────────────────────────────────────────────
+   A mixed-size mosaic rather than a uniform 3-up, per the reference Sagar shared:
+   rows of three squares broken up by a full-width landscape and a large square
+   with two small ones stacked beside it. Nine tiles per cycle, then it repeats.
+
+   Six columns is what makes both thirds and two-thirds land on the same grid. The
+   geometry is derived, not guessed: the frame is 390 with 24 either side, so the
+   track is 342. Five 12px gaps leave 282 over six columns = 47 each, so
+
+     small (2 cols) = 2*47 + 12    = 106   and one row is 106, so it is square
+     large (4 cols) = 4*47 + 3*12  = 224   over 2 rows = 2*106 + 12 = 224, square
+     wide  (6 cols) = 342          over 2 rows = 224, landscape
+
+   grid-auto-rows has to be a length — a percentage there resolves against the
+   container's height, not its width — so 106px is written out. It is correct for
+   this 390px frame and would need recomputing for another, which is true of every
+   measured number in these prototypes. */
+.grid{
+  display:grid;
+  grid-template-columns:repeat(6, 1fr);
+  grid-auto-rows:106px;
+  grid-auto-flow:row dense;
+  gap:12px;
+  padding:var(--s6) var(--s6) var(--s16);
+}
+.tile{
+  position:relative;
+  grid-column:span 2;                  /* small, and the default */
+  border:0;padding:0;font:inherit;cursor:pointer;
+  border-radius:8px;overflow:hidden;
+  /* Not a token: the frame gives these tiles their own #f4f4f4, a shade off
+     surface/secondary. The photos are cut-outs, so this shows through. */
+  background:#f4f4f4;
+  /* Outside the card, not inset. An inset ring is drawn over the photograph and
+     eats 2px of it on every edge; outside, the photo is whole and the ring reads
+     as the card's edge. The 12px gap absorbs it — 2px from each neighbour leaves
+     8px of clear space between them. */
+  box-shadow:0 0 0 2px var(--border-primary);
+  -webkit-tap-highlight-color:transparent;
+  transition:box-shadow .16s ease,transform 120ms ease;
+}
+.tile--large{grid-column:span 4;grid-row:span 2}
+.tile--wide{grid-column:span 6;grid-row:span 2}
+/* The mirror of --large: two small tiles stacked on the LEFT with the big one to
+   their right, so the second big row does not simply repeat the first. Both are
+   pinned to explicit columns rather than left to flow — dense packing would put the
+   second small beside the first instead of under it. */
+.tile--stack{grid-column:1 / span 2}
+.tile--largeR{grid-column:3 / span 4;grid-row:span 2}
+.tile:active{transform:scale(.97)}
+.tile img{
+  position:absolute;inset:0;width:100%;height:100%;
+  object-fit:cover;display:block;
+}
+/* Bottom-anchored scrim so the label stays legible over any photo. */
+.tile__scrim{
+  position:absolute;left:0;right:0;bottom:0;height:68%;
+  background:linear-gradient(to bottom,
+    rgba(0,0,0,0) 8%, rgba(0,0,0,.4) 50%, #232222 100%);
+}
+.tile__name{
+  position:absolute;left:8px;right:8px;bottom:8px;
+  color:#fff;font-size:12px;font-weight:500;line-height:16px;
+  /* Left, not centred. Centring a name under a photograph reads as a caption for
+     the picture; left-aligned it reads as the label of the thing you are about to
+     tap, and a truncated one still starts where the eye is already looking.
+     Inset 8 rather than 4, since the ring is outside the card now and the text no
+     longer has a 2px rule to sit clear of. */
+  text-align:left;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+/* Marked: the ring turns negative and a dot lands in the corner. Two signals,
+   because the ring alone is easy to miss on a photo with a dark edge. */
+.tile.is-marked{box-shadow:0 0 0 2px var(--content-negative)}
+.tile__dot{
+  position:absolute;top:6px;right:6px;width:10px;height:10px;
+  border-radius:50%;background:var(--content-negative);
+  box-shadow:0 0 0 2px rgba(255,255,255,.85);
+  opacity:0;transform:scale(.4);
+  transition:opacity .18s var(--ease-out),transform .18s var(--ease-out);
+}
+.tile.is-marked .tile__dot{opacity:1;transform:scale(1)}
+
+/* ── Zone tabs: the part rows ─────────────────────────────────────────────── */
+/* `prow`, not `row`: the shell already defines .row and .row__* for the
+   checklist's swipe rows, and .row{display:flex} laid the drawer out beside its
+   header instead of under it. Anything this screen adds has to dodge that
+   namespace. */
+.rows{padding:var(--s6) 0 var(--s16)}
+.prow{
+  width:342px;margin:0 auto;
+  /* The divider sits on the row boundary as an inset shadow so it cannot add
+     height, and the last row keeps it — the frame draws one there too. */
+  box-shadow:inset 0 -1px 0 var(--border-primary);
+}
+.prow__head{
+  display:flex;align-items:center;gap:var(--s4);width:100%;
+  padding:var(--s4) 0;
+  border:0;background:none;font:inherit;color:inherit;text-align:left;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+.prow__head:active{opacity:.55}
+.prow__thumb{
+  flex:0 0 auto;width:56px;height:56px;
+  border-radius:9.333px;background:var(--surface-secondary);
+  overflow:hidden;
+}
+.prow__thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.prow__main{flex:1 1 auto;min-width:0;display:flex;align-items:center;gap:var(--s2)}
+.prow__name{color:var(--content-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* 3px separator, then the count. Both appear only once something is marked. */
+.prow__sep{width:3px;height:3px;border-radius:50%;background:var(--content-tertiary);flex:0 0 auto}
+.prow__count{
+  flex:0 0 auto;width:20px;height:20px;border-radius:30px;
+  background:var(--content-secondary);color:var(--content-inverse);
+  font-size:12px;font-weight:500;line-height:20px;text-align:center;
+}
+.prow__chev{
+  flex:0 0 auto;width:24px;height:24px;margin-right:-2px;
+  display:block;fill:var(--content-primary);
+  transition:transform .26s var(--ease-out);
+}
+.prow.is-open .prow__chev{transform:rotate(180deg)}
+
+/* The chip drawer animates on a 0fr/1fr grid row: a content-driven height that a
+   plain height transition cannot do. Same trick as the sibling's sheet. */
+.prow__drawer{
+  display:grid;grid-template-rows:0fr;
+  transition:grid-template-rows .28s var(--ease-out);
+}
+.prow.is-open .prow__drawer{grid-template-rows:1fr}
+/* The clip carries no padding of its own — overflow:hidden clips content, not an
+   element's own padding box, so the gap would survive the collapse. */
+.prow__clip{overflow:hidden;min-height:0}
+.prow__chips{padding:var(--s2) 0 var(--s6)}
+
+/* ── Chips and the part sheet come from the shell ────────────────────────────
+   `.chips`, `.chip`, `.sheet` and `.sheet__*` are lifted out of mechanic-checks
+   by build.py, so this screen's issue-marking sheet is that screen's sheet
+   rather than a lookalike of it. Nothing to restate here. */
+
+/* ── Footer button ────────────────────────────────────────────────────────── */
+/* 318 wide inside 36px padding, per both frames — narrower than the 342 the
+   other screens use, and left that way rather than "corrected". */
+.footer__content--single{justify-content:center;padding:0 var(--s9)}
+.btn-block{
+  width:100%;height:64px;
+  display:flex;align-items:center;justify-content:center;
+  border:0;border-radius:100px;
+  font:inherit;font-weight:700;font-size:16px;line-height:20px;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+  background:var(--surface-disabled);color:var(--content-disabled);
+  transition:transform 120ms ease,background-color .16s ease,color .16s ease;
+}
+.btn-block:not(:disabled){background:var(--surface-primary);color:var(--content-inverse)}
+.btn-block:not(:disabled):active{transform:scale(.98)}
+.btn-block:disabled{cursor:default}
+
+/* ── Toast ────────────────────────────────────────────────────────────────── */
+.toast{
+  position:absolute;left:50%;bottom:calc(var(--footer-h) + var(--s4));
+  transform:translate(-50%,8px);
+  background:var(--surface-primary);color:var(--content-inverse);
+  font-weight:500;font-size:14px;line-height:20px;
+  padding:10px 16px;border-radius:100px;white-space:nowrap;
+  opacity:0;pointer-events:none;z-index:25;
+  transition:opacity .22s var(--ease-out),transform .22s var(--ease-out);
+}
+.toast.is-shown{opacity:1;transform:translate(-50%,0)}
+</style>
+</head>
+<body>
+<div class="phone">
+
+  <header class="appbar">
+    <div class="statusbar">
+      <div class="time">9:41</div>
+      <div class="icons">
+        <svg width="20" height="14" viewBox="0 0 20 14" fill="none" aria-hidden="true">
+          <rect x="2" y="7.5" width="2.5" height="4.5" rx=".6" fill="#222"/>
+          <rect x="6.5" y="5.5" width="2.5" height="6.5" rx=".6" fill="#222"/>
+          <rect x="11" y="3.5" width="2.5" height="8.5" rx=".6" fill="#222"/>
+          <rect x="15.5" y="2" width="2.5" height="10" rx=".6" fill="#222"/>
+        </svg>
+        <svg width="16" height="14" viewBox="0 0 16 14" fill="none" aria-hidden="true">
+          <path d="M8 3.1c2.3 0 4.4.85 6 2.26l1-1.2A11 11 0 0 0 8 1.5 11 11 0 0 0 1 4.16l1 1.2A9.2 9.2 0 0 1 8 3.1Z" fill="#222"/>
+          <path d="M8 6.6c1.36 0 2.6.5 3.55 1.32l1-1.2A6.9 6.9 0 0 0 8 5a6.9 6.9 0 0 0-4.55 1.72l1 1.2A5.4 5.4 0 0 1 8 6.6Z" fill="#222"/>
+          <path d="M8 9.9c.68 0 1.3.26 1.77.68L8 12.6 6.23 10.6c.47-.43 1.09-.69 1.77-.69Z" fill="#222"/>
+        </svg>
+        <svg width="25" height="14" viewBox="0 0 25 14" fill="none" aria-hidden="true">
+          <rect x=".5" y="1.5" width="22" height="11" rx="3" stroke="#222" stroke-opacity=".35"/>
+          <rect x="2" y="3" width="19" height="8" rx="1.5" fill="#222"/>
+          <path d="M24 5.5v3a1.6 1.6 0 0 0 0-3Z" fill="#222" fill-opacity=".4"/>
+        </svg>
+      </div>
+    </div>
+
+    <div class="appbar__row">
+      <div class="appbar__lead">
+        <div class="leading-action">
+          <button class="icon-btn" id="backBtn" aria-label="Back">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M10.4538 12L14.5269 16.0731C14.6654 16.2116 14.7362 16.3856 14.7394 16.5952C14.7426 16.8048 14.6718 16.982 14.5269 17.1269C14.382 17.2718 14.2064 17.3442 14 17.3442C13.7936 17.3442 13.618 17.2718 13.4731 17.1269L8.97888 12.6327C8.88528 12.5391 8.81925 12.4404 8.7808 12.3365C8.74233 12.2327 8.7231 12.1205 8.7231 12C8.7231 11.8795 8.74233 11.7673 8.7808 11.6635C8.81925 11.5596 8.88528 11.4609 8.97888 11.3673L13.4731 6.8731C13.6116 6.73463 13.7856 6.6638 13.9952 6.6606C14.2048 6.65738 14.382 6.72822 14.5269 6.8731C14.6718 7.01797 14.7442 7.1936 14.7442 7.4C14.7442 7.6064 14.6718 7.78203 14.5269 7.9269L10.4538 12Z" fill="#222222"/></svg>
+          </button>
+        </div>
+        <div class="appbar__title">
+          <p class="t-label-md">543210<span class="muted"> / Mark Issues</span></p>
+        </div>
+      </div>
+      <div class="trailing-action">
+        <button class="icon-btn" id="searchBtn" aria-label="Search parts">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="__SEARCH_PATH__" fill="#222222"/>
+          </svg>
+        </button>
+        <!-- Overflow. Three 2px dots drawn inline rather than exported, as on the
+             issues screen: the frame has no such button, so there is no node to
+             pull, and this glyph is unambiguous enough that drawing it is safe. -->
+        <button class="icon-btn" id="moreBtn" aria-label="More options"
+                aria-haspopup="dialog" aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <circle cx="12" cy="5" r="1.9" fill="#222"/>
+            <circle cx="12" cy="12" r="1.9" fill="#222"/>
+            <circle cx="12" cy="19" r="1.9" fill="#222"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div class="tabs-wrap">
+    <div class="tabs" id="tabs" role="tablist" aria-label="Zone">
+      <!-- The underline stays the last child; tabs are inserted before it. -->
+      <div class="tabs-underline" id="tabsUnderline"></div>
+    </div>
+  </div>
+
+  <main class="scroll" id="scroll">
+    <div id="pane"></div>
+  </main>
+
+  <!-- ── Options sheet, opened from the three dots ────────────────────────
+       The same sheet as on issues and mechanic-checks — build.py lifts its CSS,
+       so the three cannot drift. One item here: this screen has no counterpart
+       to the issues screen's "Finish with open issues". -->
+  <div class="scrim" id="optScrim"></div>
+  <section class="sheet-opt" id="optSheet" role="dialog" aria-modal="true" aria-label="More options">
+    <div class="sheet-opt__grabzone" id="optGrab"><div class="sheet-opt__grab"></div></div>
+    <div class="sheet-opt__list">
+      <button class="sheet-opt__item" data-opt="commands">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="__BOLT_PATH__"/></svg>
+        <span class="t-label-md">Bike commands</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- ── Part sheet, opened from a Recommended tile ─────────────────────────
+       Structure and styling are mechanic-checks' part sheet: build.py lifts its
+       CSS, so the two are one sheet rather than two that resemble each other.
+       What is missing is that screen's Faulty/Good toggle — see the README. -->
+  <div class="scrim" id="partScrim"></div>
+  <section class="sheet" id="partSheet" role="dialog" aria-modal="true"
+           aria-labelledby="partName">
+    <div class="sheet__top">
+      <div class="sheet__grabzone" id="partGrab"><div class="sheet__grab"></div></div>
+      <div class="sheet__stack">
+        <div class="sheet__part">
+          <div class="sheet__lhs">
+            <div class="thumb" id="partThumb"></div>
+            <p class="t-label-md sheet__name" id="partName"></p>
+          </div>
+        </div>
+        <div class="sheet__collapseBody">
+          <div class="sheet__divider"></div>
+          <div class="sheet__issues">
+            <p class="t-label-md">Issues</p>
+            <div class="chips" id="partChips"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="sheet__footer">
+      <button class="btn-primary t-label-md700" id="partConfirm" disabled>Confirm</button>
+    </div>
+  </section>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <footer class="footer is-hidden" id="footer">
+    <div class="footer__content footer__content--single">
+      <button class="btn-block" id="updateBtn">Update issues</button>
+    </div>
+  </footer>
+</div>
+
+<script>
+"use strict";
+
+/* ══════════════════════════════════════════════════════════════════════════
+   STITCHING CONTRACT — this screen's whole outbound surface.
+   Replace the function bodies to wire it into the flow; change nothing else.
+   ══════════════════════════════════════════════════════════════════════════ */
+window.Yuzen = {
+  /* STITCHED: back returns to the issues screen, which is where Mark Issues
+     came from. history.back() would be wrong on a cold open — nothing to go
+     back to — so this navigates explicitly. */
+  onBack()                        {
+    console.log("[Yuzen] onBack");
+    /* Back to the section we were sent from, not to whichever one issues opens on.
+       This screen is only ever reached from Mechanical today, but echoing the
+       parameter rather than hardcoding it means the next entry point works too. */
+    const from = new URLSearchParams(location.search).get("from");
+    location.href = "../issues/prototype.html"
+      + (from ? "?section=" + encodeURIComponent(from) : "");
+  },
+  /* The search screen is not in these frames — this fires where it would open. */
+  onSearch()                      { console.log("[Yuzen] onSearch"); },
+  /* 'commands' — the options sheet's only item. The three dots open the sheet
+     locally, so the tap itself is not an event anyone downstream needs. */
+  onMenu(which)                   { console.log("[Yuzen] onMenu", which); },
+  onTab(zone)                     { console.log("[Yuzen] onTab", zone); },
+  onOpenPart({id, name})          { console.log("[Yuzen] onOpenPart", {id, name}); },
+  /* Every change to a part's marks, from a tile sheet or an expanded row. */
+  onMarkPart({id, name, reasons}) { console.log("[Yuzen] onMarkPart", {id, name, reasons}); },
+  onUpdateIssues(marked)          { console.log("[Yuzen] onUpdateIssues", marked); },
+};
+
+const PHOTOS = __PHOTOS__;
+const CHEVRON = "__CHEVRON_PATH__";
+const MISSING = "Missing";
+
+/* ── The parts ──────────────────────────────────────────────────────────────
+   Recommended is the frame's twelve tiles, in its order, with its labels — three
+   of which read "Display" (see the README). The zone lists are drawn from the
+   same parts: the frame fills all three with five identical "Front tyre" rows,
+   which cannot be told apart in a test.
+
+   `reasons` is the fault catalogue offered for that part; `marked` is what has
+   been recorded so far. "Missing" is appended to every catalogue, not listed.
+
+   Reasons, not issues: a part carries ONE issue, and the reasons are what is
+   wrong with it — the same shape the issues screen lists (`Rusting · Cuts · Wear
+   out` on one row). Three marks on a part is one issue with three reasons, never
+   three issues.
+   ────────────────────────────────────────────────────────────────────────── */
+const FAULTS = ["Rusting", "Cuts", "Wear out"];
+const P = (name, photo, zone, reasons, marked) =>
+  ({name, photo, zone, reasons: reasons || FAULTS, marked: marked || []});
+
+/* The Recommended mosaic shows everything, so this list is also its running order.
+   The first block is the five part renders the Assessment checklist and Mark faults
+   already use, brought in at Sagar's request so a mechanic meets the same picture
+   of a part wherever they meet the part — they are cut-outs on white where the rest
+   are photographs on the bike, which is a difference worth deciding about rather
+   than smoothing over.
+
+   Zones still come from the part, so the Front / Middle / Rear lists are unaffected
+   by where a tile lands in the mosaic. */
+/* The Recommended mosaic shows everything, so this list is also its running order,
+   and the order is what the size pattern reads — see TILE_SIZE.
+
+   The pigtail group leads: the large tile with two stacked beside it. The five part
+   renders the Assessment checklist and Mark faults already use follow it, brought
+   in at Sagar's request so a mechanic meets the same picture of a part wherever
+   they meet the part. They are grey cut-outs where the rest are photographs on the
+   bike — a difference worth deciding about rather than smoothing over.
+
+   Nothing arrives marked. Three parts used to (Front tyre, Battery bucket, Brake),
+   which put red rings on the grid before anyone had touched it.
+
+   Zones still come from the part, so the Front / Middle / Rear lists are unaffected
+   by where a tile lands in the mosaic. */
+/* The Recommended mosaic shows everything, so this list is also its running order,
+   and TILE_SIZE below reads that order position by position.
+
+   The five part renders the Assessment checklist and Mark faults already use are
+   in here, brought in at Sagar's request so a mechanic meets the same picture of a
+   part wherever they meet the part. They are grey cut-outs where the rest are
+   photographs on the bike — a difference worth deciding about rather than
+   smoothing over.
+
+   Nothing arrives marked. Three parts used to (Front tyre, Battery bucket, Brake),
+   which put red rings on the grid before anyone had touched it.
+
+   Zones still come from the part, so the Front / Middle / Rear lists are unaffected
+   by where a tile lands in the mosaic. */
+const PARTS = [
+  P("Pigtail light",     "r-pigtail",      "Rear",   ["Rusting","Cuts","Wear out"]),
+  P("Pigtail connector", "pigtail",        "Front",  ["Wear out","Cuts","Rust"]),
+  P("Air nozzle",        "air-nozzle",     "Front",  ["Leaking","Cuts","Damage"]),
+
+  P("MCU",               "r-mcu",          "Middle", ["Water ingress","Error code","Burnt"]),
+  P("Throttle",          "r-throttle",     "Front",  ["Sticky","Cuts","No response"]),
+  P("Front wheel",       "r-front-wheel",  "Front",  ["Damage","Bent","Wobble"]),
+
+  /* The two small ones lead and the large follows, so this row mirrors the pigtail
+     row at the top instead of repeating it. */
+  P("Front tyre",        "tyre-rim",       "Front",  ["Worn out","Cuts","Puncture"]),
+  P("Display",           "tail-lamp",      "Rear",   ["Not lighting","Cracked","Loose"]),
+  P("IOT",               "iot",            "Middle", ["No signal","Water ingress","Loose"]),
+
+  P("Tyre",              "r-tyre",         "Rear",   ["Worn out","Cuts","Puncture"]),
+
+  P("Shocker",           "front-shocker",  "Front",  ["Oil leak","Bent","Noise"]),
+  P("Swing arm",         "swingarm",       "Middle", ["Bent","Rusting","Play"]),
+  P("Display",           "bike-pic",       "Middle", ["Blank","Flickering","Cracked"]),
+
+  P("Battery bucket",    "battery-bucket", "Middle", ["Rusting","Lock broken","Dented"]),
+
+  P("Rear shocker",      "rear-shocker",   "Rear",   ["Oil leak","Bent","Noise"]),
+  P("Brake",             "brake",          "Rear",   ["Not holding","Worn out","Noise"]),
+  /* The frame's three tiles all read "Display" (see the README). They are spread
+     one per zone so no list ever shows the same label twice — in a zone list,
+     with no photo differences to go on, two identical rows are untestable. */
+  P("Display",           "display-unit",   "Front",  ["Blank","Cracked","Loose"]),
+].map((p, i) => ({id:"p" + i, ...p}));
+
+const ZONES = ["Recommended", "Front", "Middle", "Rear"];
+const S = {zone:"Recommended", open:null, sheet:null};
+
+const tabsEl     = document.getElementById("tabs");
+const underlineEl = document.getElementById("tabsUnderline");
+const paneEl   = document.getElementById("pane");
+const scrollEl = document.getElementById("scroll");
+const updateBtn = document.getElementById("updateBtn");
+const footerEl  = document.getElementById("footer");
+
+const esc = s => String(s).replace(/[&<>"']/g,
+  c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+function tap(){ if (navigator.vibrate) navigator.vibrate(10); }
+
+const toastEl = document.getElementById("toast");
+let toastTimer = 0;
+function toast(msg){
+  toastEl.textContent = msg;
+  toastEl.classList.add("is-shown");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toastEl.classList.remove("is-shown"), 1600);
+}
+
+const partById = id => PARTS.find(p => p.id === id);
+const markedParts = () => PARTS.filter(p => p.marked.length);
+
+/* What the bike already had filed when this screen opened. Three parts arrive with
+   issues on them — that is the point of the red dots — so counting every marked
+   part would put "Update issues (3)" on screen before the mechanic has touched
+   anything, and the footer would be up from the start.
+
+   Sagar's rule is that the button appears once an issue is ADDED, so what counts is
+   the difference from this baseline: parts whose marks are not what they were when
+   the screen opened. Removing a pre-existing issue counts too — that is also a
+   change to commit. Frozen as a string per part, since the arrays are mutated in
+   place. */
+const BASELINE = new Map(PARTS.map(p => [p.id, p.marked.slice().sort().join("|")]));
+const changedParts = () =>
+  PARTS.filter(p => p.marked.slice().sort().join("|") !== BASELINE.get(p.id));
+/* A part either has an issue against it or it does not; the reasons are that one
+   issue's detail. So this is 0 or 1, never the number of reasons — and the row
+   badge and the footer count the same thing as each other. */
+const issueCount = p => p.marked.length ? 1 : 0;
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Chips — enabled, selected, disabled.
+
+   A part cannot be missing and faulty at once, so the two sides disable each
+   other: mark it Missing and every fault greys out until Missing is cleared;
+   pick any fault and Missing greys out until the last one goes. Tapping a
+   selected chip again releases it, so the lock cannot strand anyone. Same rule
+   as the issues screen's detail sheet.
+   ══════════════════════════════════════════════════════════════════════════ */
+function chipsHTML(part, marked){
+  const faulty  = part.reasons.some(r => marked.includes(r));
+  const missing = marked.includes(MISSING);
+  /* One wrapping run with Missing last, as mechanic-checks lays its chips out.
+     The frames break the line before Missing; a single run that wraps on its own
+     keeps the two screens' chips identical, which matters more. */
+  return part.reasons.concat(MISSING).map(r => {
+    const on  = marked.includes(r);
+    const off = !on && (r === MISSING ? faulty : missing);
+    return `<button type="button" class="chip${on ? " is-selected" : ""}"
+              data-reason="${esc(r)}" aria-pressed="${on}"${off ? " disabled" : ""}
+              >${esc(r)}</button>`;
+  }).join("");
+}
+
+/* ── Tabs ─────────────────────────────────────────────────────────────────────
+   Built once, then only their classes change and the underline slides. Rebuilding
+   them on every render would restart the slide from wherever the new node happens
+   to sit. */
+function buildTabs(){
+  ZONES.forEach(z => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "tab";
+    b.setAttribute("role", "tab");
+    b.dataset.zone = z;
+    b.textContent = z;
+    tabsEl.insertBefore(b, underlineEl);
+  });
+}
+
+function moveUnderline(){
+  const active = tabsEl.querySelector(".tab.is-active");
+  if (!active) return;
+  underlineEl.style.width = active.offsetWidth + "px";
+  underlineEl.style.transform = `translateX(${active.offsetLeft}px)`;
+}
+
+function paintTabs(){
+  tabsEl.querySelectorAll(".tab").forEach(b => {
+    const on = b.dataset.zone === S.zone;
+    b.classList.toggle("is-active", on);
+    b.setAttribute("aria-selected", String(on));
+  });
+  moveUnderline();
+  /* A tab scrolled off the strip cannot show it is selected. */
+  tabsEl.querySelector(".tab.is-active")
+        .scrollIntoView({behavior:"smooth", block:"nearest", inline:"nearest"});
+}
+
+/* ── Recommended: tiles ───────────────────────────────────────────────────── */
+/* The mosaic, position by position, against the order of PARTS above. It was a
+   repeating nine-tile cycle; it is a designed arrangement now, because Sagar placed
+   specific rows — so it is written out rather than derived, and reordering PARTS
+   without reordering this will put the sizes on the wrong tiles.
+
+   Reading down: a large with two stacked right, a row of three, two stacked LEFT
+   with a large right (the mirror), a full-width, a row of three, a full-width, a
+   row of three. Seventeen entries for seventeen parts. */
+const TILE_SIZE = [
+  "--large", "", "",                     /* Pigtail light + connector, nozzle   */
+  "", "", "",                            /* MCU, Throttle, Front wheel          */
+  "--stack", "--stack", "--largeR",      /* Front tyre, Display | IOT           */
+  "--wide",                              /* Tyre                                */
+  "", "", "",                            /* Shocker, Swing arm, Display         */
+  "--wide",                              /* Battery bucket                      */
+  "", "", "",                            /* Rear shocker, Brake, Display        */
+];
+
+function tileHTML(p, i){
+  const marked = p.marked.length > 0;
+  const size = TILE_SIZE[i] || "";      /* beyond the arrangement: small */
+  return `<button class="tile${size ? " tile" + size : ""}${marked ? " is-marked" : ""}" data-part="${p.id}"
+            aria-label="${esc(p.name)}${marked ? ", issue marked: " + esc(p.marked.join(", ")) : ""}">
+      <img src="${PHOTOS[p.photo]}" alt="">
+      <span class="tile__scrim"></span>
+      <span class="tile__dot"></span>
+      <span class="tile__name">${esc(p.name)}</span>
+    </button>`;
+}
+
+/* ── Zones: rows with an inline chip drawer ───────────────────────────────── */
+function rowHTML(p){
+  const n = issueCount(p);
+  return `<div class="prow${S.open === p.id ? " is-open" : ""}" data-prow="${p.id}">
+      <button class="prow__head" data-toggle="${p.id}"
+              aria-expanded="${S.open === p.id}">
+        <span class="prow__thumb"><img src="${PHOTOS[p.photo]}" alt=""></span>
+        <span class="prow__main">
+          <span class="t-label-md prow__name">${esc(p.name)}</span>
+          ${n ? `<span class="prow__sep"></span>
+                 <span class="prow__count">${n}</span>` : ""}
+        </span>
+        <svg class="prow__chev" viewBox="0 0 24 24" aria-hidden="true"><path d="${CHEVRON}"/></svg>
+      </button>
+      <div class="prow__drawer"><div class="prow__clip">
+        <div class="prow__chips chips" data-chips="${p.id}">${chipsHTML(p, p.marked)}</div>
+      </div></div>
+    </div>`;
+}
+
+function render(){
+  paintTabs();
+  const inZone = PARTS.filter(p => p.zone === S.zone);
+  paneEl.innerHTML = S.zone === "Recommended"
+    ? `<div class="grid">${PARTS.map(tileHTML).join("")}</div>`
+    : `<div class="rows">${inZone.map(rowHTML).join("")}</div>`;
+
+  paintFooter();
+}
+
+/* The footer is not there until there is something to update — it used to sit
+   there disabled, which spends 124px of a 844px screen on a button that cannot be
+   pressed and reads as broken rather than as not-yet. Mark anything and it rises;
+   clear the last one and it goes. */
+function paintFooter(){
+  const n = changedParts().length;
+  updateBtn.textContent = n ? `Update issues (${n})` : "Update issues";
+  updateBtn.disabled = n === 0;
+  footerEl.classList.toggle("is-hidden", n === 0);
+  scrollEl.classList.toggle("footer-hidden", n === 0);
+}
+
+/* The footer ships hidden in the markup, not shown-then-hidden by the first paint.
+   It used to render up and slide away on every refresh — a panel appearing from the
+   bottom and dismissing itself, which reads as something having gone wrong. There
+   is nothing to animate away if it was never up. */
+
+/* ── Scrolled state ───────────────────────────────────────────────────────────
+   Direction, not depth. It used to collapse past 24px and only come back within
+   8px of the top, which meant that once you were down the grid the app bar was
+   gone until you scrolled all the way up again — the bike number and the search
+   were unreachable from anywhere in the middle of a two-fold list.
+
+   Now any upward gesture brings it straight back: the header follows the direction
+   you are travelling, the way the footer already does on the issues screen.
+
+   Accumulated with a small threshold rather than acting on each scroll event,
+   because a single frame of a flick can carry a pixel the other way and would
+   otherwise flip the header. The accumulator resets when the direction changes, so
+   8px of committed movement is what counts, not 8px of net drift. */
+const phoneEl = document.querySelector(".phone");
+const SCROLL_THRESHOLD = 8;
+let scrolled = false, sLastY = 0, sAccum = 0;
+
+function setScrolled(next){
+  if (next === scrolled) return;
+  scrolled = next;
+  phoneEl.classList.toggle("is-scrolled", scrolled);
+}
+
+scrollEl.addEventListener("scroll", () => {
+  const y = scrollEl.scrollTop;
+  const delta = y - sLastY;
+  sLastY = y;
+  if (delta === 0) return;
+
+  if ((delta > 0) !== (sAccum > 0)) sAccum = 0;      /* direction flipped */
+  sAccum += delta;
+
+  if (sAccum > SCROLL_THRESHOLD)       { setScrolled(true);  sAccum = 0; }
+  else if (sAccum < -SCROLL_THRESHOLD) { setScrolled(false); sAccum = 0; }
+
+  if (y <= 0) setScrolled(false);                    /* always open at the top */
+}, {passive:true});
+
+/* A new zone starts at the top, so the chrome comes back with it. */
+function resetScroll(){
+  scrollEl.scrollTop = 0;
+  sLastY = 0; sAccum = 0;
+  setScrolled(false);
+}
+
+/* ── Tab switching ────────────────────────────────────────────────────────── */
+tabsEl.addEventListener("click", e => {
+  const t = e.target.closest("[data-zone]");
+  if (!t || t.dataset.zone === S.zone) return;
+  S.zone = t.dataset.zone;
+  resetScroll();
+  S.open = null;                     /* a drawer left open in another zone is
+                                        not something you can see or close */
+  tap();
+  render();
+  scrollEl.scrollTop = 0;
+  window.Yuzen.onTab(S.zone);
+});
+
+/* ── Tiles and rows ───────────────────────────────────────────────────────── */
+paneEl.addEventListener("click", e => {
+  const tile = e.target.closest("[data-part]");
+  if (tile){
+    const p = partById(tile.dataset.part);
+    tap();
+    openSheet(p);
+    window.Yuzen.onOpenPart({id:p.id, name:p.name});
+    return;
+  }
+
+  /* A chip inside an open drawer marks the part there and then — no sheet, no
+     confirm. The row is already the context. */
+  const chip = e.target.closest(".prow__chips [data-reason]");
+  if (chip){
+    const p = partById(chip.closest("[data-chips]").dataset.chips);
+    const r = chip.dataset.reason;
+    p.marked = p.marked.includes(r)
+      ? p.marked.filter(x => x !== r)
+      : p.marked.concat(r);
+    tap();
+    /* Repaint this drawer in place: a full render() would collapse it. */
+    chip.closest("[data-chips]").innerHTML = chipsHTML(p, p.marked);
+    paintRowCount(p);
+    paintFooter();
+    window.Yuzen.onMarkPart({id:p.id, name:p.name, reasons:p.marked.slice()});
+    return;
+  }
+
+  const head = e.target.closest("[data-toggle]");
+  if (head){
+    const id = head.dataset.toggle;
+    S.open = S.open === id ? null : id;   /* one drawer at a time */
+    tap();
+    paneEl.querySelectorAll("[data-prow]").forEach(row => {
+      const on = row.dataset.prow === S.open;
+      row.classList.toggle("is-open", on);
+      row.querySelector("[data-toggle]").setAttribute("aria-expanded", String(on));
+    });
+  }
+});
+
+/* Surgical repaints, so marking never disturbs an open drawer. */
+function paintRowCount(p){
+  const row = paneEl.querySelector(`[data-prow="${p.id}"]`);
+  if (!row) return;
+  const main = row.querySelector(".prow__main");
+  const n = issueCount(p);
+  main.querySelectorAll(".prow__sep,.prow__count").forEach(el => el.remove());
+  if (n) main.insertAdjacentHTML("beforeend",
+    `<span class="prow__sep"></span><span class="prow__count">${n}</span>`);
+}
+/* ══════════════════════════════════════════════════════════════════════════
+   Part sheet — Figma 2052:16205
+
+   Edits live in the sheet until Confirm, so backing out leaves the earlier
+   marks standing. Confirm is disabled until the selection differs from what was
+   saved: with nothing changed there is nothing to confirm.
+   ══════════════════════════════════════════════════════════════════════════ */
+const partScrim   = document.getElementById("partScrim");
+const partSheet   = document.getElementById("partSheet");
+const partThumb   = document.getElementById("partThumb");
+const partNameEl  = document.getElementById("partName");
+const partChips   = document.getElementById("partChips");
+const partConfirm = document.getElementById("partConfirm");
+
+let sheet = null;                     /* {id, picked:[]} */
+
+const same = (a, b) =>
+  a.length === b.length && a.every(x => b.includes(x));
+
+function paintSheet(){
+  if (!sheet) return;
+  const p = partById(sheet.id);
+  partChips.innerHTML = chipsHTML(p, sheet.picked);
+  partConfirm.disabled = same(sheet.picked, p.marked);
+}
+
+function openSheet(p){
+  sheet = {id:p.id, picked:p.marked.slice()};
+  /* The sibling's .thumb carries its photo as a background, so this does too —
+     one element, one rule, and no <img> to size against it. */
+  partThumb.style.backgroundImage = `url("${PHOTOS[p.photo]}")`;
+  partThumb.style.backgroundSize = "cover";
+  partThumb.style.backgroundPosition = "center";
+  partNameEl.textContent = p.name;
+  paintSheet();
+  partScrim.classList.add("is-open");
+  partSheet.classList.add("is-open");
+}
+
+function closeSheet(){
+  sheet = null;
+  partScrim.classList.remove("is-open");
+  partSheet.classList.remove("is-open");
+  partSheet.style.transform = "";
+}
+
+partScrim.addEventListener("click", closeSheet);
+
+partChips.addEventListener("click", e => {
+  const chip = e.target.closest("[data-reason]");
+  if (!chip || !sheet) return;
+  const r = chip.dataset.reason;
+  sheet.picked = sheet.picked.includes(r)
+    ? sheet.picked.filter(x => x !== r)
+    : sheet.picked.concat(r);
+  tap();
+  paintSheet();
+});
+
+partConfirm.addEventListener("click", () => {
+  const p = partById(sheet.id);
+  p.marked = sheet.picked.slice();
+  const n = p.marked.length, name = p.name, id = p.id;
+  tap();
+  closeSheet();
+  render();
+  /* One issue however many reasons it carries, so the toast counts reasons and
+     says so rather than implying three issues were raised. */
+  toast(n ? `Issue marked · ${n} reason${n > 1 ? "s" : ""}` : "Issue cleared");
+  window.Yuzen.onMarkPart({id, name, reasons:p.marked.slice()});
+});
+
+/* Drag the grabber down to dismiss. */
+(() => {
+  const zone = document.getElementById("partGrab");
+  let d = null;
+  zone.addEventListener("pointerdown", e => {
+    d = {y0:e.clientY, dy:0};
+    zone.setPointerCapture(e.pointerId);
+    partSheet.classList.add("sheet-part--dragging");
+  });
+  zone.addEventListener("pointermove", e => {
+    if (!d) return;
+    d.dy = Math.max(0, e.clientY - d.y0);
+    partSheet.style.transform = `translateY(${d.dy}px)`;
+  });
+  const end = () => {
+    if (!d) return;
+    const far = d.dy > 60; d = null;
+    partSheet.classList.remove("sheet-part--dragging");
+    partSheet.style.transform = "";
+    if (far) closeSheet();
+  };
+  zone.addEventListener("pointerup", end);
+  zone.addEventListener("pointercancel", end);
+})();
+
+document.getElementById("backBtn").addEventListener("click", () => {
+  tap(); window.Yuzen.onBack();
+});
+document.getElementById("searchBtn").addEventListener("click", () => {
+  tap(); window.Yuzen.onSearch();
+});
+
+/* ── Options sheet ────────────────────────────────────────────────────────── */
+const optScrim = document.getElementById("optScrim");
+const optSheet = document.getElementById("optSheet");
+const optMore  = document.getElementById("moreBtn");
+
+function setOptSheet(open){
+  optScrim.classList.toggle("is-open", open);
+  optSheet.classList.toggle("is-open", open);
+  optMore.setAttribute("aria-expanded", String(open));
+}
+optMore.addEventListener("click", () => {
+  tap(); setOptSheet(!optSheet.classList.contains("is-open"));
+});
+optScrim.addEventListener("click", () => setOptSheet(false));
+
+optSheet.addEventListener("click", e => {
+  const opt = e.target.closest("[data-opt]");
+  if (!opt) return;
+  tap();
+  setOptSheet(false);
+  window.Yuzen.onMenu(opt.dataset.opt);
+});
+
+/* Drag the grabber down to dismiss. */
+(() => {
+  const zone = document.getElementById("optGrab");
+  let d = null;
+  zone.addEventListener("pointerdown", e => {
+    d = {y0:e.clientY, dy:0};
+    zone.setPointerCapture(e.pointerId);
+    optSheet.classList.add("sheet-opt--dragging");
+  });
+  zone.addEventListener("pointermove", e => {
+    if (!d) return;
+    d.dy = Math.max(0, e.clientY - d.y0);
+    optSheet.style.transform = `translateY(${d.dy}px)`;
+  });
+  const end = () => {
+    if (!d) return;
+    const far = d.dy > 60; d = null;
+    optSheet.classList.remove("sheet-opt--dragging");
+    optSheet.style.transform = "";
+    if (far) setOptSheet(false);
+  };
+  zone.addEventListener("pointerup", end);
+  zone.addEventListener("pointercancel", end);
+})();
+updateBtn.addEventListener("click", () => {
+  tap();
+  window.Yuzen.onUpdateIssues(
+    changedParts().map(p => ({id:p.id, name:p.name, reasons:p.marked.slice()})));
+});
+
+buildTabs();
+render();
+/* Satoshi lands after first paint and the labels change width with it, so the
+   underline is measured again once the font is in. */
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(moveUnderline);
+</script>
+</body>
+</html>

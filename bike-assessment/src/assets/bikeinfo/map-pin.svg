@@ -1,0 +1,11 @@
+<svg width="32" height="44" viewBox="0 0 32 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- The bike's position. content/positive rather than the app's near-black,
+       because on a grey map the pin is the one thing that is a live reading and
+       every other dark mark on this screen is text. The shadow is an ellipse on
+       the ground rather than a filter — filters are the one SVG feature that
+       renders differently once the file is a base64 data URI in an <img>. -->
+  <ellipse cx="16" cy="40.5" rx="5.5" ry="2" fill="#222222" fill-opacity="0.18"/>
+  <path d="M16 2C9.373 2 4 7.373 4 14c0 8.5 12 24 12 24s12-15.5 12-24c0-6.627-5.373-12-12-12Z"
+        fill="#00654F"/>
+  <circle cx="16" cy="14" r="4.5" fill="#FFFFFF"/>
+</svg>

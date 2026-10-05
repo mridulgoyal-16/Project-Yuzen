@@ -1,0 +1,97 @@
+/* ── Filter sheet ────────────────────────────────────────────────────────────
+   Figma 2872:22873. Shared chrome, not part of the listing screen — see the
+   note in filtersheet.html for why it cannot live inside it.
+
+   Rides on .sheet for the slide-up, the scrim and the 24px top corners, and adds
+   only what this one is: a 32px title with Reset opposite it, groups of 48px
+   chips, and a full-width Apply behind an inset rule.
+
+   The frame's vertical rhythm, which is all measured rather than tokenised
+   because three of the four gaps have no token: head 24 from the top, body 24
+   under it, 16 between a group's heading and its chips, 32 between groups, 24
+   below the last one. On the task queue's three groups that comes to 460 — the
+   frame's 584 less the rule, the Apply and the 36 that separated them.
+   ─────────────────────────────────────────────────────────────────────────── */
+.flsheet{
+  padding-bottom:var(--s6);
+  /* The whole sheet is the drag handle — see the note at the foot of
+     filtersheet.js. Without this the browser claims the vertical gesture for its
+     own scrolling before a single pointermove is delivered. */
+  touch-action:none;
+  /* Leaves the status bar visible however many groups a queue declares, and the
+     body takes the scroll rather than the sheet growing off the top. */
+  max-height:calc(100% - 44px);
+}
+.flsheet__head{
+  flex:0 0 auto;
+  display:flex;align-items:flex-start;justify-content:space-between;gap:var(--s4);
+  padding:var(--s6) var(--s6) 0;
+}
+.flsheet__title{color:var(--content-primary)}
+/* 16 + 40 + 8 + 20 + 16 = 100, the frame's width, reached by its parts rather
+   than set. Both states are a filled pill and the fill is what changes:
+   surface/disabled grey with a grey label, or surface/secondary with the label
+   in full. So the control keeps its shape and only its weight moves — the
+   flat-white variant 2872:22844 draws would have made an enabled Reset
+   indistinguishable from the sheet behind it. */
+.flsheet__reset{
+  flex:0 0 auto;
+  display:flex;align-items:center;gap:var(--s2);
+  height:48px;padding:0 var(--s4);
+  border:0;border-radius:40px;cursor:pointer;
+  background:var(--surface-secondary);color:var(--content-primary);
+  font:inherit;
+}
+/* The stamper inserts at the top of the button, and the frame puts the glyph
+   AFTER the word — so the order is set here rather than by hand-pasting the
+   svg into the markup, which is what data-icon exists to avoid. */
+.flsheet__reset svg{display:block;width:20px;height:20px;order:1}
+.flsheet__reset[disabled]{
+  background:var(--surface-disabled);color:var(--content-disabled);cursor:default;
+}
+.flsheet__body{
+  /* The body keeps its own vertical gesture: it is the one part that scrolls, and
+     the drag only takes over once it is at the top. */
+  touch-action:pan-y;
+  flex:1 1 auto;min-height:0;overflow-y:auto;
+  padding:var(--s6) var(--s6) 0;
+  display:flex;flex-direction:column;gap:32px;
+}
+.flgroup{display:flex;flex-direction:column;gap:var(--s4)}
+.flgroup__h{
+  color:var(--content-primary);
+  font-weight:700;font-size:20px;line-height:28px;
+}
+/* Wraps rather than scrolls: this is the full set, and a chip a mechanic cannot
+   see is the exact failure the sheet exists to fix. The row at the top of the
+   listing is the one that scrolls. */
+.flgroup__chips{display:flex;flex-wrap:wrap;gap:var(--s2)}
+
+
+/* ── The 48px chip ───────────────────────────────────────────────────────────
+   Figma's Chips/Large. It lives here rather than in the listing's stylesheet
+   because the sheet is where the full set is, and the listing's quick row draws
+   a smaller 40px variant of its own — see .qquickchip.
+   ─────────────────────────────────────────────────────────────────────────── */
+.qchip{
+  flex:0 0 auto;height:48px;min-width:48px;padding:0 var(--s4);
+  border-radius:100px;cursor:pointer;
+  background:var(--surface-inverse);
+  border:1px solid var(--border-primary);
+  color:var(--content-primary);
+  font:inherit;font-weight:500;font-size:16px;line-height:20px;
+  display:inline-flex;align-items:center;justify-content:center;gap:var(--s2);
+  white-space:nowrap;
+  transition:background-color .16s var(--ease-out),border-color .16s var(--ease-out);
+}
+.qchip[aria-pressed="true"]{
+  background:var(--surface-secondary);
+  border:1.5px solid var(--border-selected);
+}
+/* Live is where bikes are right now, so it gets a presence dot — red, like a
+   recording light, not green: it marks the section that is live, it does not
+   say the bikes in it are healthy. Shared with the quick row's chips. */
+.qdot{
+  width:8px;height:8px;border-radius:4px;flex:0 0 auto;
+  background:var(--content-negative);
+}

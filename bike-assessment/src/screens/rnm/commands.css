@@ -1,0 +1,190 @@
+/* ═══ RnM — the command grid: power, wheel, beep, seat, view all ═══
+   Split out of screens/rnm/style.css. See src/MAP.md. */
+
+  /* Figma 2470:40624. 342x208 at x24 y488, inline on the dashboard rather than
+     behind a tab. A 3-column grid: 4px gaps put 1fr at 111.33, which lands the
+     columns on the frame's x24 / x139 / x255 — row one is three stacked 124px
+     cards, row two is Seat spanning two columns and View all taking the third,
+     80 tall. The gaps were 15 when the grid lived in a panel with the whole width
+     to itself; the restructured frame tightens them to 4 so the five cards read
+     as one block of controls rather than five tiles.
+
+     Absolutely placed, like everything else in this frame — the page does not
+     scroll, so every block sits on its stated line. */
+  #scrRnm .commands{
+    position: absolute;
+    left: var(--s6);
+    right: var(--s6);
+    top: 488px;
+    z-index: 1;
+  }
+  #scrRnm .cmd-grid{
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    column-gap: 4px;
+    row-gap: 4px;
+  }
+
+  /* The rncard is a rncard, not a button — only the control inside it is pressable,
+     so a stray tap on a label cannot cut the bike's power. View all is the one
+     exception, because the whole rncard IS the control there. */
+  #scrRnm .cmd{
+    position: relative;
+    min-width: 0;
+    overflow: hidden;
+    border-radius: var(--s4);
+    background: var(--surface-secondary);
+    text-align: left;
+  }
+
+  /* The whole card is the target on the single-command cards, so it says so and
+     answers a press. Seat keeps its per-button feedback — the card there is a
+     container for two actions, not one. */
+  #scrRnm .cmd--stack{ cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  #scrRnm .cmd--stack:active{ background: var(--surface-disabled); }
+
+  /* 16 top, 48 control, 8, title, 4, state, 16 bottom = 124. */
+  #scrRnm .cmd--stack{
+    height: 124px;
+    padding: var(--s4) 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  #scrRnm .cmd--stack .cmd-title{ margin-top: var(--s2); }
+  #scrRnm .cmd--stack .cmd-state{ margin-top: 4px; }
+
+  /* 20 top, title, 8, state, 20 bottom = 80. Both circles sit right, 16 apart. */
+  #scrRnm .cmd--wide{
+    grid-column: span 2;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    gap: var(--s4);
+    padding: 0 var(--s4);
+  }
+  #scrRnm .cmd--wide .cmd-text{
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--s2);
+  }
+
+  #scrRnm .cmd--viewall{
+    height: 80px;
+    border: 0;
+    cursor: pointer;
+    padding: var(--s4) 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 120ms ease;
+  }
+  #scrRnm .cmd--viewall:active{ transform: scale(.97); }
+  /* content/primary here, not secondary — this is a label, not a state. */
+  #scrRnm .cmd--viewall .cmd-state{ margin-top: var(--s2); color: var(--content-primary); }
+
+  /* Label/Small over Label/XSmall, per the frame. The titles used to be 16/700;
+     the new cards are narrower and the frame drops them to 14/500. */
+  #scrRnm .cmd-title{
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 16px;
+    color: var(--content-primary);
+  }
+  #scrRnm .cmd-state{
+    font-weight: 500;
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--content-secondary);
+    white-space: nowrap;
+  }
+
+  /* Figma's own exports. The seat pair are drawn at their intrinsic sizes rather
+     than stretched to 24 — the frame insets them off-centre by under half a pixel
+     and flex-centring lands in the same place. */
+  #scrRnm .cglyph{ display: block; width: 24px; height: 24px; }
+  #scrRnm .cglyph--seat-closed{ width: 15.61px; height: 21.19px; }
+  #scrRnm .cglyph--seat-open{ width: 16.73px; height: 22.19px; }
+
+  /* 48px control: a 24px glyph in 12px of padding. This is the only hit target
+     on the rncard, so it carries the press feedback. */
+  #scrRnm .cmd-btn{
+    position: relative;
+    flex-shrink: 0;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    padding: 0;
+    border-radius: 200px;
+    background: var(--content-inverse);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    /* colour moves with the background, not instantly: transitioning only the
+       background left the glyph dark on a still-dark circle, so it vanished for
+       the length of the fade. */
+    transition: background-color 160ms ease, color 160ms ease, transform 120ms ease;
+  }
+  #scrRnm .cmd-btn:active{ transform: scale(.9); }
+  /* The glyphs inherit colour, so switching states is a colour transition on one
+     element rather than a cut between two images. */
+  #scrRnm .cmd-btn{ color: var(--content-primary); }
+  #scrRnm .cmd-btn .glyph{ display: block; width: 24px; height: 24px; fill: currentColor; }
+  /* Actuated: the filled circle the frame gives Power when it is on. */
+  /* On reads as an outlined ring on the rncard's own grey, per the frame — it used
+     to invert to a dark disc. inset box-shadow rather than a border so the 48px
+     control does not resize when it lights up. */
+  #scrRnm .cmd-btn.is-lit{
+    background: var(--surface-secondary);
+    box-shadow: inset 0 0 0 1.5px var(--content-primary);
+    color: var(--content-primary);
+  }
+
+  /* The shackle swings on its left foot, so locking and unlocking read as one
+     lock moving rather than two icons swapping. */
+  #scrRnm .lock-shackle{
+    transform-origin: 9.25px 8.5px;
+    transition: transform 320ms cubic-bezier(.34, 1.3, .64, 1);
+  }
+  #scrRnm .cmd-btn.is-unlocked .lock-shackle{ transform: rotate(-24deg) translateY(-1px); }
+
+  /* Beep runs for a fixed 4s. Two signals, because one is not enough on a bench:
+     the rncard drains so you can see the time left, and the control itself pulses so
+     the thing you pressed is visibly live.
+
+     Anchored to the BOTTOM with a shrinking height, so the level falls from the
+     top down — the rncard empties like a glass rather than wiping sideways, which is
+     what it did when the cards were wide and short. Driven by a CSS transition on
+     height rather than a rAF loop, for the same reason revealGlyph is: a loop
+     stops dead wherever the browser is not producing frames and leaves the fill
+     stranded part-way. */
+  #scrRnm .cmd-sweep{
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 0;
+    background: var(--content-secondary);
+    opacity: .10;
+    pointer-events: none;
+  }
+  @keyframes beep-ring {
+    0%   { box-shadow: 0 0 0 0 rgba(34, 34, 34, .28); }
+    100% { box-shadow: 0 0 0 14px rgba(34, 34, 34, 0); }
+  }
+  #scrRnm .cmd-btn.is-beeping{ animation: beep-ring 1s ease-out infinite; }
+  /* Locked out until the run finishes — the pulse and the draining rncard are the
+     reason why, so it does not also need to look greyed out. */
+  #scrRnm .cmd-btn:disabled{ cursor: default; }
+
+  /* ---- Seat: a spring-return drag toggle -------------------------------- */
+  /* 48px black track, a 44x21 thumb, and a chevron in whichever gap is open.
+     Drag up to open, down to close; the thumb returns to centre on release,
+     because the command fires once rather than latching. */
+  /* The seat's drag track is gone — the frame replaces it with a tap control.
+     Its rules went with it; see the seat block in the script. */

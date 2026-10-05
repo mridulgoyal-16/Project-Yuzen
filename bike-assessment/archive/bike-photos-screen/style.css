@@ -1,0 +1,62 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   SCREEN 3 — Bike photos
+   Built from Figma 2137:28918. Four dashed drop-targets, one per side.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.screen--photos{display:flex;flex-direction:column;padding-top:var(--status-h)}
+.screen--photos .appbar{flex:0 0 auto}
+.ptbody{
+  flex:1 1 auto;overflow-y:auto;overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;scrollbar-width:none;
+  padding:var(--s4) 0 var(--s6);
+}
+.ptbody::-webkit-scrollbar{display:none}
+.ptprompt{padding:0 var(--s6);color:var(--content-primary)}
+.ptgrid{
+  padding:0 var(--s6);margin-top:var(--s6);
+  display:grid;grid-template-columns:1fr 1fr;gap:var(--s4);
+}
+/* 163x200 at a 390 frame; the grid derives the width so it holds on 393 and 430
+   handsets too. Plain CSS dash here — unlike the swipe reveal, Figma specifies a
+   regular 2px dashed border rather than its 4-on/6-off stroke. */
+.pttile{
+  position:relative;height:200px;
+  border:2px dashed var(--border-primary);border-radius:var(--s4);
+  background:var(--surface-inverse);background-size:cover;background-position:center;
+  cursor:pointer;padding:0;overflow:hidden;
+  display:block;width:100%;
+  color:var(--content-primary);
+}
+.pttile__label{
+  position:absolute;left:0;right:0;bottom:var(--s4);
+  text-align:center;
+}
+/* Same add_a_photo glyph and colour as the Mark faults camera card — same icon,
+   same meaning: tap to capture. Centred in the tile, gone once a side is taken. */
+.pttile__cam{
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  color:var(--content-primary);
+  transition:opacity .2s var(--ease-out);
+}
+.pttile__cam svg{display:block;width:32px;height:32px}
+.pttile.is-filled .pttile__cam{opacity:0}
+/* Once a side is captured the photo fills the tile, so the label needs the same
+   bottom scrim the customer-photos carousel uses to stay readable. */
+.pttile.is-filled{border-style:solid;border-color:transparent}
+.pttile__scrim{
+  position:absolute;inset:0;pointer-events:none;opacity:0;
+  background:linear-gradient(to bottom,rgba(0,0,0,0) 55%,rgba(0,0,0,.72) 100%);
+  transition:opacity .2s var(--ease-out);
+}
+.pttile.is-filled .pttile__scrim{opacity:1}
+.pttile.is-filled .pttile__label{color:var(--content-inverse)}
+.pttile__x{
+  position:absolute;top:var(--s2);right:var(--s2);
+  width:24px;height:24px;border-radius:12px;border:0;cursor:pointer;padding:0;
+  background:rgba(34,34,34,.72);color:#fff;
+  display:none;align-items:center;justify-content:center;
+  font-size:14px;line-height:1;font-weight:700;
+}
+.pttile.is-filled .pttile__x{display:flex}
+
+
+

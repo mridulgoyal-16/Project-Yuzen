@@ -1,0 +1,1049 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>My tasks — Tokens · Yuzen</title>
+<link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@500,700&display=swap">
+<style>
+  :root {
+    --content-primary: #222;
+    --content-secondary: #717171;
+    --content-tertiary: #919191;
+    --content-positive: #00654f;
+  /* Needed for the Completed tab. From the design system:
+     content/disabled #B0B0B0, surface/disabled #DDDDDD. */
+  --content-disabled: #b0b0b0;
+  --surface-disabled: #dddddd;
+    --surface-secondary: #f7f7f7;
+    --border-primary: #e8e8e8;
+    --border-selected: #222;
+    --space-8: 8px;
+    --space-16: 16px;
+    --space-24: 24px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Satoshi', -apple-system, system-ui, sans-serif;
+    background: #f4f4f4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .phone {
+    position: relative;
+    width: 390px;
+    height: 844px;
+    background: #fff;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    border-radius: 44px;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, .18);
+  }
+
+  @media (max-width: 767px) {
+    body { display: block; background: #fff; }
+    .phone {
+      width: 100%;
+      height: 100vh;
+      height: 100dvh;
+      border-radius: 0;
+      box-shadow: none;
+    }
+  }
+
+  /* ---- Sticky header ---------------------------------------------------- */
+  /* flex-shrink: 0 on header and footer, flex: 1 on the scroller — the same
+     structure as the task list, so the chrome holds and only content moves. */
+  .header {
+    flex-shrink: 0;
+    background: #fff;
+    position: relative;
+    z-index: 10;
+  }
+
+  .statusbar {
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 14px 0 21px;
+  }
+  .sb-icons { display: flex; align-items: center; gap: 4px; }
+  .sb-icons img, .statusbar img { display: block; object-fit: contain; }
+  .sb-signal { display: flex; align-items: flex-end; gap: 1.5px; height: 14px; }
+  .sb-signal i { width: 3px; background: var(--content-primary); border-radius: .5px; }
+  .sb-signal i:nth-child(1) { height: 5px; }
+  .sb-signal i:nth-child(2) { height: 8px; }
+  .sb-signal i:nth-child(3) { height: 11px; }
+
+  .appbar {
+    height: 72px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 10px 12px 10px 4px;
+    position: relative;
+  }
+  .appbar-title {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    font-weight: 700;
+    font-size: 16px;
+    line-height: 20px;
+    color: var(--content-primary);
+    white-space: nowrap;
+  }
+
+  .btn-icon {
+    border: 0;
+    background: none;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    border-radius: 999px;
+    padding: 12px;
+    transition: transform 120ms ease, background-color 120ms ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .btn-icon img { display: block; width: 24px; height: 24px; object-fit: contain; }
+  .btn-icon:active { transform: scale(.9); background: rgba(0, 0, 0, .06); }
+
+  /* ---- Tabs ------------------------------------------------------------- */
+  .tabs-wrap { border-bottom: .5px solid var(--border-primary); }
+  /* `hidden` is only display:none in the UA sheet, so any author display rule
+     silently beats it. Without this, hiding a flex container does nothing. */
+  [hidden] { display: none !important; }
+  .tabs {
+    display: flex;
+    align-items: center;
+    height: 55px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    position: relative;
+  }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab {
+    flex-shrink: 0;
+    border: 0;
+    background: none;
+    height: 55px;
+    padding: 16px;
+    font-family: inherit;
+    font-weight: 500;
+    font-size: 16px;
+    line-height: 24px;
+    color: var(--content-secondary);
+    white-space: nowrap;
+    cursor: pointer;
+    transition: color 180ms ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .tab:first-of-type { padding-left: var(--space-24); }
+  .tab.is-active { color: var(--content-primary); }
+  .tabs-underline {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 2px;
+    width: 0;
+    border-radius: 1px;
+    background: var(--content-primary);
+    transition: transform 220ms cubic-bezier(.4, 0, .2, 1),
+                width     220ms cubic-bezier(.4, 0, .2, 1);
+  }
+
+  /* ---- Scrolling body --------------------------------------------------- */
+  .body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+    /* No top padding: sticky `top: 0` is measured from the padding edge, so a
+       top padding here would pin the chips that far below the tabs. The 36px
+       lead-in lives on the first child instead. */
+    padding: 0 0 24px;
+    transition: opacity 140ms ease;
+  }
+  .body.is-swapping { opacity: 0; }
+
+  /* ---- Active token card ------------------------------------------------ */
+  .active-card {
+    width: 342px;
+    margin: 36px auto 0;
+    background: var(--surface-secondary);
+    border-radius: 16px;
+    padding: var(--space-24);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-16);
+  }
+
+  .token-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    border: 0;
+    background: none;
+    padding: 0;
+    font-family: inherit;
+    text-align: left;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 120ms ease;
+  }
+  .token-row:active { transform: scale(.98); }
+
+  /* Active token badge: green with the design's top-down darkening. */
+  .badge {
+    flex-shrink: 0;
+    width: 48px;
+    height: 48px;
+    border-radius: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 20px;
+    line-height: 28px;
+  }
+  .badge-active {
+    background:
+      linear-gradient(180deg, rgba(0, 0, 0, .3) 0%, rgba(0, 0, 0, 0) 100%),
+      var(--content-positive);
+    color: #fff;
+  }
+  /* Ongoing: the same pie idea as the bell, behind the token number, so the
+     captain reads repair progress without asking a mechanic. */
+  .badge-wrap { position: relative; flex-shrink: 0; width: 48px; height: 48px; margin: 6px; }
+  .badge-wrap .badge { position: absolute; inset: 0; }
+  .badge-pie { position: absolute; inset: -6px; transform: rotate(-90deg); pointer-events: none; }
+  .badge-pie .track { fill: none; stroke: var(--content-primary); opacity: .12; stroke-width: 6; }
+  /* butt caps, not round: a flat edge at 12 o'clock shows where the arc starts,
+     so a short arc reads as "just began" instead of a floating pill. */
+  .badge-pie .fill  { fill: none; stroke: var(--content-primary); opacity: .65; stroke-width: 6;
+                      stroke-linecap: butt; transition: stroke-dashoffset 400ms ease,
+                      stroke 300ms ease, opacity 300ms ease; }
+  /* Finished repair: full-strength green, so "ready" is legible at a glance. */
+  .badge-pie.is-complete .fill { stroke: var(--content-positive); opacity: 1; }
+  .token-stage { color: var(--content-secondary); }
+  .token-pct { font-weight: 700; font-variant-numeric: tabular-nums; }
+
+  .badge-upcoming {
+    background: #fff;
+    color: var(--content-primary);
+  }
+
+  .token-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--space-8); }
+  .token-name {
+    font-weight: 700;
+    font-size: 20px;
+    line-height: 28px;
+    color: var(--content-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .token-sub {
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 20px;
+    color: var(--content-tertiary);
+  }
+  .token-row > img { display: block; width: 24px; height: 24px; flex-shrink: 0; object-fit: contain; }
+
+  /* Hairlines are .5px throughout — 1px reads heavy against #f7f7f7. */
+  .card-divider { height: .5px; background: var(--border-primary); width: 100%; }
+
+  .card-actions { display: flex; align-items: center; gap: 64px; }
+  .card-action {
+    display: flex;
+    align-items: center;
+    gap: var(--space-8);
+    border: 0;
+    background: none;
+    padding: 0;
+    font-family: inherit;
+    font-weight: 500;
+    font-size: 16px;
+    line-height: 20px;
+    color: var(--content-primary);
+    white-space: nowrap;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: opacity 120ms ease, transform 120ms ease;
+  }
+  .card-action:active { opacity: .55; transform: scale(.96); }
+  .card-action img { display: block; width: 24px; height: 24px; object-fit: contain; }
+
+  /* Some Figma icons export as the inner glyph only, already inset inside their
+     24px frame — call.svg comes out 17x17. Scaling those up to fill 24px makes
+     them read much heavier than the icons that genuinely are 24x24. The slot
+     keeps the 24px footprint so labels still line up; the glyph draws true size. */
+  .icon-slot {
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .card-action .icon-slot img { width: 17px; height: 17px; }
+
+  /* ---- Upcoming section ------------------------------------------------- */
+  .section { margin-top: 36px; }
+  .section-title {
+    padding: 0 var(--space-24);
+    font-weight: 700;
+    font-size: 20px;
+    line-height: 28px;
+    color: var(--content-primary);
+  }
+
+  /* Sticky filter bar: pins to the top of the scroller once you reach it, so the
+     type filter stays reachable however far down the queue you are. The white
+     background and vertical padding are what make it work — without them the
+     token cards would scroll through it. Spacing is preserved: 12px margin plus
+     12px padding still reads as the design's 24px on each side. */
+  .chips {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    display: flex;
+    gap: var(--space-8);
+    padding: 12px var(--space-24);
+    margin-top: 12px;
+    background: #fff;
+    overflow-x: auto;
+    scrollbar-width: none;
+    transition: box-shadow 200ms ease;
+  }
+  .chips::-webkit-scrollbar { display: none; }
+  /* Only once actually pinned — a permanent edge looks wrong at rest. */
+  .chips.is-stuck { box-shadow: 0 1px 0 var(--border-primary), 0 6px 16px rgba(0, 0, 0, .05); }
+
+  /* Zero-height probe sitting just above the chips; when it scrolls out of the
+     scroller, the chips are pinned. Cheaper and steadier than reading scrollTop. */
+  .chips-sentinel { height: 0; }
+  .chip {
+    flex-shrink: 0;
+    height: 48px;
+    min-width: 48px;
+    padding: 14px 16px;
+    border-radius: 100px;
+    background: #fff;
+    border: 1px solid var(--border-primary);
+    font-family: inherit;
+    font-weight: 500;
+    font-size: 16px;
+    line-height: 20px;
+    color: var(--content-primary);
+    white-space: nowrap;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background-color 160ms ease, border-color 160ms ease, transform 120ms ease;
+  }
+  .chip:active { transform: scale(.95); }
+  .chip.is-selected {
+    background: var(--surface-secondary);
+    border: 1.5px solid var(--border-selected);
+  }
+
+  .token-list {
+    margin-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-16);
+    align-items: center;
+  }
+
+  .token-card {
+    width: 342px;
+    min-height: 104px;
+    background: var(--surface-secondary);
+    border-radius: 16px;
+    padding: var(--space-24);
+    display: flex;
+    align-items: center;
+  }
+
+  /* The bell is its own button inside the card, so tapping it doesn't open
+     the token. */
+  .bell {
+    flex-shrink: 0;
+    border: 0;
+    background: none;
+    padding: 0;
+    min-width: 24px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 120ms ease, opacity 160ms ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    font: inherit;
+    color: var(--content-primary);
+  }
+  .bell:disabled { cursor: default; }
+  .bell:disabled:active { transform: none; }
+  /* While the wait runs the bell stays lit and filled — it is the record that
+     the phone went off. The pie behind it drains instead, and the bell only
+     becomes tappable again once the pie is gone. */
+  .bell-stack { position: relative; width: 36px; height: 36px; display: grid; place-items: center; }
+  .bell-pie { position: absolute; inset: 0; transform: rotate(-90deg); pointer-events: none; }
+  /* r=9 with an 18-wide stroke fills the disc, so the arc reads as a pie. */
+  .bell-pie circle {
+    fill: none; stroke: var(--content-primary); opacity: .12;
+    stroke-width: 18; stroke-dasharray: 56.55;
+    transition: stroke-dashoffset 1s linear;
+  }
+  .bell-glyph { position: relative; width: 24px; height: 24px; }
+  .bell-glyph img, .bell-glyph svg { display: block; width: 24px; height: 24px; }
+  .bell.is-waiting { color: var(--content-primary); }
+  .bell img { display: block; width: 24px; height: 24px; object-fit: contain; }
+  .bell:active { transform: scale(.85); }
+  @keyframes bell-ring {
+    0%, 100% { transform: rotate(0); }
+    20% { transform: rotate(14deg); }
+    40% { transform: rotate(-11deg); }
+    60% { transform: rotate(7deg); }
+    80% { transform: rotate(-4deg); }
+  }
+  .bell.is-ringing .bell-glyph { animation: bell-ring 520ms ease-in-out; }
+
+  /* Skip is a FLIP, not a slide: the active card shrinks into the first queue
+     slot while the token below it grows into the active slot. Both travel their
+     real distance, so the sizes visibly trade places. */
+  .is-flipping { will-change: transform; }
+  .is-flipping .token-row, .is-flipping .bell { pointer-events: none; }
+  /* The inner column holds its own scale so text does not squash while the
+     card's height changes. */
+  .is-flipping > .token-row > .token-main { will-change: transform; }
+
+  /* Completed tokens are served and closed: inert card, disabled palette,
+     and no bell — you cannot call over someone already dealt with. */
+  /* Completed keeps full-contrast name and detail — still information the
+     captain reads. The token number is spent, so it drops to disabled, and the
+     tick is neutral because the outcome is settled, not an alert. */
+  .token-card.is-done .badge { color: var(--content-disabled); }
+  .token-done {
+    flex-shrink: 0; width: 24px; height: 24px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--content-tertiary);
+  }
+  .token-done svg { display: block; width: 24px; height: 24px; }
+  /* Same affordance as the active card in Pending — the row opens. */
+  .token-more { flex-shrink: 0; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; }
+  .token-more img { display: block; width: 24px; height: 24px; }
+
+  .empty {
+    padding: 64px var(--space-24);
+    text-align: center;
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 20px;
+    color: var(--content-tertiary);
+  }
+
+  /* ---- Sticky bottom nav ------------------------------------------------ */
+  .bottomnav {
+    flex-shrink: 0;
+    height: 100px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding: 16px 54px 0;
+    border-top: .5px solid var(--border-primary);
+    background: #fff;
+    position: relative;
+    z-index: 10;
+  }
+  .nav-item {
+    position: relative;
+    width: 64px;
+    height: 44px;
+    border: 0;
+    background: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    color: var(--content-tertiary);
+    -webkit-tap-highlight-color: transparent;
+    transition: color 160ms ease;
+  }
+  .nav-item img { display: block; width: 24px; height: 24px; opacity: .55; object-fit: contain; transition: opacity 160ms ease; }
+  .nav-label { font-weight: 500; font-size: 12px; line-height: 16px; color: inherit; }
+  .nav-item.is-active { color: var(--content-primary); }
+  .nav-item.is-active img { opacity: 1; }
+  .nav-bar {
+    position: absolute;
+    top: -16px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 44px;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--content-primary);
+    opacity: 0;
+    transition: opacity 160ms ease;
+  }
+  .nav-item.is-active .nav-bar { opacity: 1; }
+
+  /* Toast for the bell, so notifying a user visibly does something. */
+  .toast {
+    position: absolute;
+    left: 50%;
+    bottom: 120px;
+    transform: translate(-50%, 12px);
+    background: var(--content-primary);
+    color: #fff;
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 20px;
+    padding: 10px 16px;
+    border-radius: 100px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 220ms ease, transform 220ms ease;
+    z-index: 20;
+    white-space: nowrap;
+  }
+  .toast.is-shown { opacity: 1; transform: translate(-50%, 0); }
+</style>
+</head>
+<body>
+  <div class="phone">
+
+    <header class="header">
+      <div class="statusbar">
+        <img src="assets/status-time.svg" alt="9:41" width="33" height="15">
+        <div class="sb-icons">
+          <div class="sb-signal" aria-hidden="true"><i></i><i></i><i></i></div>
+          <img src="assets/status-wifi.svg" alt="" width="16" height="14">
+          <img src="assets/status-battery.svg" alt="" width="25" height="14">
+        </div>
+      </div>
+
+      <div class="appbar">
+        <h1 class="appbar-title">My tasks</h1>
+        <button class="btn-icon" type="button" aria-label="Search">
+          <img src="assets/search.svg" alt="">
+        </button>
+      </div>
+
+      <div class="tabs-wrap">
+        <div class="tabs" id="tabs">
+          <div class="tabs-underline" id="tabsUnderline"></div>
+        </div>
+      </div>
+    </header>
+
+    <main class="body" id="body"></main>
+
+    <nav class="bottomnav" id="bottomnav">
+      <button class="nav-item" type="button" data-nav="home">
+        <span class="nav-bar" aria-hidden="true"></span>
+        <img src="assets/nav-home.svg" alt="">
+        <span class="nav-label">Home</span>
+      </button>
+      <button class="nav-item" type="button" data-nav="tasks">
+        <span class="nav-bar" aria-hidden="true"></span>
+        <img src="assets/nav-tasks.svg" alt="">
+        <span class="nav-label">Tasks</span>
+      </button>
+      <button class="nav-item" type="button" data-nav="profile">
+        <span class="nav-bar" aria-hidden="true"></span>
+        <img src="assets/nav-profile.svg" alt="">
+        <span class="nav-label">Profile</span>
+      </button>
+    </nav>
+
+    <div class="toast" id="toast"></div>
+  </div>
+
+<script>
+  'use strict';
+
+  /* ======================================================================
+     STITCHING CONTRACT — this is the page's whole outbound surface.
+     To wire this page into the assembled prototype, replace the function
+     bodies below. Nothing else in this file needs to change.
+     ====================================================================== */
+  window.Yuzen = {
+    // A token was tapped — entry point to that token's flow.
+    onTokenOpen({ token, name, type, vehicle, tab }) {
+      console.log('[Yuzen] onTokenOpen', { token, name, type, vehicle, tab });
+    },
+    onCallUser({ token, name }) { console.log('[Yuzen] onCallUser', { token, name }); },
+    onSkipToken({ token, name }) { console.log('[Yuzen] onSkipToken', { token, name }); },
+    onNotifyUser({ token, name }) { console.log('[Yuzen] onNotifyUser', { token, name }); },
+    onNavigate(destination) { console.log('[Yuzen] onNavigate', destination); },
+  };
+
+  /* A customer's phone may only be rung once every 20s — same shape as an OTP
+     resend, so the wait has to be visible rather than a silently dead tap. */
+  const NOTIFY_COOLDOWN = 10;
+  const cooling = new Map();          // token -> seconds remaining
+  let coolTicker = null;
+
+  function startCooling(token) {
+    cooling.set(token, NOTIFY_COOLDOWN);
+    /* Draw the full pie with no transition, then let it drain — otherwise it
+       animates in from empty on the first paint. */
+    const c = document.querySelector(`.bell[data-notify="${token}"] .bell-pie circle`);
+    if (c) { c.style.transition = 'none'; c.style.strokeDashoffset = '0'; void c.getBoundingClientRect(); c.style.transition = ''; }
+    paintCooldowns();
+    if (coolTicker) return;
+    coolTicker = setInterval(() => {
+      for (const [k, left] of cooling) {
+        if (left <= 1) cooling.delete(k); else cooling.set(k, left - 1);
+      }
+      paintCooldowns();
+      if (!cooling.size) { clearInterval(coolTicker); coolTicker = null; }
+    }, 1000);
+  }
+
+  /* Touches only the bells, so a running cooldown never re-renders the list
+     out from under a finger. */
+  const BELL_FILLED = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5S10.5 3.17 10.5 4v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2zM7.58 4.08 6.15 2.65C3.75 4.48 2.17 7.3 2.03 10.5h2c.15-2.65 1.51-4.97 3.55-6.42zm12.39 6.42h2c-.15-3.2-1.73-6.02-4.12-7.85l-1.42 1.43c2.02 1.45 3.39 3.77 3.54 6.42z"/></svg>';
+  const BELL_OUTLINE = '<img src="assets/bell.svg" alt="">';
+  const PIE_C = 56.55;   // 2·π·9
+
+  function paintCooldowns() {
+    document.querySelectorAll('.bell[data-notify]').forEach(b => {
+      const left  = cooling.get(b.dataset.notify);
+      const glyph = b.querySelector('.bell-glyph');
+      const pie   = b.querySelector('.bell-pie circle');
+      b.disabled = !!left;
+      b.classList.toggle('is-waiting', !!left);
+      b.setAttribute('aria-label', left
+        ? `Notified — can ring again in ${left} seconds`
+        : `Notify ${b.dataset.name || ''}`.trim());
+      if (glyph) glyph.innerHTML = left ? BELL_FILLED : BELL_OUTLINE;
+      /* Offset grows as the wait runs down, so the pie empties. */
+      if (pie) pie.style.strokeDashoffset =
+        left ? PIE_C * (1 - left / NOTIFY_COOLDOWN) : PIE_C;
+    });
+  }
+
+  /* ---- Data ------------------------------------------------------------- */
+  const TYPES = ['Service', 'Attach', 'Enquiry', 'RSA'];
+  const CHIPS = ['All', ...TYPES];
+  const NAMES = [
+    'Rakesh Kumar', 'Anjali Sharma', 'Imran Sheikh', 'Priya Nair',
+    'Vikram Reddy', 'Fatima Khan', 'Sunil Yadav', 'Meera Iyer',
+    'Arjun Das', 'Neha Gupta', 'Rohit Patil', 'Kavya Menon',
+  ];
+  const VEHICLES = ['Dex NV', 'Dex GR'];
+  const REPAIR_STAGES = [
+    { label: 'In queue',      pct: 10 },
+    { label: 'Assessment',    pct: 30 },
+    { label: 'Under repair',  pct: 55 },
+    { label: 'Quality check', pct: 80 },
+    { label: 'Ready',         pct: 100 },
+  ];
+
+  // Deterministic, so a tester's session and a later screenshot agree.
+  function makeToken(n, seed) {
+    return {
+      token: String(n).padStart(2, '0'),
+      name: NAMES[(seed * 5 + n) % NAMES.length],
+      type: TYPES[(seed * 3 + n) % TYPES.length],
+      vehicle: VEHICLES[(seed * 7 + n) % VEHICLES.length],
+      plate: String(543200 + n * 7 + seed * 13),
+    };
+  }
+
+  const TABS = [
+    { id: 'pending',   label: 'Pending' },
+    { id: 'completed', label: 'Completed' },
+    { id: 'ongoing',   label: 'Ongoing', count: 8 },
+  ];
+
+  const DATA = {
+    // Pending: one active token plus the queue behind it.
+    pending: {
+      active: { token: '08', name: 'Rakesh Kumar', type: 'Service', vehicle: 'Dex NV', plate: '543210' },
+      queue: Array.from({ length: 9 }, (_, i) => makeToken(9 + i, 1)),
+    },
+    completed: { active: null, queue: Array.from({ length: 6 }, (_, i) => makeToken(1 + i, 4)) },
+    /* PROVISIONAL: stage names and percentages are invented until the real
+       workshop states are confirmed. Finished repairs float to the top — those
+       are the bikes someone can act on now; the rest follow, furthest along
+       first. */
+    ongoing:   { active: null, queue: Array.from({ length: 8 }, (_, i) => {
+                   const t = makeToken(12 + i, 2);
+                   const s = REPAIR_STAGES[i % REPAIR_STAGES.length];
+                   return { ...t, stage: s.label, pct: s.pct };
+                 }).sort((a, b) => b.pct - a.pct) },
+  };
+
+  const S = { tab: 'pending', chip: 'All', nav: 'tasks' };
+
+  const elTabs = document.getElementById('tabs');
+  const elUnderline = document.getElementById('tabsUnderline');
+  const elBody = document.getElementById('body');
+  const elNav = document.getElementById('bottomnav');
+  const elToast = document.getElementById('toast');
+
+  function tap() { if (navigator.vibrate) navigator.vibrate(10); }
+
+  let toastTimer = 0;
+  function toast(message) {
+    elToast.textContent = message;
+    elToast.classList.add('is-shown');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => elToast.classList.remove('is-shown'), 1600);
+  }
+
+  /* ---- Rendering -------------------------------------------------------- */
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, c =>
+      ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
+  /* The design shows the plate only on the active token — queued cards read
+     "Type | Vehicle". Keep that: the plate is detail you need for the bike in
+     front of you, not for the nine behind it. */
+  /* The bike number now shows on every card, not just the active one — the
+     captain needs to identify the bike for anything in the queue too. */
+  function subtitle(t) {
+    return t.plate ? `${t.type} | ${t.vehicle} • ${t.plate}`
+                   : `${t.type} | ${t.vehicle}`;
+  }
+
+  function activeCardHTML(t) {
+    return `
+      <div class="active-card">
+        <button class="token-row" type="button" data-open="${esc(t.token)}">
+          <span class="badge badge-active">${esc(t.token)}</span>
+          <span class="token-main">
+            <span class="token-name">${esc(t.name)}</span>
+            <span class="token-sub">${esc(subtitle(t))}</span>
+          </span>
+          <img src="assets/view-more.svg" alt="">
+        </button>
+        <div class="card-divider"></div>
+        <div class="card-actions">
+          <button class="card-action" id="btnCall" type="button">
+            <span class="icon-slot"><img src="assets/call.svg" alt=""></span>Call user
+          </button>
+          <button class="card-action" id="btnSkip" type="button">
+            <img src="assets/skip.svg" alt="">Skip for now
+          </button>
+        </div>
+      </div>`;
+  }
+
+  const TICK = '<svg viewBox="0 0 24 24" fill="none" aria-hidden="true">'
+    + '<circle cx="12" cy="12" r="10" fill="currentColor"/>'
+    + '<path d="M10.6 16.2 6.4 12l1.4-1.4 2.8 2.8 6-6L18 8.8z" fill="#fff"/></svg>';
+
+  /* One card, three jobs. Only a token still waiting gets a bell: a completed
+     token is closed, and one in the workshop is not standing at the counter. */
+  function tokenCardHTML(t, mode) {
+    const done = mode === 'completed';
+    const trailing = done
+      ? `<span class="token-done" aria-label="Completed">${TICK}</span>`
+      : mode === 'ongoing'
+        ? `<span class="token-more" aria-hidden="true"><img src="assets/view-more.svg" alt=""></span>`
+      : mode === 'pending'
+        ? `<button class="bell" type="button" data-notify="${esc(t.token)}"
+             data-name="${esc(t.name)}" aria-label="Notify ${esc(t.name)}">
+             <span class="bell-stack">
+               <svg class="bell-pie" viewBox="0 0 36 36" aria-hidden="true"><circle cx="18" cy="18" r="9"/></svg>
+               <span class="bell-glyph"><img src="assets/bell.svg" alt=""></span>
+             </span>
+           </button>`
+        : '';
+    const C = 2 * Math.PI * 25;                       // r=25 in the 58 box
+    const pct = Number(t.pct) || 0;
+    const badge = mode === 'ongoing'
+      ? `<span class="badge-wrap">
+           <svg class="badge-pie${pct >= 100 ? ' is-complete' : ''}" viewBox="0 0 58 58" aria-hidden="true">
+             <circle class="track" cx="29" cy="29" r="25"/>
+             <circle class="fill" cx="29" cy="29" r="25"
+               style="stroke-dasharray:${C.toFixed(2)};stroke-dashoffset:${(C * (1 - pct / 100)).toFixed(2)}"/>
+           </svg>
+           <span class="badge badge-upcoming">${esc(t.token)}</span>
+         </span>`
+      : `<span class="badge badge-upcoming">${esc(t.token)}</span>`;
+    /* No third line: the ring carries the progress on its own. */
+    const detail = '';
+    return `
+      <div class="token-card${done ? ' is-done' : ''}">
+        <button class="token-row" type="button" data-open="${esc(t.token)}">
+          ${badge}
+          <span class="token-main">
+            <span class="token-name">${esc(t.name)}</span>
+            <span class="token-sub">${esc(subtitle(t))}</span>
+            ${detail}
+          </span>
+        </button>
+        ${trailing}
+      </div>`;
+  }
+
+  function visibleQueue() {
+    const q = DATA[S.tab].queue;
+    return S.chip === 'All' ? q : q.filter(t => t.type === S.chip);
+  }
+
+  function render() {
+    const d = DATA[S.tab];
+    const q = visibleQueue();
+    // Completed and Ongoing have no active token and no type filter — they are
+    // plain lists, so the chips would be furniture with nothing to act on.
+    const showChrome = S.tab === 'pending';
+    const heading = S.tab === 'completed' ? 'Completed today'
+                  : S.tab === 'ongoing'   ? 'In progress'
+                  : 'Upcoming tokens';
+
+    elBody.innerHTML = `
+      ${d.active ? activeCardHTML(d.active) : ''}
+      <div class="section">
+        <h2 class="section-title">${esc(heading)}</h2>
+        ${showChrome ? `<div class="chips-sentinel" id="chipsSentinel"></div>
+        <div class="chips" id="chips">${
+          CHIPS.map(c => `<button class="chip${c === S.chip ? ' is-selected' : ''}" type="button" data-chip="${esc(c)}">${esc(c)}</button>`).join('')
+        }</div>` : ''}
+        <div class="token-list">
+          ${q.length ? q.map(t => tokenCardHTML(t, S.tab)).join('')
+                     : `<p class="empty">No ${esc(S.chip === 'All' ? '' : S.chip + ' ')}tokens here.</p>`}
+        </div>
+      </div>`;
+
+    watchChips();
+    paintCooldowns();      // a re-render must not wipe a running cooldown
+  }
+
+  /* render() rebuilds the body, so the observer has to be rebuilt with it —
+     the previous sentinel node no longer exists. */
+  let chipsObserver = null;
+  function watchChips() {
+    if (chipsObserver) { chipsObserver.disconnect(); chipsObserver = null; }
+    const sentinel = document.getElementById('chipsSentinel');
+    const chips = document.getElementById('chips');
+    if (!sentinel || !chips) return;
+    chipsObserver = new IntersectionObserver(
+      ([entry]) => chips.classList.toggle('is-stuck', !entry.isIntersecting),
+      { root: elBody, threshold: 0 },
+    );
+    chipsObserver.observe(sentinel);
+  }
+
+  function renderTabs() {
+    TABS.forEach(t => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'tab';
+      b.dataset.tab = t.id;
+      b.textContent = t.count ? `${t.label} (${t.count})` : t.label;
+      elTabs.insertBefore(b, elUnderline);
+    });
+  }
+
+  function moveUnderline() {
+    const a = elTabs.querySelector('.tab.is-active');
+    if (!a) return;
+    elUnderline.style.width = `${a.offsetWidth}px`;
+    elUnderline.style.transform = `translateX(${a.offsetLeft}px)`;
+  }
+
+  function setTab(tabId) {
+    S.tab = tabId;
+    S.chip = 'All';                  // a stale type filter across tabs reads as a bug
+    elTabs.querySelectorAll('.tab').forEach(b =>
+      b.classList.toggle('is-active', b.dataset.tab === tabId));
+    moveUnderline();
+    elTabs.querySelector('.tab.is-active')
+      .scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+    render();
+    elBody.scrollTop = 0;
+  }
+
+  function setNav(navId) {
+    S.nav = navId;
+    elNav.querySelectorAll('.nav-item').forEach(b =>
+      b.classList.toggle('is-active', b.dataset.nav === navId));
+    /* Home and Profile have no screens yet, so they are left genuinely blank
+       rather than filled with invented content. Tasks owns the tabs, so those
+       go with it. */
+    const onTasks = navId === 'tasks';
+    document.querySelector('.tabs-wrap').hidden = !onTasks;
+    /* Empty the body rather than hide it: `hidden` takes it out of flow and the
+       bottom nav floats up to meet the header. */
+    if (onTasks) render(); else elBody.innerHTML = '';
+  }
+
+  /* ---- Events ----------------------------------------------------------- */
+  elTabs.addEventListener('click', e => {
+    const b = e.target.closest('.tab');
+    if (!b || b.dataset.tab === S.tab) return;
+    tap();
+    elBody.classList.add('is-swapping');
+    setTab(b.dataset.tab);
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => elBody.classList.remove('is-swapping')));
+  });
+
+  elBody.addEventListener('click', e => {
+    const chip = e.target.closest('.chip');
+    if (chip) {
+      tap();
+      /* render() rebuilds the body, which resets the chip row's scrollLeft to
+         0 — that is what threw RSA out of frame when you tapped it. Carry the
+         offset across the rebuild, then nudge the selected chip fully into
+         view so a half-clipped chip becomes whole. */
+      const row = document.getElementById('chips');
+      const keepScroll = row ? row.scrollLeft : 0;
+      const label = chip.dataset.chip;
+      S.chip = label;
+      render();
+      const newRow = document.getElementById('chips');
+      if (newRow) {
+        newRow.scrollLeft = keepScroll;
+        const sel = newRow.querySelector('.chip.is-selected');
+        if (sel) {
+          const pad = 24;
+          const relLeft  = sel.offsetLeft - newRow.scrollLeft;
+          const relRight = relLeft + sel.offsetWidth;
+          if (relRight > newRow.clientWidth - pad)
+            newRow.scrollTo({ left: sel.offsetLeft + sel.offsetWidth - newRow.clientWidth + pad, behavior: 'smooth' });
+          else if (relLeft < pad)
+            newRow.scrollTo({ left: Math.max(0, sel.offsetLeft - pad), behavior: 'smooth' });
+        }
+      }
+      return;
+    }
+
+    const bell = e.target.closest('.bell');
+    if (bell) {
+      tap();
+      if (bell.disabled || cooling.has(bell.dataset.notify)) return;
+      const t = DATA[S.tab].queue.find(x => x.token === bell.dataset.notify);
+      bell.classList.remove('is-ringing');
+      void bell.offsetWidth;                 // restart the animation
+      bell.classList.add('is-ringing');
+      toast(`${t.name} notified`);
+      window.Yuzen.onNotifyUser({ token: t.token, name: t.name });
+      startCooling(t.token);
+      return;
+    }
+
+    if (e.target.closest('#btnCall')) {
+      tap();
+      const a = DATA[S.tab].active;
+      toast(`Calling ${a.name}…`);
+      window.Yuzen.onCallUser({ token: a.token, name: a.name });
+      return;
+    }
+
+    if (e.target.closest('#btnSkip')) {
+      tap();
+      skipActive();
+      return;
+    }
+
+    const row = e.target.closest('.token-row');
+    if (row) {
+      tap();
+      const d = DATA[S.tab];
+      const t = (d.active && d.active.token === row.dataset.open)
+        ? d.active
+        : d.queue.find(x => x.token === row.dataset.open);
+      window.Yuzen.onTokenOpen({
+        token: t.token, name: t.name, type: t.type, vehicle: t.vehicle, tab: S.tab,
+      });
+    }
+  });
+
+  /* Skip promotes the next token in the queue into the active card and sends
+     the skipped one to the back, which is what actually happens at a station. */
+  let skipping = false;          // guards a FLIP already in flight
+  function skipActive() {
+    const d = DATA[S.tab];
+    if (!d.active || !d.queue.length) { toast('No one else waiting'); return; }
+    if (skipping) return;
+    skipping = true;
+
+    const skipped = d.active;
+    window.Yuzen.onSkipToken({ token: skipped.token, name: skipped.name });
+
+    // FLIP — measure both cards before the swap.
+    const fromActive = elBody.querySelector('.active-card');
+    const fromFirst  = elBody.querySelector('.token-card');
+    const rA = fromActive && fromActive.getBoundingClientRect();
+    const rF = fromFirst  && fromFirst.getBoundingClientRect();
+
+    d.active = d.queue.shift();
+    d.queue.unshift(skipped);          // next in line, not the back
+    render();
+
+    const toActive = elBody.querySelector('.active-card');   // was the first queued
+    const toFirst  = elBody.querySelector('.token-card');    // is the skipped one
+
+    let pending = 0;
+    const flip = (el, from) => {
+      if (!el || !from) return;
+      const to = el.getBoundingClientRect();
+      const dx = from.left - to.left;
+      const dy = from.top  - to.top;
+      const sy = to.height ? from.height / to.height : 1;
+      if (!dx && !dy && Math.abs(sy - 1) < 0.01) return;
+      const inner = el.querySelector('.token-main');
+      pending++;
+      el.classList.add('is-flipping');
+      el.style.transformOrigin = 'top left';
+      el.style.transition = 'none';
+      el.style.transform = `translate(${dx}px, ${dy}px) scaleY(${sy})`;
+      // Counter-scale the text so only the card box changes shape.
+      if (inner) { inner.style.transition = 'none'; inner.style.transform = `scaleY(${1 / sy})`; }
+      el.getBoundingClientRect();                       // flush
+      const EASE = 'cubic-bezier(.22, .61, .36, 1)', MS = 420;
+      el.style.transition = `transform ${MS}ms ${EASE}`;
+      el.style.transform = 'translate(0, 0) scaleY(1)';
+      if (inner) { inner.style.transition = `transform ${MS}ms ${EASE}`; inner.style.transform = 'scaleY(1)'; }
+      const clear = () => {
+        el.classList.remove('is-flipping');
+        el.style.transition = el.style.transform = el.style.transformOrigin = '';
+        if (inner) inner.style.transition = inner.style.transform = '';
+        if (--pending <= 0) skipping = false;
+      };
+      el.addEventListener('transitionend', clear, { once: true });
+      setTimeout(clear, MS + 180);
+    };
+
+    flip(toActive, rF);      // grows into the active slot
+    flip(toFirst,  rA);      // minimises into the first queue slot
+    if (!pending) skipping = false;
+    toast(`Token ${skipped.token} is next in line`);
+  }
+
+  elNav.addEventListener('click', e => {
+    const b = e.target.closest('.nav-item');
+    if (!b) return;
+    tap();
+    setNav(b.dataset.nav);          // visual state only
+    window.Yuzen.onNavigate(b.dataset.nav);
+  });
+
+  renderTabs();
+  setTab(S.tab);
+  setNav(S.nav);
+  document.fonts.ready.then(moveUnderline);
+</script>
+</body>
+</html>

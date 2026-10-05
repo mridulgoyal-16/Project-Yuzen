@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mark Issues — Mechanic</title>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+/* ===== Design tokens — yulu-design-system-main/tokens ===== */
+:root {
+    /* semantic-colors.md */
+    --content-primary: #222222;
+    --content-secondary: #717171;
+    --content-tertiary: #919191;
+    --content-disabled: #B0B0B0;
+    --content-inverse: #FFFFFF;
+    --content-positive: #00654F;
+    --content-caution: #E07912;
+    --content-negative: #C13515;
+
+    --surface-primary: #222222;
+    --surface-secondary: #F7F7F7;
+    --surface-disabled: #DDDDDD;
+    --surface-inverse: #FFFFFF;
+    --surface-positive: #00654F;
+    --surface-caution: #E07912;
+    --surface-negative: #C13515;
+
+    --border-primary: #E8E8E8;
+    --border-secondary: #B0B0B0;
+    --border-selected: #222222;
+    --border-positive: #00654F;
+    --border-negative: #C13515;
+
+    --canvas-primary: #FFFFFF;
+    --canvas-inverse: #222222;
+
+    /* spacing.md */
+    --spacing-1: 4px;
+    --spacing-2: 8px;
+    --spacing-4: 16px;
+    --spacing-6: 24px;
+    --spacing-9: 36px;
+    --spacing-12: 48px;
+    --spacing-16: 64px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+body {
+    font-family: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+    background: #E5E5E5;
+    display: flex;
+    justify-content: center;
+    min-height: 100vh;
+}
+
+/* typography.md */
+.type-heading-small   { font-size: 20px; font-weight: 700; line-height: 28px; }
+.type-label-medium700 { font-size: 16px; font-weight: 700; line-height: 20px; }
+.type-label-medium    { font-size: 16px; font-weight: 500; line-height: 20px; }
+.type-label-small     { font-size: 14px; font-weight: 500; line-height: 16px; }
+.type-label-xsmall    { font-size: 12px; font-weight: 500; line-height: 16px; }
+.type-body-medium     { font-size: 16px; font-weight: 500; line-height: 24px; }
+.type-body-small      { font-size: 14px; font-weight: 500; line-height: 20px; }
+
+/* ===== Device frame ===== */
+.app {
+    width: 390px;
+    height: 844px;
+    background: var(--canvas-primary);
+    position: relative;
+    overflow: hidden;
+    align-self: center;
+    box-shadow: 0 8px 40px rgba(0,0,0,.18);
+}
+
+/* ===== Status bar ===== */
+.status-bar {
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 21px 0 21px;
+    flex: none;
+}
+.status-bar .time { font-size: 15px; font-weight: 700; color: var(--content-primary); }
+.status-icons { display: flex; align-items: center; gap: var(--spacing-1); }
+
+/* ===== Top app bar ===== */
+.top-app-bar {
+    height: 72px;
+    background: var(--surface-inverse);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px 10px 4px;
+    position: relative;
+    flex: none;
+}
+.tab-icon-btn {
+    display: flex; align-items: center; padding: 12px;
+    background: none; border: none; cursor: pointer;
+}
+.top-app-bar .title {
+    position: absolute; left: 50%; transform: translateX(-50%);
+    max-width: 160px; text-align: center; color: var(--content-primary);
+    white-space: nowrap;
+}
+
+/* ===== Tabs ===== */
+/* Figma: 56px tall, hairline at y=55, indicator rect y=54 h=2 painted over it.
+   The indicator hugs the label text (x=24 w=110 for "Recommended"), not the
+   tab's padded box — so it lives inside .tab-inner, which shrink-wraps the text. */
+.tabs {
+    height: 56px;
+    display: flex;
+    align-items: stretch;
+    background: var(--surface-inverse);
+    flex: none;
+    position: relative;
+}
+.tabs::after {
+    content: ""; position: absolute; left: 0; right: 0; bottom: 0;
+    height: 1px; background: var(--border-primary);
+}
+.tab {
+    display: flex; align-items: flex-start; justify-content: center;
+    padding: var(--spacing-4) var(--spacing-4) 0;
+    background: none; border: none; cursor: pointer;
+    color: var(--content-secondary); font-family: inherit;
+}
+.tab:first-child { padding-left: var(--spacing-6); padding-right: var(--spacing-4); }
+.tab.active { color: var(--content-primary); }
+.tab-inner { display: flex; flex-direction: column; gap: 14px; }
+.tab .bar {
+    height: 2px; border-radius: 1px; width: 100%; background: transparent;
+    position: relative; z-index: 1;
+}
+.tab.active .bar { background: var(--content-primary); }
+
+/* ===== Scroll body ===== */
+.body-scroll { flex: 1 1 auto; overflow-y: auto; overflow-x: hidden; }
+.body-scroll::-webkit-scrollbar { width: 0; }
+
+.screen { display: flex; flex-direction: column; height: 100%; }
+
+/* ===== Parts grid (Recommended) ===== */
+.parts-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--spacing-4);
+    padding: var(--spacing-6);
+}
+.part-tile {
+    position: relative;
+    aspect-ratio: 1 / 1;
+    border-radius: 8px;
+    background: #f4f4f4;
+    border: 2px solid var(--border-primary);
+    overflow: hidden;
+    cursor: pointer;
+    padding: 0;
+    transition: border-color .15s ease, transform .1s ease;
+}
+.part-tile:active { transform: scale(.97); }
+/* Fault-marked tiles read as "already handled" purely by fading back —
+   no red outline or dot; the border stays border/primary at 2px throughout. */
+.part-tile.marked .photo { opacity: .3; }
+.part-tile.marked .label { color: var(--content-disabled); }
+/* Figma: 188×105 fill, offset -37px inside the 103px tile */
+.part-tile .photo {
+    position: absolute; top: 0; left: -37px;
+    width: 188px; height: 105px; object-fit: cover; pointer-events: none;
+}
+.part-tile .scrim {
+    position: absolute; bottom: 0; left: 0; right: 0; height: 70px;
+    background: linear-gradient(to bottom, rgba(0,0,0,0) 7.889%, rgba(0,0,0,.4) 50.036%, #232222 100%);
+}
+.part-tile .label {
+    position: absolute; bottom: var(--spacing-2); left: 4px; right: 4px;
+    text-align: center; color: var(--content-inverse);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* ===== List rows (Front / Middle / Rear) ===== */
+.list-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: var(--spacing-6); width: 100%; background: none; border: none;
+    cursor: pointer; font-family: inherit; text-align: left;
+}
+.list-row { transition: padding-bottom .28s cubic-bezier(.2, .8, .2, 1); }
+.list-row.expanded-head { padding-bottom: var(--spacing-2); }
+.row-group { background: var(--surface-inverse); transition: background .28s ease; }
+.row-group.open { background: var(--surface-secondary); }
+
+/* Accordion. Height is measured in JS and animated explicitly —
+   `grid-template-rows: 0fr -> 1fr` does NOT interpolate in Chrome, it snaps.
+   Everything below the row slides because the row's own height animates. */
+.collapse {
+    overflow: hidden;
+    transition: height .28s cubic-bezier(.2, .8, .2, 1);
+}
+.row-chips { opacity: 0; transition: opacity .18s ease; }
+.row-group.open .row-chips { opacity: 1; transition-delay: .08s; }
+.row-lhs { display: flex; align-items: center; gap: var(--spacing-4); flex: 1 1 0; min-width: 0; }
+.part-thumb {
+    width: 56px; height: 56px; border-radius: 9.333px;
+    background: var(--surface-secondary); overflow: hidden;
+    position: relative; flex: none;
+}
+.part-thumb img {
+    position: absolute; top: -1px; left: -23px;
+    width: 101px; height: 57px; object-fit: cover;
+}
+.row-text { display: flex; flex-direction: column; min-width: 0; flex: 1 1 0; }
+.row-text .name { color: var(--content-primary); }
+/* Tags collapse on expand (the chips replace them) — animated with the
+   same grid trick so the header doesn't jump mid-transition. The 16px
+   gap lives inside the clipped area so it collapses too. */
+.row-tags {
+    display: flex; align-items: center; gap: var(--spacing-2);
+    color: var(--content-secondary); flex-wrap: wrap;
+    padding-top: var(--spacing-4);
+}
+.tag-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--content-secondary); flex: none; }
+.chevron { display: flex; align-items: center; padding: 12px; flex: none; transition: transform .2s ease; }
+.chevron.up { transform: rotate(180deg); }
+.row-divider { height: 1px; background: var(--border-primary); margin: 0 var(--spacing-6); }
+.row-chips { padding: 0 var(--spacing-6) var(--spacing-6); }
+
+/* ===== Chips — components/chips/README.md ===== */
+.chip-group { display: flex; flex-wrap: wrap; gap: var(--spacing-2); }
+.chip {
+    height: 48px; min-width: 48px;
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: 14px 16px; border-radius: 100px;
+    background: var(--surface-inverse);
+    border: 1px solid var(--border-primary);
+    color: var(--content-primary);
+    cursor: pointer; font-family: inherit; white-space: nowrap;
+    transition: background .12s ease, border-color .12s ease;
+}
+.chip.selected {
+    background: var(--surface-secondary);
+    border: 1.5px solid var(--border-selected);
+}
+
+/* ===== Footer ===== */
+.footer {
+    background: var(--surface-inverse);
+    border-top: 1px solid var(--border-primary);
+    padding: var(--spacing-6) var(--spacing-9) var(--spacing-9);
+    flex: none;
+}
+.btn-primary {
+    width: 100%; height: 64px; border-radius: 100px;
+    background: var(--surface-primary); color: var(--content-inverse);
+    border: none; cursor: pointer; font-family: inherit;
+    display: flex; align-items: center; justify-content: center;
+    transition: opacity .12s ease;
+}
+.btn-primary:disabled {
+    background: var(--surface-disabled); color: var(--content-disabled); cursor: not-allowed;
+}
+.btn-primary:not(:disabled):active { opacity: .85; }
+
+/* ===== Bottom sheet ===== */
+.scrim-overlay {
+    position: absolute; inset: 0; background: rgba(0,0,0,.5);
+    z-index: 10; animation: fade .2s ease;
+}
+@keyframes fade { from { opacity: 0 } to { opacity: 1 } }
+.sheet {
+    position: absolute; left: 0; right: 0; bottom: 0; z-index: 11;
+    background: var(--surface-inverse);
+    border-radius: 24px 24px 0 0;
+    display: flex; flex-direction: column;
+    animation: slideUp .25s cubic-bezier(.2,.8,.2,1);
+}
+@keyframes slideUp { from { transform: translateY(100%) } to { transform: translateY(0) } }
+.sheet-body {
+    display: flex; flex-direction: column; align-items: center;
+    gap: var(--spacing-9);
+    padding: var(--spacing-2) 0 var(--spacing-9);
+}
+.sheet-handle {
+    width: 44px; height: 4px; border-radius: 100px; background: var(--border-primary);
+}
+.sheet-content { display: flex; flex-direction: column; gap: var(--spacing-6); width: 342px; }
+.sheet-part { display: flex; align-items: center; gap: var(--spacing-4); height: 48px; }
+.sheet-part .thumb {
+    width: 48px; height: 48px; border-radius: 3.728px; background: #f4f4f4;
+    overflow: hidden; position: relative; flex: none;
+}
+/* Figma: 87×49 fill, offset -17px inside the 48px thumb */
+.sheet-part .thumb img {
+    position: absolute; top: 0; left: -17px;
+    width: 87px; height: 49px; object-fit: cover;
+}
+.sheet-divider { height: 1px; background: var(--border-primary); width: 100%; }
+.sheet-footer {
+    background: var(--surface-inverse);
+    padding: var(--spacing-6) var(--spacing-9) var(--spacing-9);
+}
+
+/* ===== Toast ===== */
+.toast {
+    position: absolute; left: var(--spacing-6); right: var(--spacing-6); bottom: 140px;
+    background: var(--surface-primary); color: var(--content-inverse);
+    border-radius: 12px; padding: var(--spacing-4) var(--spacing-6);
+    z-index: 20; display: flex; align-items: center; gap: var(--spacing-2);
+    animation: toastIn .25s cubic-bezier(.2,.8,.2,1);
+}
+@keyframes toastIn { from { opacity: 0; transform: translateY(12px) } to { opacity: 1; transform: translateY(0) } }
+
+.empty-note {
+    padding: var(--spacing-12) var(--spacing-6); text-align: center;
+    color: var(--content-tertiary);
+}
+
+/* ===== Search screen ===== */
+.search-head {
+    display: flex; flex-direction: column;
+    background: var(--canvas-primary); flex: none;
+}
+/* Height matches .top-app-bar (72px) so the back button sits at exactly the
+   same Y as on the Add issues screen — no jump when entering search.
+   Row padding: 4px before the back button, 16px after the field.
+   Back button carries 16px on its right so the field clears the icon by 16. */
+.search-head-row {
+    height: 72px;
+    display: flex; align-items: center;
+    padding-left: var(--spacing-1); padding-right: var(--spacing-4);
+}
+.search-back {
+    display: flex; align-items: center; flex: none;
+    padding: 12px var(--spacing-4) 12px 12px;
+    background: none; border: none; cursor: pointer;
+}
+.search-field-wrap { flex: 1 1 0; min-width: 0; }
+/* Circular search affordance in the Add issues top app bar */
+.search-btn {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: var(--surface-secondary);
+    display: flex; align-items: center; justify-content: center;
+    border: none; cursor: pointer; padding: 0; flex: none;
+}
+.search-cancel {
+    display: flex; align-items: center; justify-content: center;
+    background: none; border: none; cursor: pointer; padding: 8px; flex: none;
+}
+.search-field {
+    height: 64px; border-radius: 100px;
+    background: var(--surface-secondary);
+    border: 1.5px solid transparent;
+    display: flex; align-items: center; gap: var(--spacing-2);
+    padding: 22px var(--spacing-2) 22px var(--spacing-6);
+    transition: background .15s ease, border-color .15s ease;
+}
+/* Figma search/typing: fill drops to canvas, outline appears */
+.search-field.typing {
+    background: var(--canvas-primary);
+    border-color: var(--border-selected);
+}
+.search-field input {
+    flex: 1 1 0; min-width: 0; border: none; outline: none; background: none;
+    font-family: inherit; color: var(--content-primary);
+    font-size: 16px; font-weight: 500; line-height: 20px;
+}
+.search-field input::placeholder { color: var(--content-tertiary); }
+
+.search-results { display: flex; flex-direction: column; gap: var(--spacing-6); }
+.search-section-title { padding: 0 var(--spacing-6); color: var(--content-primary); }
+.search-row {
+    display: flex; align-items: center; justify-content: space-between;
+    width: 100%; padding: var(--spacing-2) var(--spacing-6);
+    background: none; border: none; cursor: pointer;
+    font-family: inherit; text-align: left;
+}
+.search-row .row-lhs { gap: var(--spacing-4); }
+.search-row .name { color: var(--content-primary); }
+/* Figma renders the matched substring in Label/Medium700, not a colour fill */
+.search-row .match { font-weight: 700; }
+.search-divider { height: 1px; background: var(--border-primary); }
+.search-arrow { display: flex; align-items: center; padding: 12px; flex: none; }
+
+/* ===== iOS keyboard — rebuilt from the reference so each key is tappable.
+   Colours/metrics traced from the pasted 390x353 asset. ===== */
+.keyboard {
+    flex: none; width: 100%; background: #D1D5DB;
+    user-select: none; -webkit-user-select: none;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+.kb-accessory {
+    height: 39px; background: #F1F1F1;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 var(--spacing-4);
+}
+.kb-chevrons { display: flex; gap: var(--spacing-6); }
+.kb-chevrons svg { display: block; }
+.kb-done {
+    background: none; border: none; cursor: pointer;
+    font: 600 17px/1 -apple-system, BlinkMacSystemFont, sans-serif;
+    color: #1B3A6B; padding: 4px;
+}
+.kb-predictive {
+    height: 46px; display: flex; align-items: center;
+    font-size: 15px; color: #1C1C1E;
+}
+.kb-predictive span { flex: 1; text-align: center; }
+.kb-predictive .sep { flex: none; width: 1px; height: 22px; background: #B0B4BC; }
+.kb-rows { padding: 4px 3px 0; display: flex; flex-direction: column; gap: 11px; }
+.kb-row { display: flex; gap: 6px; justify-content: center; }
+.kb-row.indent { padding: 0 20px; }
+.key {
+    flex: 1 1 0; height: 42px; min-width: 0;
+    background: #FFFFFF; border: none; border-radius: 5px;
+    box-shadow: 0 1px 0 rgba(0,0,0,.28);
+    font: 400 22px/1 -apple-system, BlinkMacSystemFont, sans-serif;
+    color: #000; cursor: pointer; padding: 0;
+    display: flex; align-items: center; justify-content: center;
+    transition: background .08s ease;
+}
+.key:active { background: #B9BEC7; }
+.key.grey { background: #ACB2BC; box-shadow: 0 1px 0 rgba(0,0,0,.28); }
+.key.grey:active { background: #FFFFFF; }
+.key.mod { flex: 1.42 1 0; }
+.key.space { flex: 5.4 1 0; font-size: 16px; }
+.key.action { flex: 2.1 1 0; font-size: 16px; }
+.key.on { background: #FFFFFF; }
+.kb-bottom {
+    height: 44px; display: flex; align-items: center;
+    justify-content: space-between; padding: 0 18px;
+}
+.kb-bottom button { background: none; border: none; cursor: pointer; padding: 4px; }
+.kb-home {
+    height: 22px; display: flex; align-items: center; justify-content: center;
+}
+.kb-home i { display: block; width: 140px; height: 5px; border-radius: 3px; background: #000; }
+
+/* Row flash after arriving from a search result */
+@keyframes rowFlash {
+    0%   { background: var(--surface-secondary); }
+    100% { background: transparent; }
+}
+.row-group.flash { animation: rowFlash 1.8s ease-out; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useMemo, useRef, useLayoutEffect } = React;
+
+/* Animates between 0 and the content's measured height, then hands back to
+   `auto` so the content can still reflow (e.g. chips re-wrapping). */
+function Collapse({ open, children }) {
+    const ref = useRef(null);
+    const first = useRef(true);
+    const [height, setHeight] = useState(open ? "auto" : 0);
+
+    useLayoutEffect(() => {
+        const el = ref.current;
+        if (!el) return;
+        if (first.current) { first.current = false; return; }
+
+        const target = el.scrollHeight;
+        if (open) {
+            setHeight(target);
+            const t = setTimeout(() => setHeight("auto"), 300);
+            return () => clearTimeout(t);
+        }
+        // Pin the current height for one frame so there's something to animate from
+        setHeight(target);
+        const r = requestAnimationFrame(() =>
+            requestAnimationFrame(() => setHeight(0))
+        );
+        return () => cancelAnimationFrame(r);
+    }, [open]);
+
+    return (
+        <div
+            ref={ref}
+            className="collapse"
+            style={{ height: height === "auto" ? "auto" : height + "px" }}
+            aria-hidden={!open}
+        >
+            {children}
+        </div>
+    );
+}
+
+/* ---------------------------------------------------------------
+   Placeholder part photo. Every part reuses this single asset —
+   the Figma frames do the same. Swap PART_IMG for real per-part
+   photos by giving each entry in PARTS its own `img`.
+---------------------------------------------------------------- */
+const PART_IMG = "data:image/png;base64,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";
+
+/* The iOS keyboard is built in markup (see <Keyboard/>) rather than used as a
+   flat image, so individual keys are tappable. */
+
+/* ---------------------------------------------------------------
+   Part catalogue.
+   `zone` places the part under the Front / Middle / Rear tabs.
+   `recommended` surfaces it in the Recommended grid.
+   "Missing" is appended to every part's issue list automatically
+   and is mutually exclusive with all other issues.
+---------------------------------------------------------------- */
+const MISSING = "Missing";
+
+const PARTS = [
+    // --- Front ---
+    { id: "front-tyre",     name: "Front tyre",       zone: "front",  recommended: true, issues: ["Rusting", "Cuts", "Wear out"] },
+    { id: "front-shocker",  name: "Shocker",          zone: "front",  recommended: true, issues: ["Oil leak", "Bent", "Makes noise"] },
+    { id: "front-brake",    name: "Brake",            zone: "front",  recommended: true, issues: ["Worn pads", "Low bite", "Cable snapped"] },
+    { id: "air-nozzle",     name: "Air nozzle",       zone: "front",  recommended: true, issues: ["Air leak", "Cap missing", "Bent"] },
+    { id: "display",        name: "Display",          zone: "front",  recommended: true, issues: ["Screen cracked", "Not lighting up", "Flickering"] },
+    { id: "handlebar",      name: "Handlebar",        zone: "front",  recommended: false, issues: ["Bent", "Grip torn", "Loose"] },
+    { id: "headlight",      name: "Headlight",        zone: "front",  recommended: false, issues: ["Not glowing", "Dim", "Cracked lens"] },
+    { id: "front-fender",   name: "Front fender",     zone: "front",  recommended: false, issues: ["Cracked", "Loose", "Rubbing tyre"] },
+
+    // --- Middle ---
+    { id: "battery-bucket", name: "Battery bucket",   zone: "middle", recommended: true, issues: ["Lock broken", "Rust", "Dented"] },
+    { id: "iot",            name: "IOT",              zone: "middle", recommended: true, issues: ["Not powering on", "No network", "Loose mount"] },
+    { id: "pigtail",        name: "Pigtail connector",zone: "middle", recommended: true, issues: ["Wear out", "Cuts", "Rust"] },
+    { id: "footboard",      name: "Footboard",        zone: "middle", recommended: true, issues: ["Cracked", "Loose", "Rust"] },
+    { id: "seat",           name: "Seat",             zone: "middle", recommended: false, issues: ["Torn", "Loose", "Lock broken"] },
+    { id: "frame",          name: "Frame",            zone: "middle", recommended: false, issues: ["Cracked", "Rust", "Bent"] },
+    { id: "side-stand",     name: "Side stand",       zone: "middle", recommended: false, issues: ["Loose", "Spring broken", "Bent"] },
+    { id: "charging-port",  name: "Charging port",    zone: "middle", recommended: false, issues: ["Pins bent", "Not charging", "Cover damaged"] },
+
+    // --- Rear ---
+    { id: "swing-arm",      name: "Swing arm",        zone: "rear",   recommended: true, issues: ["Bent", "Rust", "Loose bolts"] },
+    { id: "rear-shocker",   name: "Rear shocker",     zone: "rear",   recommended: true, issues: ["Oil leak", "Makes noise", "Spring broken"] },
+    { id: "tail-lamp",      name: "Tail lamp",        zone: "rear",   recommended: true, issues: ["Not glowing", "Cracked lens", "Loose wiring"] },
+    { id: "rear-tyre",      name: "Rear tyre",        zone: "rear",   recommended: false, issues: ["Wear out", "Cuts", "Puncture"] },
+    { id: "rear-brake",     name: "Rear brake",       zone: "rear",   recommended: false, issues: ["Worn pads", "Low bite", "Cable snapped"] },
+    { id: "mudguard",       name: "Mudguard",         zone: "rear",   recommended: false, issues: ["Cracked", "Loose", "Rust"] },
+    { id: "carrier",        name: "Carrier",          zone: "rear",   recommended: false, issues: ["Bent", "Loose", "Rust"] },
+    { id: "motor-hub",      name: "Motor hub",        zone: "rear",   recommended: false, issues: ["Makes noise", "Overheating", "Not running"] },
+];
+
+const TABS = [
+    { id: "recommended", label: "Recommended" },
+    { id: "front",       label: "Front" },
+    { id: "middle",      label: "Middle" },
+    { id: "rear",        label: "Rear" },
+];
+
+const byId = Object.fromEntries(PARTS.map(p => [p.id, p]));
+const issuesFor = part => [...part.issues, MISSING];
+
+/* Order-insensitive comparison — used to tell whether the sheet is "dirty". */
+function sameSet(a, b) {
+    return a.length === b.length && a.every(x => b.includes(x));
+}
+
+/* "Missing" cancels every other issue, and any other issue cancels "Missing". */
+function toggleIssue(current, issue) {
+    const has = current.includes(issue);
+    if (issue === MISSING) return has ? [] : [MISSING];
+    const next = has ? current.filter(i => i !== issue) : [...current, issue];
+    return next.filter(i => i !== MISSING);
+}
+
+/* ===================== Icons ===================== */
+const BackIcon = () => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+        <path d="M15 19l-7-7 7-7" stroke="var(--content-primary)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+);
+const SearchIcon = () => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+        <circle cx="11" cy="11" r="7" stroke="var(--content-primary)" strokeWidth="1.8"/>
+        <path d="M20 20l-3.5-3.5" stroke="var(--content-primary)" strokeWidth="1.8" strokeLinecap="round"/>
+    </svg>
+);
+const ChevronIcon = () => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+        <path d="M6 9l6 6 6-6" stroke="var(--content-primary)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+);
+/* Figma `arrow_insert`. Placeholder until the exported asset lands —
+   swap for <img src={ARROW_INSERT_IMG} /> when it does. */
+const ArrowInsertIcon = () => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+        <path d="M7 17L17 7" stroke="var(--content-primary)" strokeWidth="1.8" strokeLinecap="round"/>
+        <path d="M8.5 7H17v8.5" stroke="var(--content-primary)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+);
+const CancelIcon = () => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+        <path d="M6.5 6.5l11 11M17.5 6.5l-11 11" stroke="var(--content-primary)" strokeWidth="1.8" strokeLinecap="round"/>
+    </svg>
+);
+const CheckIcon = () => (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+        <path d="M4 12.5l5.5 5.5L20 7" stroke="var(--content-inverse)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+);
+
+/* ===================== Chrome ===================== */
+function StatusBar() {
+    return (
+        <div className="status-bar">
+            <span className="time">9:41</span>
+            <div className="status-icons">
+                <svg width="20" height="14" viewBox="0 0 20 14"><rect x="0" y="9" width="3" height="5" rx="1" fill="#222"/><rect x="5" y="6" width="3" height="8" rx="1" fill="#222"/><rect x="10" y="3" width="3" height="11" rx="1" fill="#222"/><rect x="15" y="0" width="3" height="14" rx="1" fill="#222"/></svg>
+                <svg width="16" height="14" viewBox="0 0 16 12"><path d="M8 10.5l2-2.2a2.9 2.9 0 00-4 0l2 2.2z" fill="#222"/><path d="M2.6 4.6a7.8 7.8 0 0110.8 0" stroke="#222" strokeWidth="1.5" fill="none" strokeLinecap="round"/><path d="M4.8 6.9a4.7 4.7 0 016.4 0" stroke="#222" strokeWidth="1.5" fill="none" strokeLinecap="round"/></svg>
+                <svg width="25" height="14" viewBox="0 0 25 14"><rect x="0.5" y="1.5" width="22" height="11" rx="2.5" stroke="#222" fill="none"/><rect x="2" y="3" width="19" height="8" rx="1" fill="#222"/><rect x="24" y="5" width="1" height="4" rx="0.5" fill="#222"/></svg>
+            </div>
+        </div>
+    );
+}
+
+function TopAppBar({ onSearch }) {
+    return (
+        <div className="top-app-bar">
+            <button className="tab-icon-btn" aria-label="Back"><BackIcon /></button>
+            <span className="title type-label-medium700">Mark Issues</span>
+            <button className="search-btn" aria-label="Search" onClick={onSearch}>
+                <SearchIcon />
+            </button>
+        </div>
+    );
+}
+
+function Tabs({ active, onChange }) {
+    return (
+        <div className="tabs">
+            {TABS.map(t => (
+                <button
+                    key={t.id}
+                    className={"tab type-body-medium" + (active === t.id ? " active" : "")}
+                    onClick={() => onChange(t.id)}
+                >
+                    <span className="tab-inner">
+                        <span>{t.label}</span>
+                        <span className="bar" />
+                    </span>
+                </button>
+            ))}
+        </div>
+    );
+}
+
+function Chip({ label, selected, onClick }) {
+    return (
+        <button className={"chip type-label-medium" + (selected ? " selected" : "")} onClick={onClick}>
+            {label}
+        </button>
+    );
+}
+
+/* ===================== Recommended grid ===================== */
+function PartTile({ part, marked, onClick }) {
+    return (
+        <button className={"part-tile" + (marked ? " marked" : "")} onClick={onClick}>
+            <img className="photo" src={PART_IMG} alt="" />
+            <div className="scrim" />
+            <span className="label type-label-xsmall">{part.name}</span>
+        </button>
+    );
+}
+
+function RecommendedGrid({ marks, onOpen }) {
+    const parts = PARTS.filter(p => p.recommended);
+    return (
+        <div className="parts-grid">
+            {parts.map(p => (
+                <PartTile
+                    key={p.id}
+                    part={p}
+                    marked={(marks[p.id] || []).length > 0}
+                    onClick={() => onOpen(p.id)}
+                />
+            ))}
+        </div>
+    );
+}
+
+/* ===================== Zone list ===================== */
+function ZoneList({ zone, marks, expanded, flashed, onToggleRow, onToggleIssue }) {
+    const parts = PARTS.filter(p => p.zone === zone);
+    return (
+        <div>
+            {parts.map((p, i) => {
+                const selected = marks[p.id] || [];
+                const open = expanded === p.id;
+                return (
+                    <div
+                        key={p.id}
+                        id={"row-" + p.id}
+                        className={"row-group" + (open ? " open" : "") + (flashed === p.id ? " flash" : "")}
+                    >
+                        <button
+                            className={"list-row" + (open ? " expanded-head" : "")}
+                            onClick={() => onToggleRow(p.id)}
+                        >
+                            <span className="row-lhs">
+                                <span className="part-thumb"><img src={PART_IMG} alt="" /></span>
+                                <span className="row-text">
+                                    <span className="name type-label-medium">{p.name}</span>
+                                    {selected.length > 0 && (
+                                        <Collapse open={!open}>
+                                            <span className="row-tags type-label-medium">
+                                                {selected.map((s, idx) => (
+                                                    <React.Fragment key={s}>
+                                                        {idx > 0 && <span className="tag-dot" />}
+                                                        <span>{s}</span>
+                                                    </React.Fragment>
+                                                ))}
+                                            </span>
+                                        </Collapse>
+                                    )}
+                                </span>
+                            </span>
+                            <span className={"chevron" + (open ? " up" : "")}><ChevronIcon /></span>
+                        </button>
+
+                        {/* Always mounted so it can animate open *and* closed */}
+                        <Collapse open={open}>
+                            <div className="row-chips">
+                                <div className="chip-group">
+                                    {issuesFor(p).map(issue => (
+                                        <Chip
+                                            key={issue}
+                                            label={issue}
+                                            selected={selected.includes(issue)}
+                                            onClick={() => onToggleIssue(p.id, issue)}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+                        </Collapse>
+
+                        {i < parts.length - 1 && <div className="row-divider" />}
+                    </div>
+                );
+            })}
+        </div>
+    );
+}
+
+/* ===================== Search ===================== */
+
+/* Case-insensitive substring match; returns the name split so the
+   matched run can be bolded (Figma renders it in Label/Medium700). */
+function splitMatch(name, query) {
+    if (!query) return [{ text: name, hit: false }];
+    const i = name.toLowerCase().indexOf(query.toLowerCase());
+    if (i === -1) return [{ text: name, hit: false }];
+    return [
+        { text: name.slice(0, i), hit: false },
+        { text: name.slice(i, i + query.length), hit: true },
+        { text: name.slice(i + query.length), hit: false },
+    ].filter(s => s.text);
+}
+
+const matchesQuery = (part, q) =>
+    part.name.toLowerCase().includes(q.trim().toLowerCase());
+
+function SearchRow({ part, query, onPick }) {
+    return (
+        <button className="search-row" onClick={() => onPick(part)}>
+            <span className="row-lhs">
+                <span className="part-thumb"><img src={PART_IMG} alt="" /></span>
+                <span className="name type-label-medium">
+                    {splitMatch(part.name, query).map((s, i) => (
+                        <span key={i} className={s.hit ? "match" : undefined}>{s.text}</span>
+                    ))}
+                </span>
+            </span>
+            <span className="search-arrow"><ArrowInsertIcon /></span>
+        </button>
+    );
+}
+
+const KB_ROWS = [
+    ["Q","W","E","R","T","Y","U","I","O","P"],
+    ["A","S","D","F","G","H","J","K","L"],
+    ["Z","X","C","V","B","N","M"],
+];
+
+function Keyboard({ onKey, onBackspace, onDone }) {
+    const [shift, setShift] = useState(false);
+
+    const tapLetter = ch => {
+        onKey(shift ? ch.toUpperCase() : ch.toLowerCase());
+        if (shift) setShift(false);   // one-shot shift, as on iOS
+    };
+
+    return (
+        <div className="keyboard">
+            <div className="kb-accessory">
+                <div className="kb-chevrons">
+                    <svg width="20" height="12" viewBox="0 0 20 12" fill="none">
+                        <path d="M2 10L10 2l8 8" stroke="#9A9DA3" strokeWidth="2"
+                              strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    <svg width="20" height="12" viewBox="0 0 20 12" fill="none">
+                        <path d="M2 2l8 8 8-8" stroke="#6E7176" strokeWidth="2"
+                              strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                </div>
+                <button className="kb-done" onClick={onDone}>Done</button>
+            </div>
+
+            <div className="kb-predictive">
+                <span>“GREENDRIVE”</span>
+                <i className="sep" />
+                <span />
+                <i className="sep" />
+                <span />
+            </div>
+
+            <div className="kb-rows">
+                <div className="kb-row">
+                    {KB_ROWS[0].map(c => (
+                        <button key={c} className="key" onClick={() => tapLetter(c)}>{c}</button>
+                    ))}
+                </div>
+                <div className="kb-row indent">
+                    {KB_ROWS[1].map(c => (
+                        <button key={c} className="key" onClick={() => tapLetter(c)}>{c}</button>
+                    ))}
+                </div>
+                <div className="kb-row">
+                    <button
+                        className={"key grey mod" + (shift ? " on" : "")}
+                        onClick={() => setShift(s => !s)}
+                        aria-label="Shift"
+                    >
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <path d="M10 2.5L3 9.5h3.6v4.2h6.8V9.5H17L10 2.5z" fill="#000"/>
+                            <rect x="6.6" y="15" width="6.8" height="2.4" fill="#000"/>
+                        </svg>
+                    </button>
+                    {KB_ROWS[2].map(c => (
+                        <button key={c} className="key" onClick={() => tapLetter(c)}>{c}</button>
+                    ))}
+                    <button className="key grey mod" onClick={onBackspace} aria-label="Backspace">
+                        <svg width="25" height="19" viewBox="0 0 25 19" fill="none">
+                            <path d="M8 1.6h14a1.6 1.6 0 011.6 1.6v12.2A1.6 1.6 0 0122 17H8L1.3 9.6 8 1.6z"
+                                  stroke="#fff" strokeWidth="1.5" fill="none"/>
+                            <path d="M11.5 6.8l6 5.4M17.5 6.8l-6 5.4" stroke="#fff"
+                                  strokeWidth="1.5" strokeLinecap="round"/>
+                        </svg>
+                    </button>
+                </div>
+                <div className="kb-row">
+                    <button className="key grey action">123</button>
+                    <button className="key space" onClick={() => onKey(" ")}>space</button>
+                    <button className="key grey action" onClick={onDone}>return</button>
+                </div>
+            </div>
+
+            <div className="kb-bottom">
+                <button aria-label="Emoji">
+                    <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
+                        <circle cx="13" cy="13" r="11" stroke="#4A4A4A" strokeWidth="1.6"/>
+                        <circle cx="9.2" cy="10.5" r="1.4" fill="#4A4A4A"/>
+                        <circle cx="16.8" cy="10.5" r="1.4" fill="#4A4A4A"/>
+                        <path d="M8.4 15.4a5.4 5.4 0 009.2 0" stroke="#4A4A4A"
+                              strokeWidth="1.6" strokeLinecap="round"/>
+                    </svg>
+                </button>
+                <button aria-label="Dictate">
+                    <svg width="20" height="28" viewBox="0 0 20 28" fill="none">
+                        <rect x="6.6" y="2" width="6.8" height="13" rx="3.4"
+                              stroke="#4A4A4A" strokeWidth="1.6"/>
+                        <path d="M3.4 12.6a6.6 6.6 0 0013.2 0M10 19.2V24" stroke="#4A4A4A"
+                              strokeWidth="1.6" strokeLinecap="round"/>
+                    </svg>
+                </button>
+            </div>
+            <div className="kb-home"><i /></div>
+        </div>
+    );
+}
+
+function SearchScreen({ onPick, onDone }) {
+    const [query, setQuery] = useState("");
+    const typing = query.length > 0;
+
+    /* Default state shows top suggestions; typing filters across every
+       part in the catalogue, not just the current tab. */
+    const results = typing
+        ? PARTS.filter(p => matchesQuery(p, query))
+        : PARTS.filter(p => p.recommended).slice(0, 6);
+
+    return (
+        <div className="screen">
+            <div className="search-head">
+                <StatusBar />
+                <div className="search-head-row">
+                    <button className="search-back" aria-label="Back" onClick={onDone}>
+                        <BackIcon />
+                    </button>
+                    <div className="search-field-wrap">
+                        <div className={"search-field" + (typing ? " typing" : "")}>
+                            <SearchIcon />
+                            <input
+                                autoFocus
+                                value={query}
+                                placeholder="Search parts, try tyre"
+                                onChange={e => setQuery(e.target.value)}
+                                onKeyDown={e => e.key === "Escape" && onDone()}
+                            />
+                            {/* Cancel clears the query, returning search to its default state */}
+                            {typing && (
+                                <button
+                                    className="search-cancel"
+                                    aria-label="Clear search"
+                                    onClick={() => setQuery("")}
+                                >
+                                    <CancelIcon />
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div className="body-scroll" style={{ paddingTop: "var(--spacing-6)" }}>
+                {results.length === 0 ? (
+                    <p className="empty-note type-body-medium">No parts match “{query}”</p>
+                ) : (
+                    <div className="search-results">
+                        {/* Title only in the default state — filtered results stand alone */}
+                        {!typing && (
+                            <h2 className="search-section-title type-heading-small">Suggestions</h2>
+                        )}
+                        {results.map((p, i) => (
+                            <React.Fragment key={p.id}>
+                                <SearchRow part={p} query={typing ? query : ""} onPick={onPick} />
+                                {i < results.length - 1 && <div className="search-divider" />}
+                            </React.Fragment>
+                        ))}
+                    </div>
+                )}
+            </div>
+
+            <Keyboard
+                onKey={ch => setQuery(q => q + ch)}
+                onBackspace={() => setQuery(q => q.slice(0, -1))}
+                onDone={onDone}
+            />
+        </div>
+    );
+}
+
+/* ===================== Bottom sheet ===================== */
+function MarkIssueSheet({ part, draft, dirty, onToggle, onConfirm, onDismiss }) {
+    const all = issuesFor(part);
+    return (
+        <React.Fragment>
+            <div className="scrim-overlay" onClick={onDismiss} />
+            <div className="sheet">
+                <div className="sheet-body">
+                    <div className="sheet-handle" />
+                    <div className="sheet-content">
+                        <div className="sheet-part">
+                            <span className="thumb"><img src={PART_IMG} alt="" /></span>
+                            <span className="type-label-medium">{part.name}</span>
+                        </div>
+                        <div className="sheet-divider" />
+                        <div style={{ display: "flex", flexDirection: "column", gap: "var(--spacing-6)" }}>
+                            <span className="type-label-medium">Mark issues</span>
+                            <div className="chip-group">
+                                {all.map(issue => (
+                                    <Chip
+                                        key={issue}
+                                        label={issue}
+                                        selected={draft.includes(issue)}
+                                        onClick={() => onToggle(issue)}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div className="sheet-footer">
+                    <button
+                        className="btn-primary type-label-medium700"
+                        disabled={!dirty}
+                        onClick={onConfirm}
+                    >
+                        Confirm
+                    </button>
+                </div>
+            </div>
+        </React.Fragment>
+    );
+}
+
+/* ===================== App ===================== */
+function App() {
+    const [tab, setTab]           = useState("recommended");
+    const [marks, setMarks]       = useState({});      // { partId: [issue, ...] }
+    const [sheetId, setSheetId]   = useState(null);
+    const [draft, setDraft]       = useState([]);
+    const [expanded, setExpanded] = useState(null);
+    const [toast, setToast]       = useState(null);
+    const [screen, setScreen]     = useState("main");   // "main" | "search"
+    const [flashed, setFlashed]   = useState(null);
+
+    /* A search hit always lands on the part's zone tab — Recommended is a
+       grid with no row to expand. Expand it, flash it, scroll it into view. */
+    const pickFromSearch = part => {
+        setScreen("main");
+        setTab(part.zone);
+        setExpanded(part.id);
+        setFlashed(part.id);
+        setTimeout(() => {
+            const el = document.getElementById("row-" + part.id);
+            if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+        }, 60);
+        setTimeout(() => setFlashed(null), 1900);
+    };
+
+    const totals = useMemo(() => {
+        const entries = Object.entries(marks).filter(([, v]) => v.length > 0);
+        return {
+            parts:  entries.length,
+            issues: entries.reduce((n, [, v]) => n + v.length, 0),
+        };
+    }, [marks]);
+
+    const openSheet = id => {
+        setSheetId(id);
+        setDraft(marks[id] || []);
+    };
+
+    const commitSheet = () => {
+        setMarks(prev => {
+            const next = { ...prev };
+            if (draft.length) next[sheetId] = draft;
+            else delete next[sheetId];
+            return next;
+        });
+        setSheetId(null);
+    };
+
+    const toggleRowIssue = (partId, issue) => {
+        setMarks(prev => {
+            const next = { ...prev };
+            const updated = toggleIssue(prev[partId] || [], issue);
+            if (updated.length) next[partId] = updated;
+            else delete next[partId];
+            return next;
+        });
+    };
+
+    const update = () => {
+        setToast(
+            `${totals.issues} issue${totals.issues === 1 ? "" : "s"} marked on ` +
+            `${totals.parts} part${totals.parts === 1 ? "" : "s"}`
+        );
+        setTimeout(() => setToast(null), 2600);
+    };
+
+    if (screen === "search") {
+        return (
+            <div className="app">
+                <SearchScreen onPick={pickFromSearch} onDone={() => setScreen("main")} />
+            </div>
+        );
+    }
+
+    return (
+        <div className="app">
+            <div className="screen">
+                <StatusBar />
+                <TopAppBar onSearch={() => setScreen("search")} />
+                <Tabs active={tab} onChange={t => { setTab(t); setExpanded(null); }} />
+
+                <div className="body-scroll">
+                    {tab === "recommended"
+                        ? <RecommendedGrid marks={marks} onOpen={openSheet} />
+                        : <ZoneList
+                            zone={tab}
+                            marks={marks}
+                            expanded={expanded}
+                            flashed={flashed}
+                            onToggleRow={id => setExpanded(expanded === id ? null : id)}
+                            onToggleIssue={toggleRowIssue}
+                          />
+                    }
+                </div>
+
+                <div className="footer">
+                    <button
+                        className="btn-primary type-label-medium700"
+                        disabled={totals.issues === 0}
+                        onClick={update}
+                    >
+                        {totals.issues > 0 ? `Update issues (${totals.issues})` : "Update issues"}
+                    </button>
+                </div>
+            </div>
+
+            {toast && (
+                <div className="toast type-label-medium">
+                    <CheckIcon />
+                    <span>{toast}</span>
+                </div>
+            )}
+
+            {sheetId && (
+                <MarkIssueSheet
+                    part={byId[sheetId]}
+                    draft={draft}
+                    /* Enabled only once the selection differs from what's saved:
+                       covers both an untouched fresh part and an untouched marked one. */
+                    dirty={!sameSet(draft, marks[sheetId] || [])}
+                    onToggle={issue => setDraft(d => toggleIssue(d, issue))}
+                    onConfirm={commitSheet}
+                    onDismiss={() => setSheetId(null)}
+                />
+            )}
+        </div>
+    );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>

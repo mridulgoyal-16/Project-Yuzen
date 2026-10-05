@@ -1,0 +1,39 @@
+/* ═══ RnM — the footer, and the two overlays this screen can raise ═══
+   Split out of screens/rnm/style.css. See src/MAP.md. */
+
+
+  /* The footer that lived here — a text button into the task sheet and + Add
+     Issues — is gone. Both were replaced by the bottom tab bar (tabbar.css):
+     Open tasks is a tab now, not a thing you raise. --rn-footer-h stays because
+     the overlays below still measure against it.
+     Add Issues has NOT been dropped; it moved to the Open tasks panel, which is
+     the only place it was ever relevant. */
+  #scrRnm{ --rn-footer-h: 88px; }
+
+  /* ---- The overlays: all vitals, and part exchange ----------------------- */
+  /* Both are places you go and come back from rather than views of the dashboard,
+     so both are the same full-height sheet with a back bar. All vitals is
+     deliberately unstyled beyond that — the real screen is a separate job — and
+     part exchange brings its own rows in parts.css. */
+  #scrRnm .rnscreen{
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    background: var(--content-inverse);
+    display: flex;
+    flex-direction: column;
+    /* In from the RIGHT, not up from the floor — the same direction every other
+       screen in this flow arrives from (shared/base.css). These two are pages you
+       go to and come back from, not sheets you raise, so they should read like
+       going somewhere. Same curve and duration as the screen transition.
+       This changes All vitals as well as Part exchange: one rule, one direction,
+       and the two reading differently would be the drift the rule exists to stop. */
+    transform: translateX(100%);
+    transition: transform 340ms cubic-bezier(.22, 1, .36, 1);
+  }
+  #scrRnm .rnscreen.is-up{ transform: translateX(0); }
+  /* Both overlays carry the flow's .appbar now (.pxappbar in parts.css), so the
+     bespoke .screen-bar / .screen-title / .screen-head that used to sit here are
+     gone rather than left unreferenced. */
+  #scrRnm .screen-body{ flex: 1; overflow-y: auto; }
+  /* Bike info brings its own layout — see rnm/bikeinfo.css. */

@@ -1,0 +1,10 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "Stitched Flow",
+      "runtimeExecutable": "/tmp/start_stitched_flow.sh",
+      "port": 8000
+    }
+  ]
+}

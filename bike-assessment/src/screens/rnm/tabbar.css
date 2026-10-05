@@ -1,0 +1,336 @@
+/* ═══ RnM — the hero carousel, the part-exchange card, and the bottom tabs ═══
+   Figma 2620:29006 (Open tasks) and 2621:29241 (Bike essentials).
+   See src/MAP.md. */
+
+  /* ---- Hero carousel — two slides in one band ---------------------------- */
+  /* The bike is what you glance at while working; the part-exchange summary is
+     what you check before closing. One is continuous and one is a moment, so
+     they take turns in the same 476px rather than each claiming a band. */
+  /* pan-y: vertical gestures still belong to the page, horizontal ones are ours.
+     Without it a touch drag is claimed by the browser as a scroll and pointermove
+     never arrives. */
+  #scrRnm .rncar{ position: absolute; inset: 0; overflow: hidden; touch-action: pan-y; }
+  #scrRnm .rncar__track{
+    display: flex;
+    width: 200%;
+    height: 100%;
+    transition: transform 320ms var(--ease-out);
+  }
+  #scrRnm .rncar__slide{ position: relative; width: 50%; height: 100%; }
+  #scrRnm.is-car2 .rncar__track{ transform: translateX(-50%); }
+
+  /* x182 y390, 26x6 — the active pill is wider rather than darker, so the two
+     read apart at a glance and on a screen being looked at through a visor. */
+  #scrRnm .rncar__dots{
+    position: absolute;
+    left: 50%;
+    top: 390px;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: var(--s1);
+    z-index: 2;
+  }
+  #scrRnm .rncar__dots i{
+    display: block;
+    width: 6px;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--content-disabled);
+    transition: width 200ms var(--ease-out), background-color 200ms var(--ease-out);
+  }
+  #scrRnm .rncar__dots i.is-on{ width: 16px; background: var(--content-primary); }
+
+  /* ---- Part exchange summary — Figma 2660:29639 -------------------------- */
+  /* 342x200 at x24 y150. The whole card is the control now — a header naming it
+     with a chevron, then the record underneath. The pill it replaces said "Part
+     exchange" directly below a card that was already about part exchange, which
+     is a button restating its own container.
+
+     172, not the frame's 200: the two counts under the barcode are gone and the
+     8 + 20 they occupied went with them rather than being left as slack. What
+     remains measures 24 header, 24, hairline, 24, 52 barcode, 24 = 172. They
+     said what the screen behind the card says better, and said it in tertiary
+     grey on a card whose whole job is to be pressed. */
+  #scrRnm .pxcard{
+    position: absolute;
+    left: var(--s6);
+    right: var(--s6);
+    top: 150px;
+    height: 172px;
+    box-sizing: border-box;
+    /* 23, not 24: border-box puts the 1px border inside the declared box, so
+       padding starts after it and 24 measured 25 from the card's own edge. */
+    padding: calc(var(--s6) - 1px);
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+    background: var(--surface-inverse);
+    border: 1px solid var(--border-primary);
+    border-radius: 16px;
+    font: inherit;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 120ms ease;
+  }
+  #scrRnm .pxcard:active{ transform: scale(.99); }
+
+  #scrRnm .pxcard__head{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 24px;
+  }
+  #scrRnm .pxcard__title{
+    font-weight: 700;
+    font-size: 16px;
+    line-height: 20px;
+    color: var(--content-primary);
+  }
+  #scrRnm .pxcard__go{ display: block; width: 24px; height: 24px; }
+
+  #scrRnm .pxcard__rule{
+    height: 1px;
+    margin-top: var(--s6);
+    background: var(--border-primary);
+  }
+
+  /* A window on the artwork, not a resize of it. The source is 680x380 — a
+     barcode sitting in a lot of vertical whitespace — so fitting all 380px into
+     52 squashed the bars to about a seventh of their thickness and they read as
+     grey hatching. The frame does not scale it either: it draws the image at
+     287% of the box and shows the middle slice, which is the bars at their own
+     weight. These percentages are the frame's, kept as percentages so the crop
+     holds if the card is ever re-sized. */
+  #scrRnm .pxcard__code{
+    display: block;
+    position: relative;
+    margin-top: var(--s6);
+    height: 52px;
+    overflow: hidden;
+  }
+  #scrRnm .pxcard__code img{
+    position: absolute;
+    display: block;
+    width: 102.65%;
+    height: 287.25%;
+    left: -1.32%;
+    top: -86.23%;
+    max-width: none;
+  }
+
+
+  /* ---- Tab panels -------------------------------------------------------- */
+  /* Each panel is the whole screen; its contents keep the absolute positions the
+     frames draw them at. `hidden` is enough to swap them — there is no transition
+     between tabs, because a tab bar says "you are in one of two places", and
+     sliding between them would say they are one scrolling surface. */
+  /* The panel is the whole screen so its contents can keep the absolute positions
+     the frames draw them at — which means it lies over the carousel band too, and
+     at z-index 1 it swallowed every pointer the hero should have got. It cannot
+     simply sit below the hero either: on Bike essentials the readings card starts
+     at 456, twenty pixels inside the 476 gradient, and the frame draws it on top.
+
+     So the panel itself is inert and only its blocks take pointers back. The
+     heading stays inert deliberately — it is text, and it overlaps the carousel's
+     last 8px. */
+  /* Bottom-anchored, not top-positioned. The frame is min(844, 100dvh) and on a
+     real phone that is ~740, not 844 — so blocks pinned by a `top` measured off
+     an 844 artboard ran straight into the tab bar, which is what was happening on
+     device. Stacking from the floor up instead puts the content a fixed distance
+     above the bar on any height and leaves the slack at the top, where the hero
+     already is. 124 = the 88 bar plus the 36 of air. */
+  #scrRnm .rntabpanel{
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding-bottom: calc(88px + 36px);
+  }
+  /* 24 above the bar, not 36. Sagar's number, and only on the assessment: the
+     mechanic's panels are measured at 36 and that layout is signed off. */
+  #scrRnm.is-assessment .rntabpanel{ padding-bottom: calc(88px + var(--s6)); }
+  /* Tasks added carries the Bike Info readings at its top now, so the panel has
+     to start below the app bar rather than at the frame's edge — and its content
+     splits: readings up there, the rows and the CTA still on the floor.
+     Assessment only. A repair's Tasks panel has no readings block and its hero
+     is a bike render, which this offset would push the rows away from. */
+  #scrRnm.is-assessment #rnPanelTasks{
+    padding-top: calc(var(--header-h) + var(--s6));
+  }
+  /* The panel is already justify-content:flex-end, so one auto margin does it:
+     the readings take all the slack below them and everything else stays on the
+     floor. space-between would have spread the rows away from the CTA too —
+     they are one group and only the readings belong at the top. */
+  #scrRnm.is-assessment #biStatsTasks{ margin-bottom: auto; }
+  #scrRnm:not(.is-assessment) #biStatsTasks{ display: none; }
+  #scrRnm .rntabpanel .vcard,
+  #scrRnm .rntabpanel .commands,
+  #scrRnm .rntabpanel .rnfoot,
+  #scrRnm .rntabpanel .tasksheet__rows{ pointer-events: auto; }
+
+  /* ── The assessment's CTA ───────────────────────────────────────────────────
+     Figma 2875:23044 draws it in a 112px band of its own below the tab bar; it
+     lives inside the panel instead, above the bar, which is where Sagar put it.
+     The band's own numbers survive the move: 318 wide on a 36 inset, 64 tall,
+     and 24 clear of the rows above it.
+     ─────────────────────────────────────────────────────────────────────────── */
+  #scrRnm:not(.is-assessment) #rnAssessFoot{ display: none; }
+  /* OUT OF THE FRAME while the assessment is in flight — see paintAssessment.
+     It slides rather than vanishing, and the list takes the height in the same
+     movement: margin-bottom on a flex:0 0 auto item hands the space to the
+     panel above it, where display:none would have snapped it. */
+  #scrRnm #rnAssessFoot{
+    margin-bottom: 0;
+    transition: margin-bottom .28s var(--ease-out), opacity .18s var(--ease-out);
+  }
+  #scrRnm #rnAssessFoot.is-away{
+    margin-bottom: -100px;   /* 64 button + 24 padding + 12 of slack */
+    opacity: 0;
+    pointer-events: none;
+  }
+  #scrRnm .rnfoot{
+    flex: 0 0 auto;
+    padding: var(--s6) 36px 0;
+  }
+  /* The fill and the radius come from the shared button now — see .btn-primary
+     and .btn-secondary in base.css. What is this screen's is only the size. */
+  #scrRnm .rnfoot .btn-primary,
+  #scrRnm .rnfoot .btn-secondary{
+    width: 100%;
+    height: 64px;
+    box-sizing: border-box;
+  }
+  #scrRnm .rnfoot .btn-primary:active{ opacity: .85; }
+  #scrRnm .rntabpanel[hidden]{ display: none; }
+
+  /* "Open tasks · 24/24" at x26 y468. The tally is in the heading rather than in
+     a progress bar: the bar this replaces was 6px of monochrome that stated the
+     same fact in a form nobody could read a number off. */
+  /* Static now: the panel stacks these from the floor. The 26 and the 24 below it
+     are the frame's own — head at 468, rows at 520, head line-height 28. */
+  #scrRnm .rnpanel__head{
+    position: static;
+    margin: 0 0 var(--s6) 26px;
+    font-weight: 700;
+    font-size: 20px;
+    line-height: 28px;
+    color: var(--content-primary);
+  }
+  /* Full bleed, because the row already carries the 24px inset itself. Insetting
+     the container too doubled it — tile on 48, chevron 48 off the right edge. */
+  #scrRnm #rnPanelTasks .tasksheet__rows{
+    position: static;
+    flex: 0 0 auto;
+  }
+  /* There is no Add Issues button on this panel. The frames put the third row's
+     bottom edge at 732 and the tab bar's top at 756 — 24px, which is a margin, not
+     a button. It went back to the ⋮ as Report issues on bike, where it was
+     before the footer existed. Flagged: this reverses a removal Sagar asked for,
+     and it is only defensible because the row no longer points at something on
+     screen. */
+
+  /* Bike essentials stacks from the floor up, so what carries over from the frame
+     is the GAP between the readings and the grid, not either block's top.
+
+     24, not 8 — Figma 2875:23253: the card ends at 500 (432 + its new 68) and the
+     grid starts at 524. It was 8 from 2621:29241, which drew a 60px card; both
+     numbers changed in the same frame and they change together here.
+
+     Not scoped to the assessment. The panel is one block of markup and the card
+     is one component, and 2875 is the newest drawing of both — so the mechanic's
+     Bike essentials moves with it. Flagged rather than assumed: that screen was
+     signed off at the old numbers. */
+  #scrRnm #rnPanelBike .vcard{
+    position: static;
+    margin: 0 var(--s6) var(--s6);
+    transition: none;
+  }
+  #scrRnm #rnPanelBike .commands{
+    position: static;
+    margin: 0 var(--s6);
+  }
+
+  /* ---- Bottom tabs — Figma 2621:29373 ------------------------------------ */
+  /* 88px, anchored to the floor. The frame is min(844, 100dvh) now, so a bar
+     pinned by a top offset floats above the bottom edge on a short viewport —
+     which is the one place a nav bar must never be. */
+  #scrRnm .rntabbar{
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 88px;
+    z-index: 3;
+    display: flex;
+    align-items: flex-start;
+    background: var(--surface-inverse);
+    box-shadow: inset 0 1px 0 var(--border-primary);
+  }
+  #scrRnm .rntabbar__tab{
+    flex: 1 1 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--s2);
+    padding-top: var(--s4);
+    border: 0;
+    background: none;
+    font: inherit;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #scrRnm .rntabbar__glyph{
+    display: block;
+    width: 24px;
+    height: 24px;
+    fill: var(--content-tertiary);
+    transition: fill 180ms ease;
+  }
+  #scrRnm .rntabbar__tab span{
+    font-weight: 500;
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--content-tertiary);
+    white-space: nowrap;
+    transition: color 180ms ease;
+  }
+  /* Bike Info is the assessment's third section. Hidden in the repair flow, along
+     with its divider — a repair reaches Bike info from the ⋮ and adding a tab
+     there would have narrowed the mechanic's two tabs for no reason. */
+  /* No heading over the assessment's rows. It read "Tasks done · 0/17", and three
+     of those four rows are findings rather than tasks — there is nothing for the
+     denominator to be. The tab already names the panel. */
+  #scrRnm.is-assessment #rnTasksHead{ display: none; }
+  #scrRnm:not(.is-assessment) #rnTabInfo,
+  #scrRnm:not(.is-assessment) #rnPanelInfo,
+  #scrRnm:not(.is-assessment) #rnTabRule2{ display: none; }
+  #scrRnm .rntabbar__tab.is-on .rntabbar__glyph{ fill: var(--content-primary); }
+  #scrRnm .rntabbar__tab.is-on span{ color: var(--content-primary); }
+
+  /* The hairline between the two, 48px — the height of one tab's content, not of
+     the whole bar. */
+  #scrRnm .rntabbar__rule{
+    flex: 0 0 1px;
+    align-self: flex-start;
+    height: 48px;
+    margin-top: var(--s4);
+    background: var(--border-primary);
+  }
+
+  /* 2px on the bar's top edge, the width of the label it belongs to — measured
+     from the label at runtime, so renaming a tab moves it without a number to
+     remember. */
+  #scrRnm .rntabbar__ink{
+    position: absolute;
+    top: -1px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    border-radius: 1px;
+    background: var(--content-primary);
+    transition: transform 220ms var(--ease-out), width 220ms var(--ease-out);
+  }

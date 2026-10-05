@@ -1,0 +1,342 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   SERVICING CHECKS — ported from mechanic-checks/
+   Barun's screen. The device frame, reset, type styles and status bar are gone:
+   the shell owns them. Every rule below is scoped to #scrChecks, every id carries
+   a "ck" prefix and the classes that collided with this app carry "ck-".
+
+   The collision list was not guessed — it is the intersection of the classes this
+   screen styles with the classes the flow already styles, and it was long: card,
+   item, row, list, scroll, progress, footer, sheet, scrim, chip, tabs, tab and
+   every is-* state among them. The assess screen's CSS is unscoped, so any of
+   those left alone would have had its rules land on these elements.
+   ══════════════════════════════════════════════════════════════════════════ */
+/* The shell already defines --status-h; --tabs-h is this screen's own. */
+/* The screen root. His .phone carried the canvas colour and the frame; the frame
+   belongs to the shell now, but the canvas does not — without it the shell's grey
+   showed through behind the list. */
+#scrChecks{--tabs-h:56px;background:var(--canvas-primary)}
+
+/* Barun's four part photographs, carried over from his :root and renamed.
+   --img-tyre COLLIDES with the flow's own tyre photo: cutting his token block
+   left ASSETS.tyre resolving to the shell's lighter render and the other three
+   resolving to nothing at all, so the hub motor showed the wrong bike and the
+   MCU and brake tiles came up empty. */
+#scrChecks{
+  --ck-img-tyre: url(assets/extracted/4b4f61258a.png);
+  --ck-img-display: url(assets/extracted/83eb0c6a61.png);
+  --ck-img-brake: url(assets/extracted/4a9ecae4b6.png);
+  --ck-img-pigtail: url(assets/extracted/ef23259fde.png);
+}
+
+
+/* ── App bar ─────────────────────────────────────────────────────────────── *//* Everything below is sized off the frame, not a hard 390px, so the screen
+   holds up on any real handset (390, 393, 430 …) during field testing. *//* The bar collapses to its status strip on the way down the list and comes back
+   on the way up. Height is animated on .appbar itself with overflow hidden, so the
+   row is clipped away from the bottom while the status bar stays anchored at the
+   top — no transform on the row, nothing to keep in sync. */#scrChecks .appbar{
+  position:absolute;left:0;top:0;width:100%;
+  /* His bar CONTAINED a 44px status strip; the host draws one over every screen,
+     so that strip was dropped and this padding stands in for it. Keeping the bar
+     at top:0 with padding — rather than moving it to top:var(--status-h) — is what
+     lets the collapsed height stay `--status-h + 1` and clip the row away cleanly
+     from the bottom. */
+  padding-top:var(--status-h);
+  height:var(--header-h);overflow:hidden;
+  background:var(--surface-inverse);
+  border-bottom:1px solid var(--border-primary);
+  transition:height 260ms var(--ease-out);
+  z-index:20;
+}/* Everything under the bar is positioned off --chrome-h, so collapsing the bar is
+   one variable change and the progress bar, the tabs and the list all follow. They
+   transition `top`, which does animate when the custom property it reads changes. */#scrChecks{--chrome-h:var(--header-h)}#scrChecks.ck-is-scrolled{--chrome-h:calc(var(--status-h) + 1px)}#scrChecks.ck-is-scrolled .appbar{height:calc(var(--status-h) + 1px)}/* ── Tabs ─────────────────────────────────────────────────────────────────── *//* One strip per checklist. It never scrolls away: the app bar can go, but losing
+   the tabs would leave the mechanic with no way to tell which list they are in or
+   to reach the other one. */#scrChecks .ck-tabs-wrap{
+  position:absolute;left:0;right:0;
+  top:calc(var(--chrome-h) + var(--progress-h));
+  height:var(--tabs-h);
+  background:var(--surface-inverse);
+  border-bottom:1px solid var(--border-primary);
+  transition:top 260ms var(--ease-out);
+  z-index:16;
+}/* Type and metrics copied from the flow's tabs (#scrIssues .iq-tab) rather than
+   invented here: 16/500/24, secondary until selected and primary when, with the
+   weight held at 500 both ways. Selection is carried by colour and the underline —
+   bolding the active label as well made this strip read heavier than every other
+   tab strip in the product. First tab is inset 24px from the frame edge. */#scrChecks .ck-tabs{position:relative;display:flex;align-items:stretch;height:100%}#scrChecks .ck-tab{
+  position:relative;flex:0 0 auto;
+  display:inline-flex;align-items:center;gap:var(--s2);
+  height:55px;padding:16px;border:0;background:none;cursor:pointer;
+  font-family:inherit;font-size:16px;font-weight:500;line-height:24px;
+  color:var(--content-secondary);white-space:nowrap;
+  transition:color .18s ease;
+}#scrChecks .ck-tab:first-of-type{padding-left:var(--s6)}#scrChecks .ck-tab.ck-is-active{color:var(--content-primary)}#scrChecks .ck-tab__n{color:var(--content-secondary)}/* One underline that slides, rather than a border per tab — a border would jump
+   between tabs, and the slide is what tells you the lists are side by side. */#scrChecks .ck-tabs__underline{
+  position:absolute;left:0;bottom:0;height:2px;width:0;
+  border-radius:1px;background:var(--content-primary);
+  transition:transform 220ms cubic-bezier(.4,0,.2,1),
+             width     220ms cubic-bezier(.4,0,.2,1);
+  pointer-events:none;
+}#scrChecks .appbar__row{
+  height:72px;display:flex;align-items:center;width:100%;
+  padding:var(--s2) var(--s6) var(--s2) 4px;
+  background:#fff;
+}#scrChecks .leading-action{height:48px;display:flex;align-items:flex-start;justify-content:flex-end;overflow:hidden}#scrChecks .icon-btn{display:flex;align-items:center;padding:12px;border:0;background:none;cursor:pointer}#scrChecks .icon-btn svg{display:block;width:24px;height:24px}#scrChecks .appbar__title{max-width:204px;width:204px;display:flex;align-items:flex-start}#scrChecks .appbar__title p{white-space:nowrap;word-break:break-word}#scrChecks .appbar__title .muted{color:var(--content-tertiary)}/* ── Scrollable checklist ────────────────────────────────────────────────── */#scrChecks .ck-scroll{
+  position:absolute;left:0;right:0;
+  top:calc(var(--chrome-h) + var(--progress-h) + var(--tabs-h));
+  bottom:var(--footer-h);
+  transition:bottom .26s cubic-bezier(.22,1,.36,1),top 260ms var(--ease-out);
+  overflow-y:auto;overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:none;
+}#scrChecks .ck-scroll::-webkit-scrollbar{display:none}/* 64px of run-out below the last row, so the final item clears the footer
+   instead of sitting flush against it — and stays clear when the footer slides
+   away and the list claims that space. */#scrChecks .ck-list{padding:0 0 var(--s16)}/* One part = one item, full-bleed with its own 24px inset — so a row press
+   state can span the full width later. Collapsed and expanded share the same
+   24px padding, which is what makes the rhythm hold: 24+48+24 = 96 collapsed,
+   24+344+24 = 392 expanded, exactly as Figma. The divider is drawn on the
+   bottom edge rather than added to the flow, so it costs no height. */#scrChecks .ck-item{position:relative;background:#fff;padding:var(--s6)}#scrChecks .ck-item::after{
+  content:"";position:absolute;left:var(--s6);right:var(--s6);bottom:0;
+  height:1px;background:var(--border-primary);
+}/* Collapsed row. min-height, not height: a row carrying wrapped issue text
+   grows, and the item's 24px padding holds the rhythm around it. */#scrChecks .ck-row{
+  min-height:48px;display:flex;align-items:center;justify-content:space-between;
+  width:100%;gap:var(--s4);
+}#scrChecks .ck-row__lhs{display:flex;align-items:center;gap:var(--s4);min-width:0}/* The photo is a background layer, not an <img>, so its data URI lives in one
+   place (the :root variable). background-position:calc(50% + Npx) reproduces
+   Figma's centre-plus-nudge crop exactly. */#scrChecks .ck-thumb{
+  width:48px;height:48px;flex:0 0 auto;
+  background-color:var(--surface-secondary);
+  background-repeat:no-repeat;
+  border-radius:8.727px;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--content-tertiary);
+}#scrChecks .ck-row__label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#scrChecks .ck-row__status{flex:0 0 auto;display:flex;align-items:center;justify-content:center;width:24px;height:24px}#scrChecks .ck-row__status svg{display:block}/* Label/Small, content/secondary, capped at 230px and allowed to wrap —
+   per the reason line in Assessment_complete (2054:40281). */#scrChecks .ck-row__reasons{
+  color:var(--content-secondary);font-size:14px;line-height:16px;font-weight:500;
+  max-width:230px;
+}#scrChecks .ck-row__text{min-width:0;display:flex;flex-direction:column;gap:var(--s2)}/* ── Swipe stage ─────────────────────────────────────────────────────────── *//* The reveal sits directly behind the card at exactly the card's rect, so the
+   card slides off it like a page off a desk. */#scrChecks .ck-swipe{position:relative}#scrChecks .ck-reveal{
+  position:absolute;inset:0;border-radius:12px;   /* 12, not the card's 8 */
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;
+}#scrChecks .ck-reveal--good{background:var(--reveal-positive);color:var(--content-positive)}#scrChecks .ck-reveal--faulty{background:var(--reveal-negative);color:var(--content-negative)}#scrChecks .ck-reveal__frame{position:absolute;inset:0;width:100%;height:100%;overflow:visible}#scrChecks .ck-reveal__body{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:var(--s4);
+}/* Long part names ("Vehicle side pigtail connector marked good") must wrap to
+   a balanced two lines rather than run the width of the panel. */#scrChecks .ck-reveal__body p{
+  color:var(--content-primary);
+  text-align:center;max-width:240px;text-wrap:balance;
+}/* ── Expanded assessment card ────────────────────────────────────────────── */#scrChecks .ck-card{
+  position:relative;z-index:2;
+  width:100%;
+  background:#fff;
+  border-radius:var(--s2);
+  padding:var(--s4);
+  display:flex;flex-direction:column;gap:var(--s2);
+  /* Stroke drawn inside so it costs no layout space — matches Figma's
+     342x344 frame exactly. Elevation is the second shadow. */
+  box-shadow:inset 0 0 0 1px var(--border-primary),
+             0 1px 4.95px rgba(0,0,0,0.1);
+  touch-action:pan-y;                 /* vertical scroll still belongs to the list */
+  cursor:grab;
+  will-change:transform;
+}#scrChecks .ck-card--settling{transition:transform .3s cubic-bezier(.22,.61,.36,1)}#scrChecks .ck-card--flying{transition:transform .26s cubic-bezier(.4,0,1,1),opacity .26s linear}/* 8px rather than 16px. The 16px was set when this block held only a heading and
+   a photo; once the action line landed between them the heading sat 20px off its
+   own subtext — looser than the 12px the collapsed rows use for the same pair.
+   8px + the action's 4px margin lands on that same 12px, and the photo gets its
+   16px back below. */#scrChecks .ck-card__head{display:flex;flex-direction:column;gap:var(--s2)}/* Name and instruction stack on the left, Skip holds the right. Top-aligned, so
+   Skip sits on the name's line whether the instruction wraps or not. */#scrChecks .ck-card__headRow{display:flex;align-items:flex-start;gap:var(--s2)}#scrChecks .ck-card__headText{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:var(--s2)}#scrChecks .ck-card__headRow + .ck-card__media{margin-top:var(--s2)}/* Secondary text button. It carries the same 16/500/20 as the Faulty and Done
+   labels below it — it is the third thing you can do to this part, so it should
+   not be set in a different size from the other two. Grey rather than a semantic
+   colour, and no fill or border, because it is the one action here that is not a
+   verdict; weight is what separates it from the name above, not size.
+
+   The negative margins are the whole point of the spacing: 8/16 of padding gives
+   it a 36px tap target, and pulling that padding back off the top and right lands
+   the LABEL exactly on the part name's first line and exactly on the card's right
+   content edge. Without them the button looks inset and sits low. Both values are
+   off the spacer scale — there is no 12px token here, so the padding is 8 and 16
+   rather than a hand-typed in-between. */#scrChecks .ck-btn-skip{
+  flex:0 0 auto;
+  margin:calc(var(--s2) * -1) calc(var(--s4) * -1) 0 0;
+  padding:var(--s2) var(--s4);
+  border:0;background:none;border-radius:100px;
+  font-family:inherit;font-size:16px;font-weight:500;line-height:20px;
+  color:var(--content-secondary);
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+  transition:background-color .15s ease;
+}#scrChecks .ck-btn-skip:active{background:var(--surface-secondary)}/* Figma: a 353x198 photo at x=-21, y=0 inside a 310x220 box.
+   As a background layer that is size 113.871% x 90%, positioned so the left
+   edge lands at -21px:  -21 / (310 - 353) = 48.837%.
+   Ratios rather than pixels, so the crop is identical at 390pt and still
+   composes correctly on a wider handset. */#scrChecks .ck-card__media{
+  height:220px;width:100%;
+  background-color:var(--border-primary);
+  background-repeat:no-repeat;
+  background-size:113.871% 90%;
+  background-position:48.837% 0%;
+  border-radius:var(--s2);overflow:hidden;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--content-tertiary);
+}#scrChecks .ck-card__actions{display:flex;align-items:center;gap:var(--s6);width:100%}#scrChecks .ck-btn-faulty{
+  flex:1 0 0;min-width:0;
+  display:flex;align-items:center;justify-content:center;
+  padding:12px var(--s2);border-radius:100px;border:0;background:none;cursor:pointer;
+}#scrChecks .ck-btn-good{
+  flex:1 0 0;min-width:0;
+  display:flex;align-items:center;justify-content:center;
+  padding:4px 0;border-radius:100px;border:0;background:none;cursor:pointer;
+}#scrChecks .ck-btn-good__inner{
+  display:flex;align-items:center;justify-content:center;gap:var(--s2);
+  padding:var(--s2) var(--s4) var(--s2) var(--s2);border-radius:100px;
+}#scrChecks .ck-btn-label{display:flex;align-items:center;justify-content:center;gap:var(--s2)}#scrChecks .ck-btn-label svg{display:block;width:24px;height:24px;flex:0 0 auto}#scrChecks .ck-txt-negative{color:var(--content-negative)}#scrChecks .ck-txt-positive{color:var(--content-positive)}/* Add issues moved into the options sheet, so the footer holds Next alone.
+   Scoped through .ck-footer to outrank the later .ck-footer__content{space-between},
+   which would otherwise park a lone button on the left. *//* Symmetric 24px, so the full-width button lands on the frame's margins. The
+   inherited 16px left was for the text-button-left / primary-right pair. */#scrChecks .ck-footer .ck-footer__content--end{justify-content:stretch;padding:0 var(--s6)}/* ── App bar titles + fading suffix ───────────────────────────────────────── *//* Carried over from bike-assessment so the two checklists behave identically:
+   the bike number never leaves, and the screen name fades in only once the big
+   heading has scrolled up past the bar — so the title is never shown twice. */#scrChecks .appbar__lhs{display:flex;align-items:center;flex:1 1 auto;min-width:0}#scrChecks .appbar__titles{flex:1 1 auto;min-width:0;display:flex;align-items:center}#scrChecks .appbar__titles p{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}/* Always on now. It used to fade in only once the in-list heading had scrolled
+   past — there is no in-list heading to duplicate any more, and the open tab is
+   worth naming in the bar for the same reason the tabs themselves never leave. */#scrChecks .appbar__suffix{display:inline-block;color:var(--content-tertiary)}#scrChecks .appbar__more{flex:0 0 auto;margin-right:-12px}#scrChecks .appbar__row{justify-content:space-between}/* ── Options sheet (three dots) ───────────────────────────────────────────── */#scrChecks .ck-scrim{
+  position:absolute;inset:0;background:rgba(0,0,0,.4);
+  opacity:0;pointer-events:none;transition:opacity .26s ease;z-index:30;
+}#scrChecks .ck-scrim.ck-is-open{opacity:1;pointer-events:auto}#scrChecks .sheet-opt{
+  position:absolute;left:0;right:0;bottom:0;
+  background:var(--surface-inverse);
+  border-radius:var(--s6) var(--s6) 0 0;
+  display:flex;flex-direction:column;
+  transform:translateY(100%);
+  transition:transform .3s var(--ease-out);
+  z-index:31;
+}#scrChecks .sheet-opt.ck-is-open{transform:translateY(0)}#scrChecks .sheet-opt--dragging{transition:none}/* Generous invisible hit area around the grabber for drag-to-dismiss. */#scrChecks .sheet-opt__grabzone{
+  padding:18px 40px 14px;display:flex;justify-content:center;
+  touch-action:none;cursor:grab;flex:0 0 auto;
+}#scrChecks .sheet-opt__grab{width:44px;height:4px;border-radius:100px;background:var(--border-primary)}#scrChecks .sheet-opt__list{display:flex;flex-direction:column;padding-bottom:var(--s9)}#scrChecks .sheet-opt__item{
+  min-height:64px;width:100%;border:0;background:none;cursor:pointer;
+  display:flex;align-items:center;gap:var(--s4);
+  padding:var(--s6);text-align:left;font:inherit;
+  color:var(--content-primary);
+}#scrChecks .sheet-opt__item:active{background:var(--surface-secondary)}/* Inset 24px, matching every other hairline on this screen (.ck-item::after, the
+   card divider). bike-assessment runs this one edge to edge, which is the one
+   place its sheet departs from the rest of the system. Drawn as a positioned
+   ::before rather than an inset shadow so it can be inset at all. */#scrChecks .sheet-opt__item{position:relative}#scrChecks .sheet-opt__item + .sheet-opt__item::before{
+  content:"";position:absolute;left:var(--s6);right:var(--s6);top:0;
+  height:1px;background:var(--border-primary);
+}#scrChecks .sheet-opt__item span{flex:1 1 auto;min-width:0}/* 24px leading glyph. Both are real exports already in the repo rather than
+   anything hand-drawn; the bolt's own viewBox is 20 so it is scaled to sit on
+   the same 24px optical square as the tick. */#scrChecks .sheet-opt__item svg{
+  width:24px;height:24px;flex:0 0 auto;display:block;
+  fill:var(--content-primary);
+}/* ── Section header (mechanic checklist) ──────────────────────────────────── *//* Figma 10-1382 heads the list with a numbered section and a done/total pill. *//* Matches bike-assessment's .ck-listhead: 24px in from the frame, 24px of air
+   above, and the heading at 32px so it dominates before it scrolls away. *//* Headings/Small, not Large. At 32px the title needed 278 of the 342px available
+   and left the count pill no room — the layout arguing the type was too big for
+   the string. At 20px there is slack for the design system's 16px gap again.
+   The scroll handoff is unchanged: it measures this block's height at run time,
+   so a shorter header simply hands off sooner. *//* The .ck-section / .section__title / .section__count rules that sat here went with
+   the in-list headings. The two checklists are tabs now; the count they carried
+   moved onto the tab label. *//* ── Action line (mechanic checklist) ─────────────────────────────────────── *//* The prescribed action per part. Sits on the same rhythm as row__reasons, so
+   swapping between them does not shift the row. */#scrChecks .ck-row__action, #scrChecks .ck-card__action{
+  font-weight:500;font-size:12px;line-height:16px;
+  color:var(--content-tertiary);margin-top:4px;
+}/* The card's copy of the line steps up to 14/20 — body-sm, the next stop on the
+   ramp. It carries a sentence now rather than a single word, and 12px was the
+   caption size: small enough that the instruction read as a footnote to the part
+   name instead of as the job. The collapsed row keeps 12/16, so it stays on the
+   same rhythm as row__reasons and the list does not shift when a card closes. */#scrChecks .ck-card__action{font-size:14px;line-height:20px}#scrChecks .ck-row__action.ck-is-missing, #scrChecks .ck-card__action.ck-is-missing{color:var(--content-negative)}/* ── Progress bar ────────────────────────────────────────────────────────── *//* Sits directly under the app bar rather than above the footer: progress is
+   something you glance at while working down the list, not on your way out. */#scrChecks .ck-progress{
+  position:absolute;left:0;top:var(--chrome-h);
+  width:100%;height:var(--progress-h);
+  background:var(--border-primary);
+  transition:top 260ms var(--ease-out);
+  z-index:17;
+}#scrChecks .ck-progress__fill{
+  height:100%;background:var(--surface-primary);width:0;
+  transition:width .3s cubic-bezier(.22,.61,.36,1);
+}/* ── Footer ──────────────────────────────────────────────────────────────── */#scrChecks .ck-footer{
+  position:absolute;left:0;bottom:0;width:100%;
+  background:var(--surface-inverse);
+  padding:var(--s6) 0 var(--s9);
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-end;
+  z-index:16;
+  /* Hairline along the top edge, so the footer reads as its own surface once the
+     list scrolls behind it. Drawn as an inset shadow rather than a border so it
+     costs no height and --footer-h stays 124. */
+  box-shadow:inset 0 1px 0 var(--border-primary);
+  transition:transform .26s cubic-bezier(.22,1,.36,1);
+}/* Slides out of view while you work down the list. The list's bottom inset is
+   released with it (below), so the space is handed to the rows rather than left
+   as a gap. */#scrChecks .ck-footer.ck-is-hidden{transform:translateY(100%)}#scrChecks .ck-scroll.ck-footer-hidden{bottom:0}#scrChecks .ck-footer__content{
+  width:100%;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 var(--s6) 0 var(--s4);
+}#scrChecks .btn-text{
+  display:flex;align-items:center;padding:12px var(--s2);
+  border-radius:100px;border:0;background:none;cursor:pointer;
+}#scrChecks .btn-text .label{text-decoration:underline;text-underline-position:from-font;text-decoration-skip-ink:none}#scrChecks .btn-primary{
+  /* Full width, matching the frame's 342x64 primary. It was hugging its label
+     when it shared the row with Add issues; now that it is alone it takes the
+     whole content width. */
+  width:100%;height:64px;
+  display:flex;align-items:center;justify-content:center;
+  padding:0 36px;border-radius:100px;border:0;cursor:pointer;
+  background:var(--surface-disabled);
+  color:var(--content-disabled);
+  font-family:inherit;
+}#scrChecks .btn-primary[disabled]{cursor:default}#scrChecks .btn-primary:not([disabled]){background:var(--surface-primary);color:var(--content-inverse)}/* ── "Mark issue" bottom sheet ───────────────────────────────────────────── */#scrChecks .ck-scrim{
+  position:absolute;inset:0;background:rgba(0,0,0,.4);
+  opacity:0;pointer-events:none;transition:opacity .26s ease;z-index:30;
+}#scrChecks .ck-scrim.ck-is-open{opacity:1;pointer-events:auto}#scrChecks .ck-sheet{
+  position:absolute;left:0;right:0;bottom:0;
+  background:var(--surface-inverse);
+  border-radius:var(--s6) var(--s6) 0 0;
+  display:flex;flex-direction:column;align-items:stretch;
+  transform:translateY(100%);
+  transition:transform .3s cubic-bezier(.22,.61,.36,1);
+  z-index:31;
+}#scrChecks .ck-sheet.ck-is-open{transform:translateY(0)}#scrChecks .ck-sheet--dragging{transition:none}#scrChecks .ck-sheet__top{
+  display:flex;flex-direction:column;align-items:center;gap:var(--s9);
+  padding:var(--s2) 0 var(--s9);
+  border-radius:var(--s6) var(--s6) 0 0;
+  overflow:hidden;
+}/* Generous invisible hit area around the 44x4 grabber for drag-to-dismiss. */#scrChecks .ck-sheet__grabzone{
+  padding:10px 40px;margin:-10px -40px;display:flex;justify-content:center;
+  touch-action:none;cursor:grab;flex:0 0 auto;
+}#scrChecks .ck-sheet__grab{width:44px;height:4px;border-radius:100px;background:var(--border-primary)}/* No gap here: the 24px below the part row belongs to the collapsing region,
+   so it disappears with it instead of leaving dead space in the good state. */#scrChecks .ck-sheet__stack{
+  display:flex;flex-direction:column;
+  width:342px;max-width:calc(100% - 48px);
+}/* Divider + issues collapse together when the part is marked good. The
+   0fr/1fr grid row animates a content-driven height, which a plain height
+   transition cannot do — and because the sheet is anchored to the bottom,
+   its top edge glides up with it. */#scrChecks .ck-sheet__collapse{
+  display:grid;grid-template-rows:1fr;
+  transition:grid-template-rows .32s cubic-bezier(.22,.61,.36,1),
+             opacity .22s ease;
+}#scrChecks .ck-sheet__collapse.ck-is-collapsed{grid-template-rows:0fr;opacity:0}#scrChecks .ck-sheet__collapse.ck-no-anim{transition:none}/* The clipping element carries no padding of its own: overflow:hidden clips
+   content, not an element's own padding box, so 24px would survive the
+   collapse. The spacing lives one level in, where it gets clipped too. */#scrChecks .ck-sheet__collapseInner{overflow:hidden;min-height:0}#scrChecks .ck-sheet__collapseBody{
+  display:flex;flex-direction:column;gap:var(--s6);padding-top:var(--s6);
+}#scrChecks .ck-sheet__part{display:flex;gap:var(--s4);align-items:flex-start;width:100%}#scrChecks .ck-sheet__lhs{flex:1 0 0;min-width:0;display:flex;gap:var(--s4);align-items:center}#scrChecks .ck-sheet__name{flex:1 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}/* The .sheet__toggle / .tog rules that used to sit here went with the control —
+   the sheet no longer carries a good/faulty pair in its header. */#scrChecks .ck-sheet__divider{height:1px;background:var(--border-primary);width:100%}#scrChecks .ck-sheet__issues{display:flex;flex-direction:column;gap:var(--s6);width:100%}#scrChecks .ck-sheet__issues[hidden]{display:none}/* One wrapping run: reasons and "Missing" share a line and flow together. */#scrChecks .ck-chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center;width:100%}#scrChecks .ck-chip{
+  height:48px;min-width:48px;padding:14px var(--s4);
+  border-radius:100px;
+  background:var(--surface-inverse);
+  border:1px solid var(--border-primary);
+  font-family:inherit;font-size:16px;font-weight:500;line-height:20px;
+  color:var(--content-primary);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;white-space:nowrap;
+  transition:background-color .15s ease,box-shadow .15s ease,color .15s ease;
+}/* Inset ring rather than a thicker border, so selecting never shifts layout. */#scrChecks .ck-chip.ck-is-selected{
+  background:var(--surface-secondary);
+  border-color:transparent;
+  box-shadow:inset 0 0 0 1.5px var(--border-selected);
+}#scrChecks .ck-chip:disabled{
+  background:var(--surface-secondary);
+  border-color:transparent;box-shadow:none;
+  color:var(--content-disabled);
+  cursor:default;
+}#scrChecks .ck-sheet__footer{
+  display:flex;flex-direction:column;align-items:stretch;justify-content:flex-end;
+  padding:var(--s6) var(--s9) var(--s9);
+}#scrChecks .ck-sheet__footer .btn-primary{width:100%;height:64px;padding:22px 36px}/* Every collapsed row is tappable — marked ones re-open the sheet, pending
+   ones jump the card to that part. */#scrChecks .ck-item--tappable{cursor:pointer}#scrChecks .ck-item--tappable:active{background:var(--surface-secondary)}

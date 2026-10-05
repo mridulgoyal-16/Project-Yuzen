@@ -1,0 +1,299 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   JOB — the task a bike carries
+   Built from Figma 2144:30682. Hero, title block, then the steps that make up
+   the job. The assessment flow is step one.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.screen--job{display:flex;flex-direction:column}
+
+/* One scroller for the whole page: hero, title and steps travel together, so the
+   list rides up over the image exactly as it would on paper. */
+.jb__scroll{
+  flex:1 1 auto;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;
+  /* Tail is measured, not fixed — sizeJobScroll() sets it so the scroll ends
+     with the steps sitting on the bar's bottom edge. This is only the floor,
+     for the case where the steps are long enough to need footer clearance. */
+  padding-bottom:var(--footer-h);
+}
+.jb__scroll::-webkit-scrollbar{display:none}
+/* 380, was 395. The title block moved up 15 per Figma 2380:27352; the gradient
+   below still runs its full 396, so the band overlaps its last 15 — which is
+   how the frame draws it. */
+.jb__heroWrap{position:relative;height:380px;flex:0 0 auto}
+
+.jb__hero{
+  position:absolute;left:0;top:-1px;width:100%;height:396px;
+  background:linear-gradient(-19.487deg,
+    var(--color-white) 20.615%, var(--color-purple100) 90.817%);
+}
+/* Behind the bike, deliberately — it is a backdrop, not a heading. */
+.jb__no{
+  position:absolute;left:var(--s6);right:var(--s6);top:120px;
+  text-align:center;color:#c8cbf5;
+  font-size:56px;font-weight:900;line-height:48px;
+}
+/* darken, per Figma: the render's near-white backdrop drops out against the
+   gradient so the task number reads through it, and the bike stays. */
+.jb__bike{
+  position:absolute;left:0;right:0;top:176px;height:233px;
+  /* renderJob() writes background-image per sub-task; this is only the box. */
+  background:var(--img-bike) center/cover no-repeat;
+  mix-blend-mode:darken;
+  /* No scaleX any more. The old render faced left and had to be mirrored; the
+     one in 2380:27352 is a three-quarter view already facing right, and
+     flipping it would put the headlight and the throttle on the wrong side. */
+}
+/* The actions live in a bar that is always there; scrolling far enough turns it
+   solid and the title arrives inside it, beside them. */
+.jb__bar{
+  position:absolute;left:0;right:0;top:var(--status-h);z-index:20;
+  height:var(--jb-bar-h);padding:0 var(--s6);
+  display:flex;align-items:center;gap:var(--s4);
+  background:transparent;
+  transition:background-color .2s var(--ease-out),box-shadow .2s var(--ease-out);
+}
+/* No hairline: the progress strip docks directly beneath and its own track is
+   the same border colour, so a divider on top of it would read as a 7px band. */
+.jb__bar.is-opaque{background:var(--surface-inverse)}
+/* The bar sits below the status strip, so content would scroll through that gap.
+   Carry the solid background up behind it. */
+.jb__bar::before{
+  content:"";position:absolute;left:0;right:0;bottom:100%;height:var(--status-h);
+  background-color:transparent;transition:background-color .2s var(--ease-out);
+}
+.jb__bar.is-opaque::before{background-color:var(--surface-inverse)}
+.jb__barTitle{
+  flex:1 1 auto;min-width:0;
+  display:flex;flex-direction:column;gap:var(--s1);
+  opacity:0;transform:translateY(6px);pointer-events:none;
+  transition:opacity .2s var(--ease-out),transform .2s var(--ease-out);
+}
+.jb__bar.is-solid .jb__barTitle{opacity:1;transform:none}
+.jb__barTitle .h{color:var(--content-primary);font-size:20px;font-weight:700;line-height:28px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.jb__barTitle .s{color:var(--content-tertiary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.jb__bar button{
+  /* NEVER SHRINK. These are fixed 40px circles (Figma 2144:30682) and the title
+     between them is `flex:1 1 auto`, so without this the flex row takes the
+     shortfall out of all three children and the buttons come back 37px on a long
+     title. They are round, so a shrunk one is visibly an oval. The title is the
+     part that gives — it already truncates with an ellipsis. */
+  flex:0 0 40px;
+  width:40px;height:40px;border:0;cursor:pointer;border-radius:20px;
+  background:var(--surface-inverse);box-shadow:var(--shadow-1);
+  display:flex;align-items:center;justify-content:center;
+  color:var(--content-primary);
+}
+.jb__bar button svg{display:block;width:24px;height:24px}
+/* on a solid bar the lift is noise */
+.jb__bar.is-opaque button{box-shadow:none;background:none}
+
+/* Positioned, and above the hero. The bike is an absolutely positioned child
+   of the hero wrap, and CSS paints positioned descendants above the in-flow
+   BACKGROUND of a later sibling — so the render's grey backdrop was washing
+   over the top of this block's white even though the block comes after it in
+   the DOM. Giving this a stacking position of its own puts the two in the
+   same layer, where later-in-DOM wins. z-index 1, so it stays well under the
+   app bar at 20. */
+.jb__title{
+  position:relative;z-index:1;
+  background:var(--surface-inverse);
+  border-bottom:1px solid var(--border-primary);
+  padding:var(--s4) var(--s6);
+  display:flex;flex-direction:column;gap:var(--s2);
+}
+.jb__titleRow{display:flex;align-items:center;justify-content:space-between;gap:var(--s4)}
+.jb__titleText{min-width:0;display:flex;flex-direction:column;gap:var(--s2)}
+.jb__title .h{color:var(--content-primary);font-size:20px;font-weight:700;line-height:28px}
+.jb__title .s{color:var(--content-tertiary)}
+
+/* The .jb__learn rules went with the pill. */
+
+/* Task progress, and the same component in both places: in the page while the
+   header is transparent, in the header once it takes over — the handoff the
+   title already makes. Full-bleed and absolute inside the bar, so it rides the
+   bottom edge without adding to the 72px. */
+/* On the footer's top edge, full bleed. Absolute rather than a flex child, so it
+   sits ON the boundary instead of taking a row inside it — the footer keeps the
+   height and padding it has everywhere else in the app. */
+#scrJob .ffooter{position:relative}
+/* The finished-task footer is the SHARED .metrics band — see base.css. The
+   allocation page carries the same one. */
+
+#scrJob .jb__prog[hidden]{display:none}
+#scrJob .jb__prog{
+  position:absolute;left:0;right:0;top:0;
+  height:var(--progress-h);overflow:hidden;
+  background:var(--border-primary);
+  /* No radius: it spans the full width and meets both edges, so rounding would
+     leave two slivers of footer showing through at the ends. */
+  border-radius:0;
+}
+.jb__prog i{
+  display:block;height:100%;width:0;
+  background:var(--surface-primary);transition:width .3s var(--ease-out);
+}
+/* .jb__progPct went with the row. The number lives on aria-valuenow now — it was
+   a second reading of a bar you can already see. */
+/* The docked strip is gone with the move to the footer. It existed so progress
+   stayed visible once the title scrolled away; in the footer it never leaves. */
+
+/* ── Optional parts ───────────────────────────────────────────────────────────
+   The badge and the tab strip belong to the template, not to any one kind. Both
+   are hidden unless the kind in hand declares them, so a task without tabs is
+   the same page minus a strip — not a different page. */
+
+/* The badge circle is gone: a token's number reads better inline in its own
+   title — "08 • Service token" — than as a second thing to look at in the bar. */
+
+/* Sticks to the bottom of the header stack. Sticky `top` is measured from the
+   SCROLLER's box, and the scroller starts at the top of the frame — the bar is
+   absolutely positioned over it at --status-h — so the status bar's height is
+   part of the offset. Leaving it out parks the strip 44px high, behind the bar. */
+.jb__tabsWrap{
+  position:sticky;z-index:19;
+  /* No --progress-h any more: the strip left the header for the footer, so the
+     stack is the status bar plus the app bar and nothing else. */
+  top:calc(var(--status-h) + var(--jb-bar-h));
+  background:var(--surface-inverse);
+  border-bottom:1px solid var(--border-primary);
+}
+.jb__tabsWrap[hidden]{display:none}
+.jb__tabs{position:relative;display:flex;align-items:stretch;height:var(--tabs-h,56px)}
+/* Matches the flow's other tab strips exactly — see #scrIssues .iq-tab. */
+.jb__tab{
+  position:relative;flex:0 0 auto;
+  display:inline-flex;align-items:center;gap:var(--s2);
+  height:55px;padding:16px;border:0;background:none;cursor:pointer;
+  font-family:inherit;font-size:16px;font-weight:500;line-height:24px;
+  color:var(--content-secondary);white-space:nowrap;
+  -webkit-tap-highlight-color:transparent;
+  transition:color .18s ease;
+}
+.jb__tab:first-of-type{padding-left:var(--s6)}
+.jb__tab.is-active{color:var(--content-primary)}
+.jb__tabsUnderline{
+  position:absolute;left:0;bottom:0;height:2px;width:0;
+  border-radius:1px;background:var(--content-primary);
+  transition:transform 220ms cubic-bezier(.4,0,.2,1),
+             width     220ms cubic-bezier(.4,0,.2,1);
+  pointer-events:none;
+}
+/* A tab with no steps yet. Centred in whatever height sizeJobScroll() gave the
+   block, so it does not sit under the strip on a short list. */
+.jb__empty{
+  position:absolute;inset:0;
+  display:flex;align-items:center;justify-content:center;
+  text-align:center;padding:0 var(--s6);
+  color:var(--content-tertiary);
+}
+
+.jb__steps{background:var(--surface-inverse);position:relative;padding-bottom:var(--s6)}
+/* Dashed rail behind the indicators, from the first dot's centre to the last. */
+.jb__rail{
+  position:absolute;left:35px;width:2px;
+  background:repeating-linear-gradient(to bottom,
+    var(--border-primary) 0 4px, transparent 4px 8px);
+}
+/* EVERY STEP IS A 72px BAND, active or not. The active one used to be 72 and the
+   rest 56 — a 24px inset against the others' 16 — so the list re-flowed under the
+   mechanic's thumb every time a step completed: the rows below jumped up 16px at
+   the moment one row grew by the same. Sagar's call to settle them all at 72, and
+   it costs nothing: the active row's tint is what marks it, which it did already.
+
+   One rule, one screen, every kind. #scrJob is the single task detail page behind
+   Assessment details, Task details and RnM details, so this is the only place the
+   step row is drawn. */
+.jb__step{
+  position:relative;z-index:1;width:100%;border:0;background:none;cursor:pointer;
+  padding:var(--s6);text-align:left;
+  display:flex;gap:var(--s4);align-items:flex-start;
+}
+/* Tint only. The padding that used to live here is the base rule's now — a step
+   that declares a sub-line still grows past 72, which is the one case where a row
+   should be taller than its neighbours because it is saying more. */
+.jb__step.is-active{background:var(--surface-secondary)}
+.jb__step .dot{
+  width:24px;height:24px;flex:0 0 auto;border-radius:12px;
+  background:var(--surface-secondary);
+  display:flex;align-items:center;justify-content:center;
+}
+.jb__step .dot i{width:8px;height:8px;border-radius:4px;background:var(--content-disabled);display:block}
+.jb__step.is-active .dot{background:var(--reveal-positive)}
+.jb__step.is-active .dot i{background:var(--surface-positive)}
+.jb__step.is-done .dot{background:none}
+.jb__step .body{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:var(--s1)}
+/* Just the label now — the chevron is gone, so nothing needs pushing to the far
+   edge. (It also carried an invalid `justify-content:between` that the following
+   declaration had been quietly overriding.) */
+.jb__step .top{display:flex;align-items:center;gap:var(--s4);width:100%}
+.jb__step .lbl{color:var(--content-disabled)}
+.jb__step.is-active .lbl,.jb__step.is-done .lbl{color:var(--content-primary)}
+.jb__step .prog{color:var(--content-tertiary)}
+/* Finished steps are always reopenable, so they keep a pointer and a press
+   state. Only upcoming steps are inert — and they are the ones that are
+   disabled, which already removes both. */
+.jb__step:disabled{cursor:default}
+.jb__step.is-done:active{background:var(--surface-secondary)}
+
+
+/* ── The task CTA is a slide — Figma 2913:32095 ──────────────────────────────
+   Starting a task, or closing a step of one, is a thing a QCA does once and
+   should not do by brushing the screen with a glove. The reference is a
+   slide-to-pay control; this is the same three states in this app's colours and
+   at the CTA's own 318x64, so nothing around it moves.
+
+     rest      knob on the left, a double chevron pointing the way
+     dragging  knob under the thumb, the label fading behind it
+     done      knob on the right, the chevron swapped for a tick
+
+   The label is centred on the TRACK rather than laid out beside the knob, so it
+   does not shuffle sideways as the knob travels. --p is the progress, 0 to 1,
+   written by the script; everything visual reads off it. */
+#scrJob .jb__slide{
+  position:relative;overflow:hidden;
+  /* The height came from .btn-primary's 22px of vertical padding and the width
+     from a 246px rule on its label — both of which the knob has to sit outside
+     of, so the track states its own box and the label is laid over it. */
+  /* 318, the width this CTA already had — it came from a 246px label plus 36 of
+     padding either side, which the track no longer has, so it is stated. */
+  padding:0;height:64px;width:318px;display:block;
+  --p:0;
+  touch-action:none;              /* the drag is ours, not the scroller's */
+  -webkit-tap-highlight-color:transparent;
+}
+/* Centred on the TRACK, not laid out beside the knob, so it does not shuffle
+   sideways as the knob travels. Fades as the knob crosses it — never to nothing,
+   because the label is what the control is FOR and a blank track mid-drag reads
+   as a bug. inset/width override the shared .ffooter rule that fixes a CTA
+   label at 246px. */
+#scrJob .jb__slide > span:first-child{
+  position:absolute;inset:0;width:auto;z-index:1;
+  display:flex;align-items:center;justify-content:center;
+  opacity:calc(1 - 0.7 * var(--p));
+}
+#scrJob .jb__knob{
+  position:absolute;left:4px;top:4px;z-index:2;
+  width:56px;height:56px;border-radius:50%;
+  background:var(--surface-inverse);
+  color:var(--content-primary);
+  display:flex;align-items:center;justify-content:center;
+  transform:translateX(calc(var(--p) * var(--jb-travel, 0px)));
+}
+/* Only while it is settling. Dragging sets --p every frame and a transition on
+   that is a knob that lags the thumb. */
+#scrJob .jb__slide.is-settling .jb__knob{transition:transform .22s var(--ease-out)}
+#scrJob .jb__slide.is-settling > span:first-child{transition:opacity .22s var(--ease-out)}
+#scrJob .jb__knob svg{position:absolute;width:24px;height:24px;display:block}
+#scrJob .jb__knobOk{opacity:0}
+/* The swap happens at the end of the travel, not during it: a tick that appears
+   half way along would be claiming the gesture before it is finished. */
+#scrJob .jb__slide.is-done .jb__knobGo{opacity:0}
+#scrJob .jb__slide.is-done .jb__knobOk{opacity:1}
+/* Nothing to slide when there is nothing to do — the disabled CTA keeps its
+   words and loses the affordance. */
+#scrJob .jb__slide:disabled .jb__knob{display:none}
+
+/* Not a slide: an ordinary CTA again, with the knob out of the way. The track's
+   own box rules only apply while .jb__slide is on, so everything below is just
+   hiding the parts the button does not use on a plain press. */
+#scrJob #jbStart:not(.jb__slide) .jb__knob{display:none}

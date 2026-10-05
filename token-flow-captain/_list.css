@@ -1,0 +1,387 @@
+#scrList, #scrList * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  #scrList {
+    --content-primary: #222;
+    --content-secondary: #717171;
+    --content-tertiary: #919191;
+    --content-positive: #00654f;
+  /* Needed for the Completed tab. From the design system:
+     content/disabled #B0B0B0, surface/disabled #DDDDDD. */
+  --content-disabled: #b0b0b0;
+  --surface-disabled: #dddddd;
+    --surface-secondary: #f7f7f7;
+    --border-primary: #e8e8e8;
+    --border-selected: #222;
+    --space-8: 8px;
+    --space-16: 16px;
+    --space-24: 24px;
+  }
+#scrList{
+    position: relative;
+    width: 390px;
+    height: 844px;
+    background: #fff;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    border-radius: 44px;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, .18);
+  }
+
+  @media (max-width: 767px) {
+#scrList{
+      width: 100%;
+      height: 100vh;
+      height: 100dvh;
+      border-radius: 0;
+      box-shadow: none;
+    }
+  }/* ---- Sticky header ---------------------------------------------------- */
+  /* flex-shrink: 0 on header and footer, flex: 1 on the scroller — the same
+     structure as the task list, so the chrome holds and only content moves. */
+  #scrList .tl-header{
+    flex-shrink: 0;
+    background: #fff;
+    position: relative;
+    z-index: 10;
+  }#scrList .tl-statusbar{
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 14px 0 21px;
+  }#scrList .tl-sb-icons{ display: flex; align-items: center; gap: 4px; }#scrList .tl-sb-icons img,#scrList .tl-statusbar img{ display: block; object-fit: contain; }#scrList .tl-sb-signal{ display: flex; align-items: flex-end; gap: 1.5px; height: 14px; }#scrList .tl-sb-signal i{ width: 3px; background: var(--content-primary); border-radius: .5px; }#scrList .tl-sb-signal i:nth-child(1){ height: 5px; }#scrList .tl-sb-signal i:nth-child(2){ height: 8px; }#scrList .tl-sb-signal i:nth-child(3){ height: 11px; }#scrList .tl-appbar{
+    height: 72px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 10px 12px 10px 4px;
+    position: relative;
+  }#scrList .tl-appbar-title{
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    font-weight: 700;
+    font-size: 16px;
+    line-height: 20px;
+    color: var(--content-primary);
+    white-space: nowrap;
+  }#scrList .tl-btn-icon{
+    border: 0;
+    background: none;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    border-radius: 999px;
+    padding: 12px;
+    transition: transform 120ms ease, background-color 120ms ease;
+    -webkit-tap-highlight-color: transparent;
+  }#scrList .tl-btn-icon img{ display: block; width: 24px; height: 24px; object-fit: contain; }#scrList .tl-btn-icon:active{ transform: scale(.9); background: rgba(0, 0, 0, .06); }/* ---- Tabs ------------------------------------------------------------- */
+  #scrList .tl-tabs-wrap{ border-bottom: .5px solid var(--border-primary); }/* `hidden` is only display:none in the UA sheet, so any author display rule
+     silently beats it. Without this, hiding a flex container does nothing. */
+  #scrList [hidden]{ display: none !important; }#scrList .tl-tabs{
+    display: flex;
+    align-items: center;
+    height: 55px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    position: relative;
+  }#scrList .tl-tabs::-webkit-scrollbar{ display: none; }#scrList .tl-tab{
+    flex-shrink: 0;
+    border: 0;
+    background: none;
+    height: 55px;
+    padding: 16px;
+    font-family: inherit;
+    font-weight: 500;
+    font-size: 16px;
+    line-height: 24px;
+    color: var(--content-secondary);
+    white-space: nowrap;
+    cursor: pointer;
+    transition: color 180ms ease;
+    -webkit-tap-highlight-color: transparent;
+  }#scrList .tl-tab:first-of-type{ padding-left: var(--space-24); }#scrList .tl-tab.tl-is-active{ color: var(--content-primary); }#scrList .tl-tabs-underline{
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 2px;
+    width: 0;
+    border-radius: 1px;
+    background: var(--content-primary);
+    transition: transform 220ms cubic-bezier(.4, 0, .2, 1),
+                width     220ms cubic-bezier(.4, 0, .2, 1);
+  }/* ---- Scrolling body --------------------------------------------------- */
+  #scrList .tl-body{
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+    /* No top padding: sticky `top: 0` is measured from the padding edge, so a
+       top padding here would pin the chips that far below the tabs. The 36px
+       lead-in lives on the first child instead. */
+    padding: 0 0 24px;
+    transition: opacity 140ms ease;
+  }#scrList .tl-body.tl-is-swapping{ opacity: 0; }/* ---- Active token card ------------------------------------------------ */
+  #scrList .tl-active-card{
+    width: 342px;
+    margin: 36px auto 0;
+    background: var(--surface-secondary);
+    border-radius: 16px;
+    padding: var(--space-24);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-16);
+  }#scrList .tl-token-row{
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    border: 0;
+    background: none;
+    padding: 0;
+    font-family: inherit;
+    text-align: left;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 120ms ease;
+  }#scrList .tl-token-row:active{ transform: scale(.98); }/* Active token badge: green with the design's top-down darkening. */
+  #scrList .tl-badge{
+    flex-shrink: 0;
+    width: 48px;
+    height: 48px;
+    border-radius: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 20px;
+    line-height: 28px;
+  }#scrList .tl-badge-active{
+    background:
+      linear-gradient(180deg, rgba(0, 0, 0, .3) 0%, rgba(0, 0, 0, 0) 100%),
+      var(--content-positive);
+    color: #fff;
+  }/* Ongoing: the same pie idea as the bell, behind the token number, so the
+     captain reads repair progress without asking a mechanic. */
+  #scrList .tl-badge-wrap{ position: relative; flex-shrink: 0; width: 48px; height: 48px; margin: 6px; }#scrList .tl-badge-wrap .tl-badge{ position: absolute; inset: 0; }#scrList .tl-badge-pie{ position: absolute; inset: -6px; transform: rotate(-90deg); pointer-events: none; }#scrList .tl-badge-pie .tl-track{ fill: none; stroke: var(--content-primary); opacity: .12; stroke-width: 6; }/* butt caps, not round: a flat edge at 12 o'clock shows where the arc starts,
+     so a short arc reads as "just began" instead of a floating pill. */
+  #scrList .tl-badge-pie .tl-fill{ fill: none; stroke: var(--content-primary); opacity: .65; stroke-width: 6;
+                      stroke-linecap: butt; transition: stroke-dashoffset 400ms ease,
+                      stroke 300ms ease, opacity 300ms ease; }/* Finished repair: full-strength green, so "ready" is legible at a glance. */
+  #scrList .tl-badge-pie.tl-is-complete .tl-fill{ stroke: var(--content-positive); opacity: 1; }#scrList .tl-token-stage{ color: var(--content-secondary); }#scrList .tl-token-pct{ font-weight: 700; font-variant-numeric: tabular-nums; }#scrList .tl-badge-upcoming{
+    background: #fff;
+    color: var(--content-primary);
+  }#scrList .tl-token-main{ flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--space-8); }#scrList .tl-token-name{
+    font-weight: 700;
+    font-size: 20px;
+    line-height: 28px;
+    color: var(--content-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }#scrList .tl-token-sub{
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 20px;
+    color: var(--content-tertiary);
+  }#scrList .tl-token-row > img{ display: block; width: 24px; height: 24px; flex-shrink: 0; object-fit: contain; }/* Hairlines are .5px throughout — 1px reads heavy against #f7f7f7. */
+  #scrList .tl-card-divider{ height: .5px; background: var(--border-primary); width: 100%; }#scrList .tl-card-actions{ display: flex; align-items: center; gap: 64px; }#scrList .tl-card-action{
+    display: flex;
+    align-items: center;
+    gap: var(--space-8);
+    border: 0;
+    background: none;
+    padding: 0;
+    font-family: inherit;
+    font-weight: 500;
+    font-size: 16px;
+    line-height: 20px;
+    color: var(--content-primary);
+    white-space: nowrap;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: opacity 120ms ease, transform 120ms ease;
+  }#scrList .tl-card-action:active{ opacity: .55; transform: scale(.96); }#scrList .tl-card-action img{ display: block; width: 24px; height: 24px; object-fit: contain; }/* Some Figma icons export as the inner glyph only, already inset inside their
+     24px frame — call.svg comes out 17x17. Scaling those up to fill 24px makes
+     them read much heavier than the icons that genuinely are 24x24. The slot
+     keeps the 24px footprint so labels still line up; the glyph draws true size. */
+  #scrList .tl-icon-slot{
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }#scrList .tl-card-action .tl-icon-slot img{ width: 17px; height: 17px; }/* ---- Upcoming section ------------------------------------------------- */
+  #scrList .tl-section{ margin-top: 36px; }#scrList .tl-section-title{
+    padding: 0 var(--space-24);
+    font-weight: 700;
+    font-size: 20px;
+    line-height: 28px;
+    color: var(--content-primary);
+  }/* Sticky filter bar: pins to the top of the scroller once you reach it, so the
+     type filter stays reachable however far down the queue you are. The white
+     background and vertical padding are what make it work — without them the
+     token cards would scroll through it. Spacing is preserved: 12px margin plus
+     12px padding still reads as the design's 24px on each side. */
+  #scrList .tl-chips{
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    display: flex;
+    gap: var(--space-8);
+    padding: 12px var(--space-24);
+    margin-top: 12px;
+    background: #fff;
+    overflow-x: auto;
+    scrollbar-width: none;
+    transition: box-shadow 200ms ease;
+  }#scrList .tl-chips::-webkit-scrollbar{ display: none; }/* Only once actually pinned — a permanent edge looks wrong at rest. */
+  #scrList .tl-chips.tl-is-stuck{ box-shadow: 0 1px 0 var(--border-primary), 0 6px 16px rgba(0, 0, 0, .05); }/* Zero-height probe sitting just above the chips; when it scrolls out of the
+     scroller, the chips are pinned. Cheaper and steadier than reading scrollTop. */
+  #scrList .tl-chips-sentinel{ height: 0; }#scrList .tl-chip{
+    flex-shrink: 0;
+    height: 48px;
+    min-width: 48px;
+    padding: 14px 16px;
+    border-radius: 100px;
+    background: #fff;
+    border: 1px solid var(--border-primary);
+    font-family: inherit;
+    font-weight: 500;
+    font-size: 16px;
+    line-height: 20px;
+    color: var(--content-primary);
+    white-space: nowrap;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background-color 160ms ease, border-color 160ms ease, transform 120ms ease;
+  }#scrList .tl-chip:active{ transform: scale(.95); }#scrList .tl-chip.tl-is-selected{
+    background: var(--surface-secondary);
+    border: 1.5px solid var(--border-selected);
+  }#scrList .tl-token-list{
+    margin-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-16);
+    align-items: center;
+  }#scrList .tl-token-card{
+    width: 342px;
+    min-height: 104px;
+    background: var(--surface-secondary);
+    border-radius: 16px;
+    padding: var(--space-24);
+    display: flex;
+    align-items: center;
+  }/* The bell is its own button inside the card, so tapping it doesn't open
+     the token. */
+  #scrList .tl-bell{
+    flex-shrink: 0;
+    border: 0;
+    background: none;
+    padding: 0;
+    min-width: 24px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 120ms ease, opacity 160ms ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    font: inherit;
+    color: var(--content-primary);
+  }#scrList .tl-bell:disabled{ cursor: default; }#scrList .tl-bell:disabled:active{ transform: none; }/* While the wait runs the bell stays lit and filled — it is the record that
+     the phone went off. The pie behind it drains instead, and the bell only
+     becomes tappable again once the pie is gone. */
+  #scrList .tl-bell-stack{ position: relative; width: 36px; height: 36px; display: grid; place-items: center; }#scrList .tl-bell-pie{ position: absolute; inset: 0; transform: rotate(-90deg); pointer-events: none; }/* r=9 with an 18-wide stroke fills the disc, so the arc reads as a pie. */
+  #scrList .tl-bell-pie circle{
+    fill: none; stroke: var(--content-primary); opacity: .12;
+    stroke-width: 18; stroke-dasharray: 56.55;
+    transition: stroke-dashoffset 1s linear;
+  }#scrList .tl-bell-glyph{ position: relative; width: 24px; height: 24px; }#scrList .tl-bell-glyph img,#scrList .tl-bell-glyph svg{ display: block; width: 24px; height: 24px; }#scrList .tl-bell.tl-is-waiting{ color: var(--content-primary); }#scrList .tl-bell img{ display: block; width: 24px; height: 24px; object-fit: contain; }#scrList .tl-bell:active{ transform: scale(.85); }
+  @keyframes bell-ring {
+    0%, 100% { transform: rotate(0); }
+    20% { transform: rotate(14deg); }
+    40% { transform: rotate(-11deg); }
+    60% { transform: rotate(7deg); }
+    80% { transform: rotate(-4deg); }
+  }#scrList .tl-bell.tl-is-ringing .tl-bell-glyph{ animation: bell-ring 520ms ease-in-out; }/* Skip is a FLIP, not a slide: the active card shrinks into the first queue
+     slot while the token below it grows into the active slot. Both travel their
+     real distance, so the sizes visibly trade places. */
+  #scrList .tl-is-flipping{ will-change: transform; }#scrList .tl-is-flipping .tl-token-row,#scrList .tl-is-flipping .tl-bell{ pointer-events: none; }/* The inner column holds its own scale so text does not squash while the
+     card's height changes. */
+  #scrList .tl-is-flipping > .tl-token-row > .tl-token-main{ will-change: transform; }/* Completed tokens are served and closed: inert card, disabled palette,
+     and no bell — you cannot call over someone already dealt with. */
+  /* Completed keeps full-contrast name and detail — still information the
+     captain reads. The token number is spent, so it drops to disabled, and the
+     tick is neutral because the outcome is settled, not an alert. */
+  #scrList .tl-token-card.tl-is-done .tl-badge{ color: var(--content-disabled); }#scrList .tl-token-done{
+    flex-shrink: 0; width: 24px; height: 24px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--content-tertiary);
+  }#scrList .tl-token-done svg{ display: block; width: 24px; height: 24px; }/* Same affordance as the active card in Pending — the row opens. */
+  #scrList .tl-token-more{ flex-shrink: 0; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; }#scrList .tl-token-more img{ display: block; width: 24px; height: 24px; }#scrList .tl-empty{
+    padding: 64px var(--space-24);
+    text-align: center;
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 20px;
+    color: var(--content-tertiary);
+  }/* ---- Sticky bottom nav ------------------------------------------------ */
+  #scrList .tl-bottomnav{
+    flex-shrink: 0;
+    height: 100px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding: 16px 54px 0;
+    border-top: .5px solid var(--border-primary);
+    background: #fff;
+    position: relative;
+    z-index: 10;
+  }#scrList .tl-nav-item{
+    position: relative;
+    width: 64px;
+    height: 44px;
+    border: 0;
+    background: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    color: var(--content-tertiary);
+    -webkit-tap-highlight-color: transparent;
+    transition: color 160ms ease;
+  }#scrList .tl-nav-item img{ display: block; width: 24px; height: 24px; opacity: .55; object-fit: contain; transition: opacity 160ms ease; }#scrList .tl-nav-label{ font-weight: 500; font-size: 12px; line-height: 16px; color: inherit; }#scrList .tl-nav-item.tl-is-active{ color: var(--content-primary); }#scrList .tl-nav-item.tl-is-active img{ opacity: 1; }#scrList .tl-nav-bar{
+    position: absolute;
+    top: -16px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 44px;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--content-primary);
+    opacity: 0;
+    transition: opacity 160ms ease;
+  }#scrList .tl-nav-item.tl-is-active .tl-nav-bar{ opacity: 1; }/* Toast for the bell, so notifying a user visibly does something. */
+  #scrList .tl-toast{
+    position: absolute;
+    left: 50%;
+    bottom: 120px;
+    transform: translate(-50%, 12px);
+    background: var(--content-primary);
+    color: #fff;
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 20px;
+    padding: 10px 16px;
+    border-radius: 100px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 220ms ease, transform 220ms ease;
+    z-index: 20;
+    white-space: nowrap;
+  }#scrList .tl-toast.tl-is-shown{ opacity: 1; transform: translate(-50%, 0); }

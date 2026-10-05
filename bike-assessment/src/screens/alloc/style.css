@@ -1,0 +1,275 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   ALLOCATE A BIKE
+   ═══════════════════════════════════════════════════════════════════════════
+   The same three-part frame as screens/checklists: app bar, a scroller that
+   takes the rest, a footer that sits in flow and claims its own height so the
+   list shrinks instead of hiding a row behind it.
+
+   Everything here is scoped under #scrAlloc or an al- prefix. This screen is a
+   draft Sagar will edit, and an unscoped `.stat` or `.who` from a page in flux
+   is exactly the bare-selector bug the geometry suite has been bitten by six
+   times — a rule leaking onto a hidden element on another screen.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.screen--alloc{display:flex;flex-direction:column;padding-top:var(--status-h)}
+.screen--alloc .appbar{flex:0 0 auto}
+
+.alscroll{
+  flex:1 1 auto;overflow-y:auto;overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;scrollbar-width:none;
+  padding:0 var(--s6) var(--s6);
+}
+.alscroll::-webkit-scrollbar{display:none}
+
+/* Title block. Not the shared .listhead, which is a flex ROW — a title with
+   something on the far side of it — and would put the sub-line beside the
+   model name rather than under it. */
+/* UNSCOPED, because two screens draw this banner: the allocation page and the
+   time details page one level under it. It is the same claim about the same
+   person, and a second copy written its own way would read as a different
+   bike. Everything else in this file stays under #scrAlloc.
+
+   A banner, and CHROME: a flex item between the app bar and the scroller rather
+   than the first thing inside it. Sticky inside the scroller would have done the
+   same job, but this way the app bar can collapse out from over it without the
+   banner's sticky offset having to follow — one moving part instead of two.
+
+   Closed by a hairline, drawn as an inset shadow so it cannot add height. */
+.al-head{
+  flex:0 0 auto;
+  padding:var(--s6);
+  background:var(--surface-secondary);
+  box-shadow:inset 0 -1px 0 var(--border-primary);
+  z-index:15;
+  display:flex;align-items:center;gap:var(--s4);
+}
+.al-head__t{flex:1 1 auto;min-width:0}
+/* 48px, the size the picker sheet draws a mechanic at — this banner is the same
+   claim about the same person, one level in. Rounded square like every other
+   thumbnail in the app. */
+.al-head__f{
+  flex:0 0 auto;width:48px;height:48px;border-radius:12px;
+  background:var(--surface-inverse);color:var(--content-disabled);
+  display:flex;align-items:center;justify-content:center;overflow:hidden;
+}
+.al-head__f[hidden]{display:none}
+.al-head__f svg{display:block;width:100%;height:100%}
+
+/* THE APP BAR GETS OUT OF THE WAY on the way down and comes back on the way up.
+
+   Two moves at once: the bar's HEIGHT goes to zero, so the space actually leaves
+   the flex column and the banner below takes the top of the frame, and the row
+   INSIDE it slides up under its own clip, so the bar reads as leaving rather
+   than as being squashed.
+
+   A negative margin was the first attempt and was wrong: it moves the element
+   itself, and the only thing above it is the frame's status bar — so the app bar
+   slid up and printed its title across the clock. Height plus overflow keeps the
+   movement inside the bar's own box.
+
+   Same 8px of slack the queue uses against finger noise; see the scroll handler
+   in script.js. */
+#scrAlloc .appbar{
+  box-sizing:border-box;height:73px;   /* 72 row + its own 1px border */
+  overflow:hidden;flex:0 0 auto;
+  transition:height .26s var(--ease-out);
+}
+#scrAlloc .appbar__row{transition:transform .26s var(--ease-out)}
+#scrAlloc.hdr-up .appbar{height:0}
+#scrAlloc.hdr-up .appbar__row{transform:translateY(-72px)}
+/* A flex row, because in progress mode it leads with the state's mark. */
+.al-sub{
+  display:flex;align-items:center;gap:var(--s2);
+  color:var(--content-secondary);margin-top:var(--s1);
+}
+
+/* Section titles. --s9 above, --s4 below: the gap that separates two sections
+   has to read as larger than the gap that binds a title to its own content. */
+/* ── SECTION HEADS ──────────────────────────────────────────────────────────
+   Three accordions, shut on arrival. A head is: the section's art, its title
+   with a count, a line saying what is inside, and the chevron.
+   ─────────────────────────────────────────────────────────────────────────── */
+#scrAlloc .al-acc{
+  display:flex;align-items:center;gap:var(--s4);width:100%;
+  box-sizing:border-box;
+  margin:var(--s6) 0 0;padding:var(--s4) 0;
+  border:0;background:none;font-family:inherit;text-align:left;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+}
+/* 40px now, up from the 28 the plain heading carried. A head is a row you press
+   rather than a line you read past, and the art is what tells the three apart
+   before the words are read. */
+#scrAlloc .al-acc__i{flex:0 0 auto;width:40px;height:40px;display:block;border-radius:8px}
+#scrAlloc .al-acc__i--bolt{
+  background:var(--surface-secondary);color:var(--content-secondary);
+  display:flex;align-items:center;justify-content:center;
+}
+#scrAlloc .al-acc__i--bolt svg{display:block;width:24px;height:24px}
+#scrAlloc .al-acc__t{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:var(--s1)}
+#scrAlloc .al-acc__title{color:var(--content-primary)}
+/* ONE LINE, clipped. It is a peek at what is inside — enough to know whether
+   the section is worth opening — so it must never wrap and push the head about
+   as the contents change. */
+#scrAlloc .al-acc__sub[hidden]{display:none}
+#scrAlloc .al-acc__sub{
+  color:var(--content-tertiary);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+/* Shut it points RIGHT, open it points down: the arrow shows what a tap will do
+   to the list below rather than what state the section is in. Same rule the
+   queue's accordions follow. */
+#scrAlloc .al-acc__go{
+  flex:0 0 auto;width:24px;height:24px;color:var(--content-primary);
+  display:flex;align-items:center;justify-content:center;
+  transform:rotate(-90deg);transition:transform .2s var(--ease-out);
+}
+#scrAlloc .al-acc.is-open .al-acc__go{transform:rotate(0deg)}
+#scrAlloc .al-acc__go svg{display:block;width:24px;height:24px}
+/* The count keeps the tab strip's grey — see .al-sec__n. */
+#scrAlloc .al-sec__n{margin-left:var(--s2);color:var(--content-tertiary)}
+#scrAlloc .al-faults[hidden]{display:none}
+
+/* ── Fault rows ─────────────────────────────────────────────────────────────
+   The fault record's own row, re-declared here rather than shared. screens/issues
+   scopes every one of these under #scrIssues, and widening those selectors to two
+   screens is exactly the leak the geometry suite has been bitten by six times —
+   a rule matching a hidden element on a screen nobody was looking at. The subset
+   below is what a STATIC row needs: no tick, no mark, no done or struck states,
+   because nothing on this page settles anything.
+
+   The one deliberate difference: no fixed 342px width. The scroller here already
+   carries the 24px inset, so the row simply fills it.
+   ─────────────────────────────────────────────────────────────────────────── */
+#scrAlloc .issue{
+  display:flex;align-items:center;gap:var(--s4);
+  padding:var(--s6) 0;
+  /* Inset shadow rather than a border, so the line cannot add height. */
+  box-shadow:inset 0 -1px 0 var(--border-primary);
+}
+/* A diagnostic row has one line and nothing to its left, so it does not need the
+   height a part row takes to hold a 56px thumbnail. */
+#scrAlloc .issue--plain{padding:var(--s4) 0;min-height:56px}
+#scrAlloc .issue__plainMain{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:4px}
+#scrAlloc .issue--plain .issue__name{min-width:0}
+/* The figure on the right of a plain row — how many parts a checklist covers.
+   Quiet, because it is a size and not the thing you are reading the row for. */
+#scrAlloc .al-n{flex:0 0 auto;color:var(--content-tertiary)}
+/* WHAT WAS DONE, on the right of a finished row. The positive green, because
+   it is the only good news on a page of faults — and the same green the
+   Finished flag and the done blocks carry, so "this is closed" looks the same
+   wherever it is said. */
+#scrAlloc .al-out{
+  flex:0 0 auto;color:var(--content-positive);white-space:nowrap;
+  align-self:center;
+}
+#scrAlloc .issue__thumb{
+  flex:0 0 auto;width:56px;height:56px;
+  border-radius:9.333px;background:var(--surface-secondary);overflow:hidden;
+}
+#scrAlloc .issue__crop{width:100%;height:100%;display:block}
+/* The no-photo glyph, centred in the tile it stands in for. */
+#scrAlloc .issue__thumb--none{
+  display:flex;align-items:center;justify-content:center;color:var(--content-tertiary);
+}
+#scrAlloc .issue__main{
+  flex:1 1 auto;min-width:0;height:56px;
+  display:flex;flex-direction:column;justify-content:space-between;
+}
+#scrAlloc .issue__head{display:flex;align-items:center}
+#scrAlloc .issue__name{
+  color:var(--content-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+/* Reasons, dot-separated, allowed to wrap — three already fill the line. */
+#scrAlloc .issue__reasons{
+  display:flex;align-items:center;gap:var(--s2);flex-wrap:wrap;
+  color:var(--content-secondary);
+}
+#scrAlloc .issue__dot{
+  width:5px;height:5px;border-radius:50%;
+  background:var(--surface-disabled);flex:0 0 auto;
+}
+/* No record, or a clean one. Stated, not left blank. */
+#scrAlloc .al-empty{padding:var(--s4) 0;color:var(--content-tertiary)}
+
+/* The mechanics, inside the sheet. Whole row is the target — Sagar's rule from
+   the checklist picker: a list item is clickable anywhere on it, not just on its
+   control. */
+#scrAlloc .al-who{display:flex;flex-direction:column;gap:var(--s2)}
+#scrAlloc .al-mech{
+  display:flex;align-items:center;gap:var(--s4);width:100%;
+  box-sizing:border-box;                       /* see the .cl-item overflow bug */
+  min-height:72px;padding:var(--s4);
+  border:1px solid var(--border-primary);border-radius:16px;
+  background:var(--surface-inverse);font-family:inherit;text-align:left;
+  cursor:pointer;
+}
+#scrAlloc .al-mech.is-on{border-color:var(--content-primary)}
+/* A face, or the stand-in for one. A rounded square like every other thumbnail
+   in the app: it was a circle, on the grounds that a person is not a part, and
+   that made a person read as a different kind of object rather than as another
+   thing on the row. Same shape on the Allocated board. */
+#scrAlloc .al-mech__f{
+  flex:0 0 auto;width:48px;height:48px;border-radius:12px;
+  background:var(--surface-secondary);overflow:hidden;
+  display:flex;align-items:center;justify-content:center;
+  /* The silhouette sits on the tile's own grey, a step darker than it so it
+     reads as a picture rather than as an icon someone forgot to colour. */
+  color:var(--content-disabled);
+}
+#scrAlloc .al-mech__f svg{display:block;width:100%;height:100%}
+#scrAlloc .al-mech__t{flex:1 1 auto;min-width:0}
+#scrAlloc .al-mech__n{display:block;color:var(--content-primary)}
+/* The status line and its ring are gone: the row carries the shared .mblocks
+   shift bar instead — see paintMechs. The blocks say what the line said and the
+   thing it could not, which is how much room the person has. */
+#scrAlloc .al-mech__t .mblocks{margin-top:var(--s2)}
+#scrAlloc .al-mech__r{flex:0 0 auto;width:24px;height:24px}
+#scrAlloc .al-mech__r svg{display:block}
+
+/* 24 + a 64px button + 36 = 124. Named, because the sheet has to sit exactly on
+   top of it — see .alsheet below — and two hand-counted 124s would drift. */
+#scrAlloc{--alfoot-h:124px}
+/* No footer in progress mode — see allocMode. The page keeps its scroller's
+   full height rather than holding 124px for a button that is not there. */
+.alfoot[hidden]{display:none}
+.alfoot{
+  flex:0 0 auto;background:var(--surface-inverse);
+  box-shadow:inset 0 1px 0 var(--border-primary);
+  padding:var(--s6) var(--s6) var(--s9);
+  z-index:16;
+}
+/* Up through the scrim. The one button drives both halves of this — Allocate,
+   then Notify mechanic — so it has to stay lit and tappable while the sheet is
+   open, which means clearing the scrim's 30 and the sheet's 31. */
+#scrAlloc.sheet-open .alfoot{position:relative;z-index:32}
+
+/* The picker. Rides .sheet for the slide-up, the scrim and the 24px corners, and
+   stops at the footer's top edge instead of the frame's floor so the CTA below
+   it is never covered. */
+.alsheet{
+  bottom:var(--alfoot-h);
+  max-height:calc(100% - var(--alfoot-h) - 88px);
+  border-radius:var(--s6) var(--s6) 0 0;
+  /* OFF THE FRAME when shut, and the footer's height is why this is not just the
+     shared .sheet's translateY(100%). That moves an element down by its OWN
+     height; this one is parked 124px up from the floor, so 100% left the whole
+     sheet sitting on top of the footer in full view — covering the CTA it is
+     supposed to be waiting for. It has to travel its height PLUS the offset. */
+  transform:translateY(calc(100% + var(--alfoot-h)));
+}
+.alsheet.is-open{transform:translateY(0)}
+.alsheet__t{flex:0 0 auto;padding:0 var(--s6) var(--s4);color:var(--content-primary)}
+.alsheet .al-who{
+  flex:1 1 auto;min-height:0;overflow-y:auto;scrollbar-width:none;
+  padding:0 var(--s6) var(--s6);
+}
+.alsheet .al-who::-webkit-scrollbar{display:none}
+.alfoot .btn-primary{width:100%}
+.alfoot .btn-primary span{white-space:nowrap}
+
+/* The breadcrumb is always on. .appbar__suffix ships collapsed and is revealed
+   by .is-collapsed on the bar — a scroll trick for screens whose title moves
+   into the bar. This page's title never leaves the page, so there is nothing to
+   collapse and the "/ Allocate" would otherwise never appear. */
+#scrAlloc .appbar__suffix{
+  max-width:200px;opacity:1;transform:none;color:var(--content-tertiary);
+}

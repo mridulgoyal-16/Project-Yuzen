@@ -1,0 +1,240 @@
+
+  <!-- ====================================================================
+       ISSUES — ported from mechanic-rnm-flow/
+       Vaishnavi's screen, Figma 1993:30331 / 1993:30576.
+
+       Her device frame, status bar, toast and options sheet are gone: this app has
+       one of each and a second copy is the drift her own README warns about. Her
+       toast() calls now reach the host's.
+
+       Every id carries an "iq" prefix and the classes that collided with this app
+       carry "iq-". Renaming is done in class and id CONTEXTS only — a blanket word
+       rename also caught JS identifiers and produced `function iq-toast()`.
+       ==================================================================== -->
+  <section class="screen" id="scrIssues" data-pos="right" aria-label="Issues">
+
+
+  <header class="appbar">
+    <div class="appbar__row">
+      <div class="appbar__lead">
+        <div class="leading-action">
+          <button class="icon-btn" id="iqBackBtn" aria-label="Back">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M10.4538 12L14.5269 16.0731C14.6654 16.2116 14.7362 16.3856 14.7394 16.5952C14.7426 16.8048 14.6718 16.982 14.5269 17.1269C14.382 17.2718 14.2064 17.3442 14 17.3442C13.7936 17.3442 13.618 17.2718 13.4731 17.1269L8.97888 12.6327C8.88528 12.5391 8.81925 12.4404 8.7808 12.3365C8.74233 12.2327 8.7231 12.1205 8.7231 12C8.7231 11.8795 8.74233 11.7673 8.7808 11.6635C8.81925 11.5596 8.88528 11.4609 8.97888 11.3673L13.4731 6.8731C13.6116 6.73463 13.7856 6.6638 13.9952 6.6606C14.2048 6.65738 14.382 6.72822 14.5269 6.8731C14.6718 7.01797 14.7442 7.1936 14.7442 7.4C14.7442 7.6064 14.6718 7.78203 14.5269 7.9269L10.4538 12Z" fill="#222222"/></svg>
+          </button>
+        </div>
+        <div class="appbar__title">
+          <!-- The count is filled by render(), not written here: it moves on every
+               resolve and re-run, and a number baked into the markup would ship
+               stale in the pre-rendered DOM. -->
+          <!-- The bar carries the bike only until the page title scrolls away;
+               the suffix then completes the breadcrumb behind it. Both halves are
+               filled by render() rather than written here — they move on every
+               resolve, and a number baked into the markup would ship stale in the
+               pre-rendered DOM. -->
+          <p class="t-label-md">543210<span class="appbar__suffix" id="iqBarSuffix" aria-hidden="true"></span></p>
+        </div>
+      </div>
+      <div class="trailing-action">
+        <!-- Overflow. Three 2px dots drawn inline rather than exported: the frame
+             has no such button, so there is no node to pull, and this glyph is
+             unambiguous enough that drawing it cannot be wrong. -->
+        <button class="icon-btn" data-opt-more aria-label="More options"
+                aria-haspopup="dialog" aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <circle cx="12" cy="5" r="1.9" fill="#222"/>
+            <circle cx="12" cy="12" r="1.9" fill="#222"/>
+            <circle cx="12" cy="19" r="1.9" fill="#222"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="iq-scroll" id="iqScroll">
+    <!-- The page title. Same hand-off as Mark faults and the checklist: the large
+         heading scrolls up and the app bar completes the breadcrumb behind it, so
+         the section you are in is named on screen at all times without the bar
+         carrying it while there is room for a real title. -->
+    <div class="iq-head" id="iqHead">
+      <h2 class="t-title-page" id="iqHeadTitle"></h2>
+    </div>
+    <div class="iq-list" id="iqList"></div>
+  </main>
+
+  <div class="progress"><div class="progress__fill" id="iqProgressFill"></div></div>
+
+  <!-- Mechanical / Electrical. A strip like this stood here once and was taken
+       out when the RnM dashboard grew a row for each section — two doors into one
+       record, and the strip was the third. The dashboard is back to ONE row now
+       (see #rowFaults), so the split has to live where the record does.
+
+       Assessment only. A repair still reaches each section from its own row, and
+       giving it tabs as well would put the third door back. -->
+  <nav class="iq-tabs" id="iqTabs" role="tablist" aria-label="Fault type" hidden>
+    <button class="iq-tab is-on" type="button" role="tab" data-iqtab="Mechanical" aria-selected="true">
+      <span class="t-label-md">Mechanical</span>
+      <!-- Written by render(). How many faults are on the other side is what
+           decides whether it is worth a tap, and a tab that will not say costs a
+           tap to find out. -->
+      <span class="t-label-md iq-tab__n" aria-hidden="true"></span>
+    </button>
+    <button class="iq-tab" type="button" role="tab" data-iqtab="Electrical" aria-selected="false">
+      <span class="t-label-md">Electrical</span>
+      <span class="t-label-md iq-tab__n" aria-hidden="true"></span>
+    </button>
+  </nav>
+
+  <!-- Where the section's own action goes on an ASSESSMENT: Add issues under the
+       Mechanical tab, Run electrical checks under the Electrical one. It is the
+       same #iqMarkBtn, moved here by render() rather than duplicated — one
+       button with one listener, in whichever of the two places the flow wants
+       it. On a repair it goes back into the footer. -->
+  <div class="iq-action" id="iqAction" hidden></div>
+
+  <!-- The Mechanical / Electrical strip that stood here is gone. The RnM
+       dashboard's Open tasks list is the switch now — one row per section, each
+       landing here on its own — so a tab strip repeating that choice one screen
+       deeper was the same decision asked twice. The screen renders whichever
+       section it was opened on; see issuesShowSection(). -->
+
+  <!-- ── Options sheet, opened from the three dots ────────────────────────
+       Structure and styling are shared with mechanic-checks: build.py lifts the
+       CSS straight out of it, so the two sheets cannot drift apart. -->
+  
+  
+
+  <!-- ── Issue detail sheet — Figma 1993:30576 ───────────────────────────── -->
+  
+  <div class="scrim" id="iqDtlScrim"></div>
+    <section class="sheet-dtl" id="iqDtlSheet" role="dialog" aria-modal="true"
+           aria-labelledby="dtlName">
+    <!-- The sub-line under the name is what is WRONG with the part, not who said
+         so. Who said so is a provenance detail and it has its own band above the
+         footer now; the reasons are the thing you are about to act on. -->
+    <div class="sheet-dtl__header" id="iqDtlGrab">
+      <!-- Filled by openDetail(): either an <img> or a cropped div, depending on
+           whether the row brought its own render. See issueThumb(). -->
+      <span class="sheet-dtl__thumb"></span>
+      <span class="sheet-dtl__ident">
+        <p class="t-label-md" id="iqDtlName"></p>
+        <p class="sheet-dtl__reasons" id="iqDtlReasons"></p>
+      </span>
+      <!-- Editing the reasons is a second job, so it is behind a control rather
+           than always on show. The sheet opens on the one question a mechanic has
+           at this point — what did you do about it — and the pencil is there for
+           the rarer case of the fault itself being wrong. -->
+      <button class="sheet-dtl__edit" id="iqDtlEdit" type="button"
+              aria-expanded="false" aria-controls="iqDtlEditWrap"
+              aria-label="Edit issue types">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19H6.2615L16.498 8.7635L15.2365 7.502L5 17.7385V19ZM4.404 20.5C4.14783 20.5 3.93317 20.4133 3.76 20.24C3.58667 20.0668 3.5 19.8522 3.5 19.596V17.8635C3.5 17.6197 3.54683 17.3873 3.6405 17.1663C3.734 16.9453 3.86283 16.7527 4.027 16.5885L16.6905 3.93075C16.8417 3.79342 17.0086 3.68733 17.1913 3.6125C17.3741 3.5375 17.5658 3.5 17.7663 3.5C17.9668 3.5 18.1609 3.53558 18.3487 3.60675C18.5367 3.67792 18.7032 3.79108 18.848 3.94625L20.0692 5.18275C20.2244 5.32758 20.335 5.49425 20.401 5.68275C20.467 5.87125 20.5 6.05975 20.5 6.24825C20.5 6.44942 20.4657 6.64133 20.397 6.824C20.3283 7.00683 20.2191 7.17383 20.0692 7.325L7.4115 19.973C7.24733 20.1372 7.05475 20.266 6.83375 20.3595C6.61275 20.4532 6.38033 20.5 6.1365 20.5H4.404ZM15.8562 8.14375L15.2365 7.502L16.498 8.7635L15.8562 8.14375Z"/></svg>
+      </button>
+    </div>
+    <!-- Two modes, not one panel that grows. Default answers "what did you do
+         about it"; the pencil switches to "what is wrong with it", which is where
+         the reasons and Delete live. Both are folds — a grid row animating
+         0fr → 1fr — so each sizes to its own content and the sheet's height
+         follows without a number written down anywhere. -->
+    <div class="sheet-dtl__body">
+      <div class="sheet-dtl__fold" id="iqDtlEditWrap">
+        <div>
+          <h4 class="sheet-dtl__label">Mark issues</h4>
+          <div class="sheet-dtl__run" id="iqDtlChips"></div>
+        </div>
+      </div>
+      <div class="sheet-dtl__fold is-open" id="iqDtlActWrap">
+        <div>
+          <h4 class="sheet-dtl__label">Your action</h4>
+          <div class="sheet-dtl__run" id="iqDtlActions"></div>
+        </div>
+      </div>
+    </div>
+    <!-- ── Part journey — Figma 2687:32227 ───────────────────────────────────
+         Where the part has been: the one that came off on the left, the one that
+         came from stores on the right. Two lists, not one, because they are two
+         objects with two histories that happen to swap places on the bike.
+
+         Shut, each column shows only its last line — where that part is now;
+         the chevron or a swipe reveals how it got there. Built from PART_JOURNEY, so a list of any
+         length keeps the same pitch and the same padding. -->
+    <div class="sheet-dtl__fold is-open" id="iqDtlJrnWrap">
+      <div>
+        <section class="pjrn" id="iqDtlJourney">
+          <!-- TWO gradient layers, not one image. Each side is tinted
+               independently — the old part and the new part report different
+               states — so they are separate elements with their own colour. The
+               wash gathers at the BOTTOM of the section and at one horizontal
+               end; the old layer is the mirrored one. -->
+          <span class="pjrn__wash pjrn__wash--old" aria-hidden="true"></span>
+          <span class="pjrn__wash pjrn__wash--new" aria-hidden="true"></span>
+          <!-- The purple is a LAYER over the grey, not a recolour of it.
+               background-image does not transition, so a single span switching
+               its colour variable could only ever snap; two layers let the
+               settled one fade up over the unsettled one like a glow. -->
+          <span class="pjrn__wash pjrn__glow pjrn__wash--old" id="iqDtlGlowOld" aria-hidden="true"></span>
+          <span class="pjrn__wash pjrn__glow pjrn__wash--new" id="iqDtlGlowNew" aria-hidden="true"></span>
+
+          <!-- The column names. They caption the summary when the section is shut
+               and the lists when it is open, so they belong to neither. -->
+          <div class="pjrn__labs">
+            <span>Old part</span><span>New part</span>
+          </div>
+
+          <!-- One list per side. Shut, only the last line of each shows — where
+               that part is now; open, the whole history above it. Same rows in
+               both states, so there is nothing to keep in agreement. -->
+          <div class="pjrn__cols" id="iqDtlJrnCols"></div>
+        </section>
+      </div>
+    </div>
+
+    <!-- The "Marked by" band stood here. Pulled for now at Sagar's request; the
+         record still carries `by`, so restoring it is markup only. -->
+    <!-- Delete is an editing action: it says this issue should never have been
+         raised, which is a judgement about the fault, not about the repair. So it
+         appears with Mark issues and is absent while a mechanic is closing. -->
+    <div class="sheet-dtl__fold" id="iqDtlFootWrap">
+      <div>
+      <div class="sheet-dtl__footer">
+      <button class="btn-sheet btn-sheet--danger" id="iqDtlRemove">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.616 20q-.667 0-1.141-.475Q6 19.051 6 18.385V6h-.75q-.213 0-.356-.144Q4.75 5.713 4.75 5.5t.144-.356Q5.037 5 5.25 5H9q0-.213.144-.356Q9.287 4.5 9.5 4.5h5q.213 0 .356.144.144.143.144.356h3.75q.213 0 .356.144.144.143.144.356t-.144.356Q18.963 6 18.75 6H18v12.385q0 .666-.475 1.14-.474.475-1.14.475H7.616ZM17 6H7v12.385q0 .269.173.442.173.173.443.173h8.769q.269 0 .442-.173.173-.173.173-.442V6ZM9.808 17h1V8h-1v9Zm3.384 0h1V8h-1v9Z"/></svg>
+        Delete
+      </button>
+      </div>
+      </div>
+    </div>
+  </section>
+
+  
+
+  <footer class="iq-footer" id="iqFooter">
+    <div class="stepbanner" id="iqBanner" hidden></div>
+    <div class="footer__content footer__content--single">
+      <!-- ASSESSMENT only. The step CTA on this screen cannot be earned by
+           anything the app can watch — reading a fault list and deciding it is
+           complete leaves no trace — so the QCA says so here and the button
+           opposite lights up. Figma 2913:32124, which puts the two on one row
+           rather than stacking a banner over the button. -->
+      <button class="iq-confirm" id="iqConfirm" type="button"
+              role="checkbox" aria-checked="false" hidden>
+        <span class="iq-confirm__box" aria-hidden="true"></span>
+        <!-- Two lines, as the frame draws it. The break is written rather than
+             left to a max-width, because where it falls is the point: "Faults" over
+             "reviewed" keeps the row short enough for the CTA beside it, and a
+             width that happened to wrap there today would move the moment the
+             type scale or the button's label changed. -->
+        <span class="t-label-md iq-confirm__t">Faults<br>reviewed</span>
+      </button>
+      <!-- Only once every issue on the bike is resolved, and then in both tabs —
+           the bike is finished with, whichever section you happen to be in. It is
+           the only primary action this footer carries; see paintDone(). -->
+      <button class="btn-block" id="iqDoneBtn" hidden>Done</button>
+      <!-- Label and action both follow the section — see setSection(). Secondary
+           in both: neither adding issues nor re-running the checks is the way OFF
+           this screen, they are things you do while you are on it. -->
+      <button class="btn-block btn-block--secondary" id="iqMarkBtn">
+        <span class="btn-block__fill" id="iqMarkFill" aria-hidden="true"></span>
+        <span class="btn-block__label" id="iqMarkLabel"></span>
+      </button>
+    </div>
+  </footer>
+  </section>

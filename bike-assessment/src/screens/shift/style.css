@@ -1,0 +1,82 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   SHIFT STATUS
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* Flex column, like the feedback and complaint screens: bar, scroller, footer in
+   flow. .btn-block and .sh-footer both sit in normal flow, so the footer takes
+   real height when it appears rather than covering the last option. */
+#scrShift{display:flex;flex-direction:column;padding-top:var(--status-h)}
+#scrShift .appbar{flex:0 0 auto}
+#scrShift .appbar__title p{color:var(--content-primary)}
+
+#scrShift .sh-body{
+  flex:1 1 auto;min-height:0;
+  overflow-y:auto;overflow-x:hidden;scrollbar-width:none;
+  padding:var(--s9) var(--s6) var(--s6);
+}
+#scrShift .sh-body::-webkit-scrollbar{display:none}
+/* 36 above each heading; the first loses it to the body's own padding. */
+#scrShift .sh-body h2{margin-top:var(--s9);color:var(--content-primary)}
+#scrShift .sh-body h2:first-child{margin-top:0}
+
+#scrShift .sh-group{
+  margin-top:var(--s4);
+  display:flex;flex-direction:column;gap:var(--s2);
+}
+
+/* ── An option ────────────────────────────────────────────────────────────── */
+/* A full-width row rather than a chip run: these are answers to a question, and
+   a row gives the label the whole line and puts every mark in the same column —
+   so the selected one is found by scanning one edge, not by reading all five. */
+#scrShift .sh-opt{
+  width:100%;min-height:64px;
+  display:flex;align-items:center;gap:var(--s4);
+  padding:var(--s4) var(--s6);
+  border:0;border-radius:12px;
+  background:var(--surface-secondary);
+  font:inherit;font-size:16px;font-weight:500;line-height:24px;
+  color:var(--content-primary);text-align:left;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+  transition:background-color .16s ease,box-shadow .16s ease;
+}
+#scrShift .sh-opt__label{flex:1 1 auto;min-width:0}
+/* Inset ring, not a border: a border would change the row's height and shunt the
+   list by a pixel as the selection moves. Same reason the chips use one. */
+#scrShift .sh-opt[aria-checked="true"]{
+  background:var(--surface-inverse);
+  box-shadow:inset 0 0 0 1.5px var(--content-primary);
+}
+
+/* The mark. Present on every row so the column exists whether or not anything is
+   chosen — an empty ring on the unselected rows would read as a checkbox, so
+   they get nothing and only the chosen row draws. */
+#scrShift .sh-opt__mark{
+  flex:0 0 auto;width:24px;height:24px;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--content-positive);
+  opacity:0;transition:opacity .16s ease;
+}
+#scrShift .sh-opt[aria-checked="true"] .sh-opt__mark{opacity:1}
+#scrShift .sh-opt__mark svg{display:block;width:24px;height:24px}
+
+/* ── Update ───────────────────────────────────────────────────────────────── */
+/* Absent until something has changed — see shChanged(). It is a flex child, so
+   arriving it takes 124px from the scroller rather than covering the last row. */
+#scrShift .sh-footer{
+  flex:0 0 auto;
+  background:var(--surface-inverse);
+  box-shadow:inset 0 1px 0 var(--border-primary);
+  padding:var(--s6) var(--s6) 36px;
+  display:flex;align-items:center;
+}
+#scrShift .sh-footer[hidden]{display:none}
+#scrShift .btn-block{
+  width:100%;height:64px;
+  display:flex;align-items:center;justify-content:center;
+  border:0;border-radius:100px;
+  background:var(--surface-primary);color:var(--content-inverse);
+  font:inherit;font-weight:700;font-size:16px;line-height:20px;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+  transition:transform 120ms ease;
+}
+#scrShift .btn-block:active{transform:scale(.98)}

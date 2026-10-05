@@ -1,0 +1,185 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   SCREEN 2 — Mark faults
+   Flex column rather than the absolute skeleton, because both the carousel and
+   the Submit footer have to push the list rather than float over it.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.screen--faults{display:flex;flex-direction:column;padding-top:var(--status-h)}
+/* The first item here is usually the open one, and its grey band would otherwise
+   start directly under the title's line box. On the checklist the first item is
+   white, so the item's own 24px is enough and no extra padding is needed.
+   Height is explicit so it can collapse to nothing when the carousel opens. */
+.screen--faults .listhead{
+  padding-bottom:var(--s4);height:64px;box-sizing:border-box;
+  transition:height .28s var(--ease-out),padding .28s var(--ease-out);
+}
+/* Opening the carousel puts the page in its scrolled state: the large title
+   gives up its space rather than competing with 248px of photographs. */
+.screen--faults.photos-open .listhead{height:0;padding-top:0;padding-bottom:0;overflow:hidden}
+
+
+
+.screen--faults .appbar{flex:0 0 auto}
+
+/* Customer photos carousel — opens under the app bar and stays pinned there */
+.carousel{
+  flex:0 0 auto;height:0;overflow:hidden;
+  transition:height .28s var(--ease-out);
+  position:relative;z-index:10;
+}
+.carousel.is-open{height:var(--carousel-h)}
+.carousel__inner{
+  height:var(--carousel-h);position:relative;
+  background:var(--surface-secondary);
+  border-bottom:1px solid var(--border-primary);
+}
+.track{
+  height:var(--carousel-h);display:flex;
+  overflow-x:auto;overflow-y:hidden;
+  scroll-snap-type:x mandatory;
+  scrollbar-width:none;-webkit-overflow-scrolling:touch;
+}
+.track::-webkit-scrollbar{display:none}
+.slide{
+  flex:0 0 100%;height:var(--carousel-h);scroll-snap-align:start;
+  background-repeat:no-repeat;background-size:cover;background-position:center;
+}
+.carousel__scrim{
+  position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(to bottom,rgba(0,0,0,0) 66.298%,rgba(0,0,0,.8) 100%);
+}
+.carousel__label{
+  position:absolute;left:var(--s4);top:var(--s4);pointer-events:none;
+  background:var(--surface-primary);opacity:.8;
+  border-radius:100px;padding:var(--s1) var(--s2);
+  color:var(--content-inverse);
+}
+.dots{position:absolute;left:0;right:0;bottom:21px;display:flex;justify-content:center;gap:var(--s2)}
+.dots button{
+  width:8px;height:8px;border-radius:50%;border:0;padding:0;cursor:pointer;
+  background:rgba(255,255,255,.32);
+  transition:background-color .2s var(--ease-out);
+}
+.dots button[aria-current="true"]{background:#fff}
+
+/* Faulty-parts list */
+.fscroll{
+  flex:1 1 auto;overflow-y:auto;overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;scrollbar-width:none;
+  padding-bottom:var(--s6);
+}
+.fscroll::-webkit-scrollbar{display:none}
+
+/* 24 + 48 row + 24 = 96 collapsed; 24 + 48 + 232 + 36 = 340 expanded — the
+   rhythm measured off "Mark faluts 1". Divider is full-bleed here, per those
+   frames; screen 1 insets it by 24. See README. */
+.fitem{background:var(--surface-inverse)}
+/* Open rows are white too — the grey band is gone, so the dividers and the
+   expanded content are the only thing separating the open item now. */
+.fitem.is-open{background:var(--surface-inverse)}
+.fitem__inner{padding-top:var(--s6)}
+.fpad{padding:0 var(--s6)}
+.fdivider{height:1px;background:var(--border-primary);margin:0 var(--s6)}
+
+.frow{
+  width:100%;min-height:48px;display:flex;align-items:center;justify-content:space-between;
+  gap:var(--s4);background:none;border:0;padding:0;text-align:left;cursor:pointer;
+}
+.frow__lhs{display:flex;align-items:center;gap:var(--s4);flex:1 1 0;min-width:0}
+.frow__text{display:flex;flex-direction:column;gap:var(--s2);min-width:0;max-width:204px}
+.frow__label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.frow__sub{color:var(--content-tertiary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.frow__end{display:flex;align-items:center;flex:0 0 auto}
+/* Same 24px status slot the checklist uses, carrying the same two icons: the
+   dashed ring while a part has no details yet, the filled disc once it has. */
+.fstatus{
+  width:24px;height:24px;flex:0 0 auto;
+  display:flex;align-items:center;justify-content:center;
+}
+.fstatus svg{display:block}
+.fstatus--pop{animation:pop .22s var(--ease-out)}
+@keyframes pop{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:scale(1)}}
+
+/* minmax(0,·) rather than a bare 0fr: an fr track keeps a min-content floor,
+   which would leave the block's 24px top padding visible when collapsed. */
+.fdetails{display:grid;grid-template-rows:minmax(0,0fr);transition:grid-template-rows .28s var(--ease-out)}
+.fitem.is-open .fdetails{grid-template-rows:minmax(0,1fr)}
+.fdetails > div{overflow:hidden}
+.fdetails__body{padding-top:var(--s6);display:flex;flex-direction:column;gap:var(--s4)}
+/* 24px, open or shut, so the card is symmetric top to bottom against the 24px
+   above the thumbnail. It used to grow to 36 when open, which left the expanded
+   card visibly bottom-heavy for no gain — the divider already separates it. */
+.ftail{height:var(--s6)}
+
+/* Label above its chips. Damage's four options need 336 of the 342px row, so
+   they cannot share a line with a label; both groups stack so the two read the
+   same. Photos keeps the inline arrangement from Figma — one object, ample room. */
+/* 6px, the gap the original prototype's chip group used. Damage's four chips
+   come to 338 of 342px at that gap — 4px of slack. Wrap stays on so a longer
+   label degrades to a second line instead of overflowing the row. */
+.fchips{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.fchip{
+  height:40px;padding:0 var(--s4);border-radius:100px;cursor:pointer;
+  background:var(--surface-inverse);
+  border:1px solid var(--border-primary);
+  color:var(--content-primary);
+  display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;
+  transition:border-color .16s var(--ease-out);
+}
+.fchip[aria-pressed="true"]{border:1.5px solid var(--border-selected)}
+
+.fphotos-row{display:flex;align-items:center;justify-content:space-between;gap:var(--s2)}
+.fphotos{display:flex;align-items:center;gap:7.64px}
+.fphoto{
+  position:relative;width:64px;height:64px;flex:0 0 auto;
+  border-radius:15.284px;overflow:hidden;
+  background-repeat:no-repeat;background-size:cover;background-position:center;
+}
+.fphoto img{width:100%;height:100%;object-fit:cover;display:block}
+.fphoto__x{
+  position:absolute;top:var(--s1);right:var(--s1);
+  width:18px;height:18px;border-radius:9px;border:0;cursor:pointer;padding:0;
+  background:rgba(34,34,34,.72);color:#fff;
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;line-height:1;font-weight:700;
+}
+.fadd{
+  width:64px;height:64px;flex:0 0 auto;border:0;cursor:pointer;
+  border-radius:15.284px;background:var(--surface-secondary);
+  display:flex;align-items:center;justify-content:center;
+  color:var(--content-primary);
+}
+.fadd svg{display:block;width:26.67px;height:26.67px}
+
+/* Submit sits in flow and claims 124px, so the list shrinks instead of
+   hiding content behind it. */
+.ffooter{
+  /* For the step banner, which rides this element's top edge. */
+  position:relative;
+  flex:0 0 auto;background:var(--surface-inverse);
+  box-shadow:inset 0 1px 0 var(--border-primary);
+  padding:var(--s6) var(--s6) var(--s9);
+  display:flex;align-items:center;justify-content:center;
+  margin-bottom:calc(-1 * var(--footer-h));
+  transition:margin-bottom .28s var(--ease-out);
+  z-index:16;
+}
+.ffooter.is-shown{margin-bottom:0}
+.ffooter .btn-primary span{width:246px;text-align:center;display:block}
+
+.fempty{
+  flex:1 1 auto;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:var(--s2);padding:var(--s6);text-align:center;
+}
+.fempty p:last-child{color:var(--content-secondary)}
+.fempty[hidden]{display:none}
+
+.toast{
+  position:absolute;left:50%;bottom:150px;transform:translate(-50%,8px);
+  background:var(--surface-primary);color:var(--content-inverse);
+  padding:12px 20px;border-radius:100px;
+  opacity:0;pointer-events:none;z-index:60;
+  transition:opacity .2s ease,transform .2s var(--ease-out);
+}
+.toast.is-shown{opacity:1;transform:translate(-50%,0)}
+
+.visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}

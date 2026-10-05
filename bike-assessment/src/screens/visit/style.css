@@ -1,0 +1,13 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   ONE REPAIR VISIT
+   The same flex column as screens/faults and screens/checklists: app bar, then
+   a scroller that takes the rest. No footer, because there is nothing to
+   confirm — this screen is a record, not a form.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.screen--visit{display:flex;flex-direction:column;padding-top:var(--status-h)}
+.screen--visit .appbar{flex:0 0 auto}
+.visitscroll{
+  flex:1 1 auto;overflow-y:auto;overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;scrollbar-width:none;
+}
+.visitscroll::-webkit-scrollbar{display:none}

@@ -1,0 +1,398 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   TASK LISTING — the template
+   Built from Figma 2139:29694, generalised. Header, optional chips, rows, dock.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.screen--queue{display:flex;flex-direction:column;padding-top:var(--status-h)}
+.screen--queue .appbar{flex:0 0 auto}
+.q__title{display:flex;flex-direction:column;gap:var(--s2);min-width:0}
+.q__title .h{color:var(--content-primary);white-space:nowrap}
+.q__title .s{color:var(--content-secondary);white-space:nowrap}
+
+/* Chips and list share one relative box so both can be overlays: nothing here
+   changes the list's height, which is what keeps the scroll-direction signal
+   clean (see .qdock). */
+.qscroller{flex:1 1 auto;position:relative;overflow:hidden}
+
+/* ── Accordion heads — Figma 2902:31870 ──────────────────────────────────────
+   68px, full-bleed dividers above and below (the rows' own are inset 24, which
+   is what separates a group from the rows inside it). Title on the left at 24,
+   count right-aligned 64 from the edge, chevron 24 from it.
+   ─────────────────────────────────────────────────────────────────────────── */
+.qsec-head{
+  position:relative;z-index:2;
+  width:100%;height:68px;box-sizing:border-box;
+  padding:0 var(--s6);
+  display:flex;align-items:center;gap:var(--s4);
+  border:0;background:var(--surface-inverse);text-align:left;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+  /* ONE line per boundary, and it is the BOTTOM one. Drawn as an inset shadow so
+     the 68 stays exact.
+
+     Both edges was wrong and visibly so: under the app bar, which draws its own
+     border-bottom, the head's top line doubled it to 2px; and two adjacent heads
+     — the third frame, where the first is shut — put head one's bottom line on
+     head two's top line for another 2px. Every boundary in this list already has
+     something above it that draws a line, so the head only ever needs to draw
+     the one below itself. The exception is the pinned foot head; see below. */
+  box-shadow:inset 0 -1px 0 var(--border-primary);
+}
+.qsec-head:active{background:var(--surface-secondary)}
+.qsec-head > span:first-child{flex:1 1 auto;color:var(--content-primary)}
+/* Right-aligned at 64 from the screen edge: 24 of padding, the 24px chevron, and
+   16 between the two. */
+.qsec-head__n{flex:0 0 auto;color:var(--content-primary);font-variant-numeric:tabular-nums}
+.qsec-head__go{
+  flex:0 0 auto;width:24px;height:24px;color:var(--content-primary);
+  display:flex;align-items:center;justify-content:center;
+  /* Shut, it points RIGHT; open, it points down. The arrow shows what a tap will
+     do to the list below rather than what state the section is in. */
+  transform:rotate(-90deg);
+  transition:transform .2s var(--ease-out);
+}
+.qsec-head.is-open .qsec-head__go{transform:rotate(0deg)}
+.qsec-head__go svg{display:block;width:24px;height:24px}
+
+/* THE STICKY ONE. The last head pins to the foot of the scroller while it is
+   shut, so a long first section keeps it in view — and when the first section is
+   short it simply sits under the last row, because sticky only engages once the
+   element's own place has scrolled past. One rule, both frames.
+
+   Not while it is OPEN: its rows are below it then, and a head pinned to the
+   floor with its own list above it reads as belonging to the wrong group.
+
+   bottom:0, flush to the frame, which is where 2902:31870 draws it. The scan FAB
+   is lifted clear of it — see .has-foot below — because the frame has no FAB and
+   at 24 from the bottom right it would sit exactly on the chevron. */
+.qsec-head--foot:not(.is-open){
+  position:sticky;bottom:0;
+  /* The one head that needs a line ABOVE it too: pinned, it floats over rows it
+     is not part of, and the row underneath has had its own divider suppressed
+     for the case where the head is sitting in flow directly below it. */
+  box-shadow:inset 0 1px 0 var(--border-primary),inset 0 -1px 0 var(--border-primary);
+}
+/* Unless the head above it is drawing that line already — two shut sections back
+   to back, which is the third frame with both collapsed. */
+.qsec-head + .qsec-head--foot:not(.is-open){box-shadow:inset 0 -1px 0 var(--border-primary)}
+
+/* ── The quick filter row ────────────────────────────────────────────────────
+   Figma 2872:22873. 72px band between two rules — 16, a 40px control, 16 — with
+   the filter button pinned at the left and the chips scrolling past it. Pinning
+   matters: the chips are a shortcut and the button is the way to everything
+   else, so the button is the one thing that must never scroll away.
+
+   Replaces the 80px strip of 48px single-select chips. Those were sections
+   dressed as filters; these are filters.
+   ─────────────────────────────────────────────────────────────────────────── */
+/* 8 + a 16px line + 8, pinned to the floor of the scroller. Full-bleed grey,
+   inset 24 like everything else, and a hairline ABOVE it — the line belongs on
+   the side the rows are on. */
+.qavg[hidden]{display:none}
+.qavg{
+  position:absolute;left:0;right:0;bottom:0;z-index:11;
+  padding:var(--s2) var(--s6);
+  background:var(--surface-secondary);
+  box-shadow:inset 0 1px 0 var(--border-primary);
+}
+.qavg .s{
+  display:block;line-height:16px;
+  color:var(--content-secondary);white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis;
+}
+/* A queue with no chips has no 80px row to clear, so the list starts at the top
+   of the scroller instead — see .qscroller:has() below. */
+.qlist{
+  position:absolute;inset:0;
+  overflow-y:auto;overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;scrollbar-width:none;
+  padding-top:0;
+  /* 88 for the scan button. The average strip adds its own 32 below — see
+     .has-avg — and a tab that suppresses the strip gets the 88 back. */
+  padding-bottom:88px;
+}
+/* 72 only when the filter row is there to clear. Assessment done has no filters,
+   so the list starts under the app bar — see renderQueue. */
+.screen--queue.has-filters .qlist{padding-top:72px}
+#scrQueue.filters-inlist .qlist{padding-top:0}
+.qlist::-webkit-scrollbar{display:none}
+
+/* Rows inside an accordion, under a person's name — see `tight` in
+   queue-kinds.js. 76 rather than 92: the taller row is sized for a listing you
+   scan top to bottom, and seven of those under one mechanic pushed the next
+   name off the screen. The two lines are unchanged; the 16 comes off the air. */
+#scrQueue.q-tight .qrow{min-height:76px;padding:var(--s4) var(--s6)}
+/* Work that is behind them, sat back on the grey. The row keeps its own text
+   colours: three states drawn as a gradient of greyness would be harder to
+   tell apart than three states with one of them on a different ground. */
+#scrQueue .qrow--past{background:var(--surface-secondary)}
+/* The running clock. Tabular figures so the seconds do not shove the minutes
+   about as they tick — at one repaint a second, a column that jitters is the
+   first thing the eye finds on the page. */
+#scrQueue .wait__live{font-variant-numeric:tabular-nums}
+/* The state marks are SHARED — .qstate in shared/base.css; the allocation
+   page's banner draws the same ones. */
+
+/* ── A MECHANIC AS AN ACCORDION HEAD ────────────────────────────────────────
+   Allocated bikes heads its sections with a person rather than a label: face,
+   name, and a line saying whether they are free and how much is left. Taller
+   than the 68px label head because it carries two lines and a 40px face.
+   ─────────────────────────────────────────────────────────────────────────── */
+#scrQueue .qsec-head--tall{height:auto;min-height:88px;gap:var(--s4)}
+/* A ROUNDED SQUARE, not a circle. Every other thumbnail in the app is a
+   rounded square — the part crops, the section art, the home cards — and the
+   circle made a person read as a different kind of object rather than as
+   another thing on the row. Sagar's call. Matched on the picker sheet, because
+   the two screens draw the same four people. */
+#scrQueue .qmech__face{
+  flex:0 0 auto;width:40px;height:40px;border-radius:10px;
+  background:var(--surface-secondary);color:var(--content-disabled);
+  display:flex;align-items:center;justify-content:center;overflow:hidden;
+}
+#scrQueue .qmech__face svg{display:block;width:100%;height:100%}
+#scrQueue .qmech__t{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:var(--s1)}
+/* The name and the count share the line: the name is what you are looking for
+   and the count is what you are deciding on, and putting the count under the
+   blocks would have made the head three lines tall to say the same thing. */
+#scrQueue .qmech__top{
+  display:flex;align-items:baseline;justify-content:space-between;gap:var(--s4);
+}
+#scrQueue .qmech__n{color:var(--content-primary);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#scrQueue .qmech__c{flex:0 0 auto;color:var(--content-tertiary);font-variant-numeric:tabular-nums}
+/* The blocks are SHARED — .mblocks in shared/base.css, drawn by the picker
+   sheet too. Only the width they sit in is this screen's business. */
+
+#scrQueue .qmech__s{
+  display:flex;align-items:center;gap:6px;
+  color:var(--content-tertiary);white-space:nowrap;
+}
+/* The same ring the allocation sheet draws, at the same 10/2 — the two screens
+   name the same four people and must not describe them differently. */
+#scrQueue .qmech__dot{
+  flex:0 0 auto;width:10px;height:10px;border-radius:50%;
+  box-sizing:border-box;background:none;
+  border:2px solid currentColor;color:var(--content-tertiary);
+}
+#scrQueue .qmech__dot--working{color:var(--content-positive)}
+#scrQueue .qmech__dot--idle{color:var(--content-warning)}
+
+/* A face in front of the row — see the `art` hook in queue-kinds.js. 40px, a
+   step down from the 48 the allocation sheet uses: there it is the thing you are
+   choosing between, here it is a label on a bike. */
+/* The text sits 16 off the face, not floated away from it. The row is
+   space-between — two children, title block and wait, pushed to the ends — and
+   a third child at the front left the middle one free to drift into the middle
+   of the row. Growing the title block pins it to the face and hands the slack
+   to the far edge, where the wait already lives. */
+#scrQueue .qrow--art{gap:var(--s4)}
+#scrQueue .qrow--art .who{flex:1 1 auto}
+#scrQueue .qrow__face{
+  flex:0 0 auto;width:40px;height:40px;border-radius:10px;
+  background:var(--surface-secondary);color:var(--content-disabled);
+  display:flex;align-items:center;justify-content:center;overflow:hidden;
+}
+#scrQueue .qrow__face svg{display:block;width:100%;height:100%}
+
+/* 24 + 20 + 8 + 16 + 24 = 92, per Figma 2872:22873 — up from 80 because the two
+   lines are further apart and the padding is 24 rather than 16. The divider is
+   inset 24 either side, so it is an element rather than an inset shadow — a
+   shadow spans the whole box. It sits on the row's bottom edge and costs no
+   height. */
+.qrow{
+  position:relative;
+  width:100%;min-height:92px;border:0;background:var(--surface-inverse);cursor:pointer;
+  padding:var(--s6);text-align:left;
+  display:flex;align-items:center;justify-content:space-between;gap:var(--s4);
+}
+.qrow::after{
+  content:"";position:absolute;left:var(--s6);right:var(--s6);bottom:0;
+  height:1px;background:var(--border-primary);
+}
+.qrow:last-child::after{display:none}
+/* Nor on the row that ends a section: the head below draws its own full-bleed
+   line, and the row's inset one would sit a pixel above it as a second, shorter
+   rule. Figma 2902:31870 has one line there. */
+.qrow:has(+ .qsec-head)::after{display:none}
+.qrow:active{background:var(--surface-secondary)}
+.qrow .who{display:flex;flex-direction:column;gap:var(--s2);min-width:0}
+/* Model and charge are the title; the number is the quiet line under it. The
+   battery glyph that used to sit on that second line is gone with the change —
+   a percentage beside the model needs no icon to say what it is, and the icon
+   was the only thing on the row drawn rather than written. */
+.qrow .who .id{color:var(--content-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.qrow .who .sub{
+  display:flex;align-items:center;gap:var(--s2);
+  color:var(--content-tertiary);white-space:nowrap;
+}
+/* Under 20% the charge goes red, and it is then the only red on the screen —
+   which is what makes it read as the warning it is. Nothing else in the row
+   changes: the bike is not the problem, its pack is. */
+.qrow.is-low .who .pct{color:var(--content-negative)}
+.qrow .mine{color:var(--content-secondary)}
+/* One colour, not two: 2872:22873 draws the whole figure in content/primary. It
+   used to split hours from minutes, which was the old frame's emphasis. */
+.qrow .wait{
+  flex:0 0 auto;font-variant-numeric:tabular-nums;color:var(--content-primary);
+}
+
+.qempty{
+  position:absolute;inset:72px 0 88px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:var(--s2);padding:var(--s6);text-align:center;
+}
+.qempty p:last-child{color:var(--content-secondary)}
+.qempty[hidden]{display:none}
+
+/* The FAB is an overlay rather than a flex item. Overlaying matters: collapsing
+   an in-flow element hands its height to the list, which can clamp scrollTop and
+   read as an upward scroll — an oscillation that then needs a timer to absorb.
+   Nothing resizes here, so the scroll-direction signal stays clean.
+
+   It no longer travels: the Filters / Sort bar it used to drop into is gone, and
+   with nothing below it the only place left to go is off the frame. The filter
+   row at the top is what moves on scroll now. */
+.qdock{
+  position:absolute;left:0;right:0;bottom:0;z-index:12;
+}
+/* THE WHOLE DOCK RIDES ON THE AVERAGE STRIP. Lifting the dock rather than the
+   FAB inside it means the parked-task band clears the strip too, and the FAB
+   keeps its own 16px skirt — so the gap under the button is the same 16 whether
+   it is measuring to the strip or to the floor. */
+.screen--queue.has-avg .qdock{bottom:32px}
+.screen--queue.has-avg .qlist{padding-bottom:120px}
+.screen--queue.has-avg.has-mini .qlist{padding-bottom:146px}
+.screen--queue.has-avg .qempty{bottom:120px}
+.qfabrow{padding:0 var(--s6) var(--s4);display:flex;justify-content:flex-end}
+.qfab{
+  width:56px;height:56px;border:0;cursor:pointer;border-radius:28px;
+  background:var(--surface-primary);color:var(--content-inverse);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:var(--shadow-1);
+}
+.qfab svg{display:block;width:24px;height:24px}
+/* REMOVED: the 68px lift over a pinned accordion head.
+     .screen--queue.has-pinned-foot .qfabrow{margin-bottom:68px}
+   The button used to climb onto a shut head pinned at the floor so it did not
+   sit on the chevron. Sagar's call to fix it in place: a button that moves is a
+   button you have to look for, and the collision it was avoiding is a 56px
+   circle over the right end of a head whose text and count are both well left
+   of it. The measurement behind it went too — see renderQueue. */
+/* And the list drops its own bottom padding entirely. A sticky element is
+   constrained to the scrollPORT — the container's padding box — so 88px of
+   padding-bottom pinned the head 88px up from the floor instead of on it, which
+   is not where 2902:31870 draws it. The clearance the padding provided is moved
+   onto the head itself below, where it does the same job without moving the
+   sticky edge. */
+.screen--queue.has-foot .qlist{padding-bottom:0}
+/* The FAB's 88, carried by the head. It keeps the last row scrollable clear of
+   the FAB, and because it sits BELOW the head it also means the head stays
+   pinned at the floor rather than landing 88px short of it at the end of the
+   scroll — flush, whatever the list length. */
+.qsec-head--foot:not(.is-open){margin-bottom:88px}
+/* THE AVERAGE STRIP IS THE FLOOR. It is opaque and pinned across the bottom, so
+   anything behind it is simply not on screen — a head pinned at bottom:0 sat
+   under it and was gone. The head stops 32 short, and its own clearance grows by
+   the same 32 so it still lands flush at the end of the scroll rather than 32
+   above where it stopped. */
+.screen--queue.has-avg .qsec-head--foot:not(.is-open){bottom:32px;margin-bottom:120px}
+
+/* ── While a task is parked ──────────────────────────────────────────────────
+   Part of the template, because every queue that parks a task has to answer the
+   same question. The parked band is full-bleed at the foot of the screen (Figma
+   2191:24126), so it does not sit above the FAB — it takes its place.
+
+   It used to displace the Filters / Sort bar too, which cost the mechanic every
+   filter for as long as a task was parked. That trade is gone with the bar: the
+   filters are at the top of the screen now and the band cannot reach them.
+   ─────────────────────────────────────────────────────────────────────────── */
+.screen--queue.has-mini .qfabrow{display:none}
+/* A tab can refuse it outright — see noFab in queue-kinds.js. */
+.screen--queue.no-fab .qfabrow{display:none}
+/* Clearance is band 90 (6 bar + 84) + 24. */
+.screen--queue.has-mini .qlist{padding-bottom:114px}
+.screen--queue.has-mini .qempty{bottom:90px}
+
+/* The tab-mode section strip. It scrolls with the list rather than being pinned:
+   this template has no band between the header and the scroller, and inventing
+   one would mean a fourth top-offset rule for one queue. Sticky to the top so it
+   is still reachable once the board is scrolled. */
+#scrQueue .qsec-tabs{position:sticky;top:0;z-index:13}
+
+/* The filter band riding INSIDE the active tab — see renderQueue. Same 72px row,
+   same chips, in flow instead of pinned to the top of the scroller: it sits under
+   the sticky strip, above the rows, and scrolls away with them. The absolute
+   band's own rules (position, transform, the .is-up travel) are all switched off
+   here rather than duplicated, so there is still one band in the markup. */
+/* WHERE the band sits is this screen's business, not the component's: pinned to
+   the top of the scroller by default, in flow inside the tab when the list has
+   a strip above it. The component itself is position-less. */
+#scrQueue .qfilters{position:absolute;left:0;right:0;top:0;z-index:11}
+#scrQueue.filters-inlist .qfilters{
+  position:static;transform:none;transition:none;z-index:auto;
+}
+
+/* Out of this queue's hands — see the note on `muted` in queue-kinds.js. Only
+   the two lines that are normally content/primary come back to tertiary; the
+   sub-line is already there, so the row goes flat rather than half-lit. */
+#scrQueue .qrow.is-muted .who .id,
+#scrQueue .qrow.is-muted .wait{color:var(--content-tertiary)}
+#scrQueue .qrow.is-muted .who .sub{color:var(--content-disabled)}
+
+/* ── A board's note ──────────────────────────────────────────────────────────
+   Figma 2982:673. Sits between the tab strip and the rows on any section that
+   declares one; today that is Transfer done. Full-bleed on surface/secondary so
+   it reads as a band the list starts under, not as a card floating in it — the
+   rows below are white and edge-to-edge, and a card would have introduced a
+   third inset the page does not otherwise use.
+
+   16 top and bottom, 24 either side: the frame's own inset, so the text lines
+   up with the row titles under it. The Figma frame is 176 tall, which is what
+   this content comes to at these paddings — height is left to fall out of the
+   text rather than being pinned, because the copy is config and the next board
+   to declare a note will not be six lines long.
+   ─────────────────────────────────────────────────────────────────────────── */
+.qnote{
+  padding:var(--s4) var(--s6);
+  background:var(--surface-secondary);
+  color:var(--content-primary);
+  /* 24, not the type scale's 20. This is a paragraph to be read, not a label —
+     see the leading on 2982:675. */
+  line-height:24px;
+}
+.qnote p{margin:0}
+/* The blank line between the two sentences in the frame is a line of its own
+   there; here it is the gap, so an empty <p> does not have to be carried in
+   config where it would be invisible to whoever edits it next. */
+.qnote p + p{margin-top:24px}
+.qnote ul{margin:0;padding-left:var(--s6);list-style:disc}
+.qnote li{line-height:24px}
+
+/* ── A bike on charge ────────────────────────────────────────────────────────
+   Figma 2982:1400. Same 92px row, tinted, with the right-hand column turned
+   into two lines that mirror the left: the state on the title's line, the time
+   on charge under it.
+
+   Tinted rather than badged. A stack of these sits above the board and the tint
+   is what separates the two groups at a glance — a badge on each row would say
+   the same thing three times and still leave the boundary unmarked.
+   ─────────────────────────────────────────────────────────────────────────── */
+.qrow.is-reviving{background:var(--surface-secondary)}
+/* The wait column becomes a column. Right-aligned against the frame's inset, on
+   the same two baselines as .who opposite it — 8px gap, same as the left. */
+.qrow.is-reviving .wait{
+  display:flex;flex-direction:column;align-items:flex-end;gap:var(--s2);
+}
+.qrow.is-reviving .wait__st{color:var(--content-primary)}
+.qrow.is-reviving .wait__since{color:var(--content-tertiary)}
+/* The flat pack still reads as the warning it is — .is-low already colours it,
+   and a reviving row is always a flat one, so nothing here overrides that. */
+
+/* A bike that has reported in — Figma 2982:1404. It carries .is-reviving too, so
+   the tint and the two-line column above already apply; this is only the second
+   phase on top of them. The pack reading goes back to the ordinary colour in the
+   row markup, not here: it is at 5% and climbing on a charger, which is a result
+   rather than a warning.
+
+   The glyph sits WITH the word, not beside the column — 8px, the row's own gap,
+   20px to match the frame, taking the text colour so the two states read as one
+   control in two readings. */
+.qrow.is-reviving .wait__st{display:inline-flex;align-items:center;gap:var(--s2)}
+.qrow.is-reviving .wait__st svg{display:block;width:20px;height:20px;flex:0 0 auto}

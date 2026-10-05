@@ -1,0 +1,206 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   SCREEN 1 — Assessment
+   ═══════════════════════════════════════════════════════════════════════════ */
+/* The list runs to the bottom of the frame until the checklist is finished; the
+   footer only exists at that point, and the list gives up exactly its height
+   rather than sliding under it. */
+/* The Assessment / Penalties strip sits between the progress bar and the list —
+   absolutely, like the rest of this screen's chrome, so it cannot scroll away
+   from the tab it belongs to. */
+.screen--assessment .steptabs{
+  position:absolute;left:0;right:0;
+  top:calc(var(--header-h) + var(--progress-h));
+}
+.scroll{
+  position:absolute;left:0;right:0;
+  top:calc(var(--header-h) + var(--progress-h) + 56px);
+  bottom:0;
+  overflow-y:auto;overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:none;
+  transition:bottom .28s var(--ease-out);
+}
+.screen--assessment.has-footer .scroll{bottom:var(--footer-h)}
+.scroll::-webkit-scrollbar{display:none}
+.list{padding:0}
+
+/* Large list heading. Scrolls away with the content; the app bar picks the same
+   words up as it goes. No bottom padding — the first item's own 24px provides
+   the gap, which keeps the 96px list rhythm intact. */
+/* An empty spacer now — the heading it held is gone. It keeps the list's 24px
+   lead-in under the tab strip, which the first item's own padding does not
+   provide. */
+.listhead{
+  padding:var(--s6) var(--s6) 0;background:#fff;
+  display:flex;align-items:center;justify-content:space-between;gap:var(--s4);
+}
+#scrAssess .listhead{padding:var(--s2) 0 0}
+
+/* 24+48+24 = 96 collapsed, 24+344+24 = 392 expanded, exactly as Figma. The
+   divider is drawn on the bottom edge, so it costs no height. */
+.item{position:relative;background:#fff;padding:var(--s6)}
+.item::after{
+  content:"";position:absolute;left:var(--s6);right:var(--s6);bottom:0;
+  height:1px;background:var(--border-primary);
+}
+.row{
+  min-height:48px;display:flex;align-items:center;justify-content:space-between;
+  width:100%;gap:var(--s4);
+}
+.row__lhs{display:flex;align-items:center;gap:var(--s4);min-width:0}
+.thumb{
+  width:48px;height:48px;flex:0 0 auto;
+  background-color:var(--surface-secondary);
+  background-repeat:no-repeat;
+  border-radius:8.727px;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--content-tertiary);
+}
+.row__label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row__status{flex:0 0 auto;display:flex;align-items:center;justify-content:center;width:24px;height:24px}
+.row__status svg{display:block}
+.row__text{min-width:0;display:flex;flex-direction:column;gap:var(--s2)}
+/* The second line — see subLineHTML. Truncated rather than wrapped: a row that
+   grows a line breaks the list's rhythm and, worse, the row/card morph measures
+   the row it is growing out of. */
+.row__note,.card__note{
+  font-weight:500;font-size:14px;line-height:16px;
+  color:var(--content-tertiary);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+/* No colour of its own for the finding. It reads in the same grey as the
+   instruction it replaced — see subLineHTML for why. */
+/* The card's second line wraps, unlike the row's: there is room for it there,
+   and a part with four issues recorded against it should show all four rather
+   than trail off after the first. */
+.card__note{white-space:normal;overflow:visible}
+.card__headText{display:flex;flex-direction:column;gap:var(--s2);min-width:0}
+
+/* Swipe stage — the reveal sits at exactly the card's rect, so the card
+   slides off it like a page off a desk. */
+.swipe{position:relative}
+.reveal{
+  position:absolute;inset:0;border-radius:12px;
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;
+}
+.reveal--good  {background:var(--reveal-positive);color:var(--content-positive)}
+.reveal--faulty{background:var(--reveal-negative);color:var(--content-negative)}
+.reveal__frame{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.reveal__body{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:var(--s4);
+}
+.reveal__body p{
+  color:var(--content-primary);
+  text-align:center;max-width:240px;text-wrap:balance;
+}
+
+.card{
+  position:relative;z-index:2;
+  width:100%;
+  background:#fff;
+  border-radius:var(--s2);
+  padding:var(--s4);
+  display:flex;flex-direction:column;gap:var(--s2);
+  box-shadow:inset 0 0 0 1px var(--border-primary),
+             0 1px 4.95px rgba(0,0,0,0.1);
+  touch-action:pan-y;
+  cursor:grab;
+  will-change:transform;
+}
+.card--settling{transition:transform .3s var(--ease-out)}
+.card--flying{transition:transform .26s cubic-bezier(.4,0,1,1),opacity .26s linear}
+.card__head{display:flex;flex-direction:column;gap:var(--s4)}
+/* The renders carry alpha and are already framed around the part, so the box is
+   filled from the centre rather than given the hand-tuned crop the old
+   photographs needed. Tile colour matches the thumbnail's. */
+.card__media{
+  height:220px;width:100%;
+  background-color:var(--surface-secondary);
+  background-repeat:no-repeat;
+  background-size:cover;
+  background-position:center;
+  border-radius:var(--s2);overflow:hidden;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--content-tertiary);
+}
+.card__actions{display:flex;align-items:center;gap:var(--s6);width:100%}
+.btn-faulty,.btn-good{
+  flex:1 0 0;min-width:0;
+  display:flex;align-items:center;justify-content:center;
+  padding:4px 0;border-radius:100px;border:0;background:none;cursor:pointer;
+}
+/* Both labels sit in an identically-shaped inner pill. Transparent at rest, so
+   the resting card is unchanged; it is the surface the selected fill lands on. */
+.btn-faulty__inner,.btn-good__inner{
+  display:flex;align-items:center;justify-content:center;gap:var(--s2);
+  padding:var(--s2) var(--s4) var(--s2) var(--s2);border-radius:100px;
+  transition:background-color .16s var(--ease-out);
+}
+/* Re-opening a part already judged shows the call that was made. The two swipe
+   tints, reused: the same colour language the reveal uses behind the card. */
+.btn-faulty.is-on .btn-faulty__inner{background:var(--reveal-negative)}
+.btn-good.is-on   .btn-good__inner  {background:var(--reveal-positive)}
+.btn-label{display:flex;align-items:center;justify-content:center;gap:var(--s2)}
+.btn-label svg{display:block;width:24px;height:24px;flex:0 0 auto}
+.txt-negative{color:var(--content-negative)}
+.txt-positive{color:var(--content-positive)}
+
+/* No hairline under this app bar. The progress strip sits directly beneath it
+   and its track is the same border/primary, so a 1px divider on top of a 6px
+   track merged into one 7px grey band — heavier than the job page's strip, which
+   is the same component. The job page's solid bar drops its hairline for exactly
+   this reason; --header-h is 116 rather than 117 to match. */
+#assessAppbar{border-bottom:0}
+
+/* Directly under the app bar, so how far along you are reads at a glance
+   without looking to the bottom of the screen. */
+.progress{
+  position:absolute;left:0;top:var(--header-h);
+  width:100%;height:var(--progress-h);
+  background:var(--border-primary);
+  z-index:19;
+}
+.progress__fill{
+  height:100%;background:var(--surface-primary);width:0;
+  transition:width .3s var(--ease-out);
+}
+
+/* Only exists once every part is judged, and then it holds one primary action.
+   Slides up as the list gives up its height, so it never covers a row. */
+.footer{
+  position:absolute;left:0;bottom:0;width:100%;
+  background:var(--surface-inverse);
+  box-shadow:inset 0 1px 0 var(--border-primary);
+  padding:var(--s6) var(--s6) var(--s9);
+  display:flex;align-items:center;justify-content:center;
+  transform:translateY(100%);
+  transition:transform .28s var(--ease-out);
+  z-index:16;
+}
+.footer.is-shown{transform:translateY(0)}
+.footer .btn-primary{width:100%}
+.btn-primary{
+  display:flex;align-items:center;justify-content:center;
+  padding:22px 36px;border-radius:100px;border:0;cursor:pointer;
+  background:var(--surface-disabled);
+  color:var(--content-disabled);
+  font-family:inherit;
+}
+.btn-primary[disabled]{cursor:default}
+.btn-primary:not([disabled]){background:var(--surface-primary);color:var(--content-inverse)}
+
+/* Every collapsed row is tappable. With the reason sheet gone, a row already
+   judged simply becomes the open card again so it can be re-swiped — the only
+   way back from a mis-swipe. */
+.item--tappable{cursor:pointer}
+.item--tappable:active{background:var(--surface-secondary)}
+
+/* The morph ghost — see screens/assess/morph.js. Above the list but below the
+   app bar and the sheet, so it never flies over chrome. */
+.morph-ghost{
+  position:absolute;z-index:15;pointer-events:none;
+  background-repeat:no-repeat;
+  overflow:hidden;
+}

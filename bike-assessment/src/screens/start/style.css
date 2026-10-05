@@ -1,0 +1,68 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   SCREEN 0 — Start
+   A static hero, so it is laid out with the same absolute offsets as Figma
+   (2108:27680) rather than reflowed into a stack.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.start__gradient{
+  position:absolute;left:0;top:-1px;width:100%;height:396px;
+  background:linear-gradient(-19.487deg,
+    var(--color-white) 20.615%, var(--color-purple100) 90.817%);
+}
+.start__bar{
+  position:absolute;left:0;top:var(--status-h);width:100%;height:72px;
+  display:flex;align-items:center;padding:10px 20px;
+}
+.start__close{
+  width:40px;height:40px;margin-left:4px;flex:0 0 auto;
+  border:0;cursor:pointer;border-radius:20px;
+  background:var(--surface-inverse);
+  box-shadow:var(--shadow-1);
+  display:flex;align-items:center;justify-content:center;
+  color:var(--content-primary);
+}
+.start__close svg{display:block;width:24px;height:24px}
+
+.start__title{
+  position:absolute;left:var(--s6);top:179px;width:342px;
+  text-align:center;color:#000;
+}
+/* Figma clips this at 72px. Clamped to four lines so it ends on an ellipsis
+   rather than a half-cut line — see README, the copy has nowhere to expand. */
+.start__desc{
+  position:absolute;left:50%;transform:translateX(-50%);top:315px;
+  width:326px;
+  text-align:center;color:var(--content-secondary);
+  overflow:hidden;text-overflow:ellipsis;
+  display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;
+}
+.start__video{
+  position:absolute;left:50%;transform:translateX(-50%);top:395px;
+  height:40px;padding:0 18px 0 16px;border:0;cursor:pointer;
+  border-radius:60px;background:var(--surface-secondary);
+  display:inline-flex;align-items:center;gap:10px;
+  color:#000;
+}
+.start__video svg{display:block;width:24px;height:24px;flex:0 0 auto}
+
+/* Measured up from the floor, not down from 652. The pair below — this strip and
+   the footer under it — are the bottom of this screen, and 652/720 only landed
+   there while the frame was exactly 844 tall. */
+.start__author{
+  position:absolute;left:0;bottom:var(--footer-h);width:100%;height:68px;
+  background:var(--surface-secondary);
+  display:flex;align-items:center;gap:var(--s4);padding:0 var(--s6);
+}
+.start__avatar{
+  width:36px;height:36px;flex:0 0 auto;border-radius:50%;
+  background:var(--surface-inverse);
+}
+.start__author p{color:#000}
+
+.start__footer{
+  position:absolute;left:0;bottom:0;width:100%;
+  background:var(--surface-inverse);
+  border-top:1px solid var(--border-primary);
+  padding:var(--s6) var(--s6) var(--s9);
+}
+.start__footer .btn-primary{width:100%}
+

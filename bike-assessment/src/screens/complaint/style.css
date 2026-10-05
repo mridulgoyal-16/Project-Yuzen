@@ -1,0 +1,135 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   NOTE COMPLAINT
+   The app bar is the shell's. Everything below is this page.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* Same 48px circle as the queue's active card and the token detail page — one
+   token, one shape, wherever it appears. */
+#scrComplaint .cp-token{
+  flex:0 0 auto;
+  width:48px;height:48px;border-radius:24px;
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, .3) 0%, rgba(0, 0, 0, 0) 100%),
+    var(--content-positive);
+  color:#fff;
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;font-weight:700;line-height:28px;
+  font-variant-numeric:tabular-nums;
+  margin-right:var(--s4);
+}
+/* The bar's title box is fixed-width for the bike-number pages; here the badge
+   takes 64 of it, so the name needs the rest of the row rather than that box. */
+#scrComplaint .appbar__title{max-width:none;width:auto;flex:1 1 auto;min-width:0}
+#scrComplaint .appbar__title p{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* Flex column, like the feedback and mark-faults screens: the bar, a scroller
+   that takes what is left, and the footer in flow claiming its own 124px. The
+   body was absolutely positioned at first, which left .ffooter — which sits in
+   FLOW and expects a flex parent — stranded directly under the header with the
+   Done button floating across the page. */
+#scrComplaint{display:flex;flex-direction:column;padding-top:var(--status-h)}
+#scrComplaint .appbar{flex:0 0 auto}
+
+#scrComplaint .cp-body{
+  flex:1 1 auto;min-height:0;
+  overflow-y:auto;overflow-x:hidden;scrollbar-width:none;
+  padding:var(--s9) var(--s6) var(--s6);
+}
+#scrComplaint .cp-body::-webkit-scrollbar{display:none}
+
+/* 36 above each heading, which is the gap Barun's field already carries below
+   its own — so the two blocks sit on the same rhythm without a wrapper. The
+   first heading loses it: the body's own padding is already there. */
+#scrComplaint .cp-body h2{margin-top:var(--s9)}
+#scrComplaint .cp-body h2:first-child{margin-top:0}
+
+/* ── The field, from token-details ────────────────────────────────────────── */
+/* Barun's .fb__field, verbatim apart from the scope. The captain types into the
+   same control in both prototypes, so it is copied rather than re-derived. */
+#scrComplaint .fb__field{
+  margin-top:var(--s9);height:64px;border-radius:32px;
+  background:var(--surface-secondary);padding:0 var(--s4);
+  display:flex;align-items:center;gap:var(--s2);
+}
+#scrComplaint .fb__input{
+  flex:1 1 auto;min-width:0;border:0;background:none;font-family:inherit;
+  color:var(--content-primary);font-size:16px;line-height:24px;font-weight:500;
+}
+#scrComplaint .fb__input:focus{outline:none}
+#scrComplaint .fb__input::placeholder{color:var(--content-tertiary)}
+
+#scrComplaint .fb__mic{
+  width:36px;height:36px;flex:0 0 auto;border-radius:18px;border:0;cursor:pointer;
+  background:var(--surface-inverse);color:var(--content-primary);
+  display:flex;align-items:center;justify-content:center;
+  -webkit-tap-highlight-color:transparent;
+  transition:background-color .16s ease,color .16s ease;
+}
+#scrComplaint .fb__mic svg{display:block;width:20px;height:20px;fill:currentColor}
+/* Dictating. */
+#scrComplaint .fb__mic.is-live{background:var(--content-primary);color:var(--content-inverse)}
+/* There is something to commit: the mic becomes the tick. Filled dark rather
+   than green — it commits the text to the field, it does not mark anything
+   resolved, and green here would borrow a meaning the rest of the flow has
+   already given to "done". */
+#scrComplaint .fb__mic.is-submit{background:var(--content-primary);color:var(--content-inverse)}
+
+/* The focused field takes the page's attention while the keyboard is up. */
+#scrComplaint .fb__field:focus-within{box-shadow:inset 0 0 0 1.5px var(--border-selected)}
+
+/* ── Saved ───────────────────────────────────────────────────────────────── */
+/* Committed and locked. The note stays legible — it is the record, and greying it
+   to content/disabled would make what the captain just wrote the faintest thing
+   on the page — but it is plainly no longer a field: the text steps back to
+   secondary, the caret cannot land in it, and the button stops answering.
+   -webkit-text-fill-color as well as color, because WebKit paints a disabled
+   input's text with its own colour and ignores `color` alone. */
+#scrComplaint .fb__input:disabled{
+  color:var(--content-secondary);
+  -webkit-text-fill-color:var(--content-secondary);
+  opacity:1;                       /* Safari dims disabled inputs by default */
+  cursor:default;
+}
+#scrComplaint .fb__field.is-saved{cursor:default}
+/* No ring on a locked field — it cannot take focus, so it must not look as if
+   it could. */
+#scrComplaint .fb__field.is-saved:focus-within{box-shadow:none}
+/* The tick survives; the fill does not. Outlined on the field's own grey, which
+   is the same "done, nothing left to do here" treatment the Issues screen gives a
+   check the bike has already confirmed. */
+#scrComplaint .fb__mic.is-saved{
+  background:var(--surface-disabled);
+  color:var(--content-disabled);
+  cursor:default;
+}
+
+/* ── Fake on-screen keyboard ─────────────────────────────────────────────── */
+/* The frame has no keyboard and a prototype in a desktop browser will not raise
+   one, so the page draws its own: it is what makes the field's behaviour legible
+   in a demo. It sits over the footer rather than pushing the layout, which is
+   what iOS does — and it means nothing reflows when it appears. */
+#scrComplaint{position:absolute}   /* .screen already is; named so the keyboard's anchor is explicit */
+#scrComplaint .cp-kb{
+  position:absolute;left:0;right:0;bottom:0;z-index:30;
+  background:#d1d4da;
+  padding:var(--s2) 6px var(--s6);
+  display:flex;flex-direction:column;gap:8px;
+  transform:translateY(100%);
+  transition:transform .26s var(--ease-out);
+  pointer-events:none;
+}
+#scrComplaint .cp-kb.is-up{transform:translateY(0);pointer-events:auto}
+#scrComplaint .cp-kbRow{display:flex;justify-content:center;gap:6px}
+#scrComplaint .cp-key{
+  flex:1 1 0;min-width:0;height:42px;border:0;border-radius:5px;
+  background:var(--surface-inverse);color:var(--content-primary);
+  /* 500, not 400: only Medium/Bold/Black are embedded, so 400 resolved to the
+     Medium face anyway and the declaration was just lying about it. */
+  font-family:inherit;font-size:22px;font-weight:500;line-height:1;
+  box-shadow:0 1px 0 rgba(0,0,0,.28);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+#scrComplaint .cp-key:active{background:#e5e5ea}
+#scrComplaint .cp-key--wide{flex:1.5 1 0;background:#adb3bd;font-size:15px;font-weight:500}
+#scrComplaint .cp-key--space{flex:5 1 0}

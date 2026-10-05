@@ -1,0 +1,98 @@
+  <!-- ══════════════════════════════════════════════════════════════════════
+       BIKE COMMANDS — persistent bottom sheet
+       Opened from the ⋮ on any screen that offers it. Unlike the options sheet
+       it is NOT modal: it carries no scrim, it does not trap the pointer, and it
+       lives out here in shell chrome rather than inside a screen — so the
+       mechanic keeps working above it and it survives goTo() untouched.
+
+       Its controls are a second instance of the RnM dashboard's, not the same
+       nodes: ids have to be unique in one document, so these carry a cs- prefix
+       and shared/commands.js drives them. The two are deliberately independent —
+       see the note at the top of that file.
+       ══════════════════════════════════════════════════════════════════════ -->
+    <section class="cmdsheet" id="cmdSheet" aria-label="Bike commands" aria-hidden="true">
+      <div class="cmdsheet__grabzone" id="cmdGrab"><div class="sheet__grab"></div></div>
+      <div class="cmdsheet__head">
+        <p class="t-label-md700">Bike commands</p>
+        <span class="cmdsheet__bike" id="cmdBike"></span>
+      </div>
+
+      <!-- Figma 2470:40592. The readings come with the controls now: the sheet is
+           reachable from screens that show no vitals of their own, and sending a
+           command without being able to see what the bike is doing is the one
+           thing this sheet could not do. Same component as the dashboard's —
+           shared/vcard.css. -->
+      <div class="vcard" id="csVitals">
+        <button class="vcard__item" id="csVCharge" type="button"
+                aria-label="Battery charge">
+          <i style="--glyph: url(assets/rnm/v-battery.svg)" aria-hidden="true"></i>
+          <span id="csVChargeLabel">75%</span>
+        </button>
+        <div class="vcard__rule" aria-hidden="true"></div>
+        <button class="vcard__item" id="csVIot" type="button" aria-label="IoT battery">
+          <i style="--glyph: url(assets/rnm/v-wifi.svg)" aria-hidden="true"></i>
+          <span id="csVIotLabel">4.3 V</span>
+        </button>
+        <div class="vcard__rule" aria-hidden="true"></div>
+        <button class="vcard__item" id="csVBt" type="button" aria-label="Bluetooth">
+          <i id="csVBtIcon" style="--glyph: url(assets/rnm/v-bt-on.svg)" aria-hidden="true"></i>
+          <span id="csVBtLabel">Connected</span>
+        </button>
+        <div class="vcard__rule" aria-hidden="true"></div>
+        <button class="vcard__more" id="csVMore" type="button" aria-label="View all vitals">
+          <img src="assets/rnm/v-arrow.svg" alt="">
+        </button>
+      </div>
+
+      <div class="cmd-grid">
+
+        <div class="cmd cmd--stack">
+          <button class="cmd-btn" id="csPower" type="button" aria-pressed="false" aria-label="Power">
+            <svg class="glyph" viewBox="0 0 24 24" aria-hidden="true"><use href="#g-power"/></svg>
+          </button>
+          <span class="cmd-title">Power</span>
+          <span class="cmd-state" id="csStatePower">Off</span>
+        </div>
+
+        <div class="cmd cmd--stack">
+          <button class="cmd-btn is-unlocked" id="csLock" type="button" aria-pressed="false" aria-label="Lock the wheel">
+            <svg class="glyph lock" viewBox="0 0 24 24" aria-hidden="true">
+              <use href="#g-lock-body"/>
+              <g class="lock-shackle"><use href="#g-lock-shackle"/></g>
+            </svg>
+          </button>
+          <span class="cmd-title">Wheel</span>
+          <span class="cmd-state" id="csStateLock">Unlocked</span>
+        </div>
+
+        <div class="cmd cmd--stack">
+          <button class="cmd-btn" id="csBeep" type="button" aria-pressed="false" aria-label="Beep">
+            <svg class="glyph" viewBox="0 0 24 24" aria-hidden="true"><use href="#g-beep"/></svg>
+          </button>
+          <span class="cmd-title">Beep</span>
+          <span class="cmd-state" id="csStateBeep">&mdash;</span>
+        </div>
+
+        <!-- Close on the left, open on the right, each holding its own glyph
+             whatever the seat is doing. Neither latches: they are momentary
+             sends, so the state line follows the last one pressed. -->
+        <div class="cmd cmd--wide">
+          <span class="cmd-text">
+            <span class="cmd-title">Seat</span>
+            <span class="cmd-state" id="csStateSeat">Closed</span>
+          </span>
+          <button class="cmd-btn" id="csSeatClose" type="button" aria-label="Close the seat">
+            <img class="cglyph cglyph--seat-closed" src="assets/rnm/cmd-seat-closed.svg" alt="">
+          </button>
+          <button class="cmd-btn" id="csSeatOpen" type="button" aria-label="Open the seat">
+            <img class="cglyph cglyph--seat-open" src="assets/rnm/cmd-seat-open.svg" alt="">
+          </button>
+        </div>
+
+        <button class="cmd cmd--viewall" id="csViewAll" type="button">
+          <img class="cglyph" src="assets/rnm/cmd-forward.svg" alt="">
+          <span class="cmd-state">View all</span>
+        </button>
+
+      </div>
+    </section>

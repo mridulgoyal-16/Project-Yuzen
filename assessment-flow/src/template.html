@@ -1,0 +1,1005 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+<title>Yuzen · Assessment</title>
+<style>
+/* ─────────────────────────────────────────────────────────────────────────
+   Yuzen — Mechanic / Assessment
+   Built from Figma HHciUbgAzmterprGPdJJbW
+     · 2024:33715  Assessment — screen, list rhythm (96 / 392)
+     · 2024:33875  collapsed list item   · 2024:34767  expanded item + reveal
+     · 2024:33964 / 34207 / 34426  swipe-right (good) progression
+     · 2024:34799 / 35012 / 35216 / 35420  swipe-left (faulty) progression
+     · 1985:17574  "Mark issue" bottom sheet
+   ───────────────────────────────────────────────────────────────────────── */
+
+@font-face{font-family:Satoshi;src:url(data:font/otf;base64,__FONT_MEDIUM__) format("opentype");font-weight:500;font-style:normal;font-display:block}
+@font-face{font-family:Satoshi;src:url(data:font/otf;base64,__FONT_BOLD__) format("opentype");font-weight:700;font-style:normal;font-display:block}
+
+:root{
+  /* Content */
+  --content-primary:#222222;
+  --content-secondary:#717171;
+  --content-tertiary:#919191;
+  --content-disabled:#b0b0b0;
+  --content-inverse:#ffffff;
+  --content-positive:#00654f;
+  --content-negative:#c13515;
+  /* Surface */
+  --surface-primary:#222222;
+  --surface-secondary:#f7f7f7;
+  --surface-disabled:#dddddd;
+  --surface-inverse:#ffffff;
+  --surface-positive:#00654f;
+  --surface-negative:#c13515;
+  /* Border */
+  --border-primary:#e8e8e8;
+  --border-secondary:#b0b0b0;
+  --border-selected:#222222;
+  /* Canvas */
+  --canvas-primary:#ffffff;
+  /* Swipe reveal tints — sampled from Figma; each is its semantic content
+     colour at 10% over white. Not new colours, derived ones. */
+  --reveal-positive:#e5f0ed;
+  --reveal-negative:#f8eae7;
+  /* Spacers */
+  --s1:4px; --s2:8px; --s4:16px; --s6:24px; --s9:36px; --s12:48px; --s16:64px;
+  /* Part photography. Declared once here and referenced by both the static
+     markup and the renderer, so pre-rendering never duplicates the payload. */
+  --img-display:url(__IMG_DISPLAY__);
+  --img-pigtail:url(__IMG_PIGTAIL__);
+  --img-brake:url(__IMG_BRAKE__);
+  --img-tyre:url(__IMG_TYRE__);
+  /* Frame */
+  --frame-w:390px;
+  --frame-h:844px;
+  --header-h:117px;   /* 44 status + 72 app bar + 1 divider */
+  --footer-h:124px;   /* 24 pt + 64 content + 36 pb */
+  --progress-h:6px;
+}
+
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+/* Form elements do not inherit type by default — without this, every button
+   label ("Faulty", "Good", "Add issues") silently falls back to the system
+   font instead of Satoshi. */
+button,input,select,textarea{font:inherit;color:inherit;letter-spacing:inherit}
+html,body{height:100%}
+body{
+  font-family:Satoshi,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font-weight:500;
+  background:#f0f0f0;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--content-primary);
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ── Type styles (design-system named styles only) ───────────────────────── */
+.t-label-md    {font-size:16px;font-weight:500;line-height:20px;letter-spacing:0}
+.t-label-md700 {font-size:16px;font-weight:700;line-height:20px;letter-spacing:0}
+.t-heading-lg  {font-size:32px;font-weight:700;line-height:40px;letter-spacing:0}
+
+/* ── Device frame ────────────────────────────────────────────────────────── */
+.phone{
+  position:relative;
+  width:var(--frame-w);height:var(--frame-h);
+  background:var(--canvas-primary);
+  border-radius:var(--s4);
+  overflow:hidden;
+  flex:0 0 auto;
+}
+/* On a real phone: go full-bleed. Width-only — a short desktop window
+   must keep the fixed 390x844 frame so it still matches Figma. */
+@media (max-width:430px){
+  body{background:var(--canvas-primary);display:block}
+  .phone{width:100vw;height:100dvh;border-radius:0}
+}
+
+/* ── Status bar ──────────────────────────────────────────────────────────── */
+.statusbar{height:44px;position:relative;background:var(--surface-inverse);flex:0 0 auto}
+.statusbar .time{
+  position:absolute;left:21px;top:12px;width:54px;height:21px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:15px;font-weight:700;letter-spacing:-.2px;
+}
+.statusbar .icons{position:absolute;right:14px;top:16px;display:flex;gap:4px;align-items:center}
+
+/* ── App bar ─────────────────────────────────────────────────────────────── */
+/* Everything below is sized off the frame, not a hard 390px, so the screen
+   holds up on any real handset (390, 393, 430 …) during field testing. */
+.appbar{
+  position:absolute;left:0;top:0;width:100%;
+  background:var(--surface-inverse);
+  border-bottom:1px solid var(--border-primary);
+  z-index:20;
+}
+.appbar__row{
+  height:72px;display:flex;align-items:center;width:100%;
+  padding:var(--s2) var(--s6) var(--s2) 4px;
+  background:#fff;
+}
+.leading-action{height:48px;display:flex;align-items:flex-start;justify-content:flex-end;overflow:hidden}
+.icon-btn{display:flex;align-items:center;padding:12px;border:0;background:none;cursor:pointer}
+.icon-btn svg{display:block;width:24px;height:24px}
+.appbar__title{max-width:204px;width:204px;display:flex;align-items:flex-start}
+.appbar__title p{white-space:nowrap;word-break:break-word}
+.appbar__title .muted{color:var(--content-tertiary)}
+
+/* ── Scrollable checklist ────────────────────────────────────────────────── */
+.scroll{
+  position:absolute;left:0;right:0;
+  top:var(--header-h);
+  bottom:calc(var(--footer-h) + var(--progress-h));
+  overflow-y:auto;overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:none;
+}
+.scroll::-webkit-scrollbar{display:none}
+.list{padding:0}
+
+/* One part = one item, full-bleed with its own 24px inset — so a row press
+   state can span the full width later. Collapsed and expanded share the same
+   24px padding, which is what makes the rhythm hold: 24+48+24 = 96 collapsed,
+   24+344+24 = 392 expanded, exactly as Figma. The divider is drawn on the
+   bottom edge rather than added to the flow, so it costs no height. */
+.item{position:relative;background:#fff;padding:var(--s6)}
+.item::after{
+  content:"";position:absolute;left:var(--s6);right:var(--s6);bottom:0;
+  height:1px;background:var(--border-primary);
+}
+
+/* Collapsed row. min-height, not height: a row carrying wrapped issue text
+   grows, and the item's 24px padding holds the rhythm around it. */
+.row{
+  min-height:48px;display:flex;align-items:center;justify-content:space-between;
+  width:100%;gap:var(--s4);
+}
+.row__lhs{display:flex;align-items:center;gap:var(--s4);min-width:0}
+/* The photo is a background layer, not an <img>, so its data URI lives in one
+   place (the :root variable). background-position:calc(50% + Npx) reproduces
+   Figma's centre-plus-nudge crop exactly. */
+.thumb{
+  width:48px;height:48px;flex:0 0 auto;
+  background-color:var(--surface-secondary);
+  background-repeat:no-repeat;
+  border-radius:8.727px;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--content-tertiary);
+}
+.row__label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row__status{flex:0 0 auto;display:flex;align-items:center;justify-content:center;width:24px;height:24px}
+.row__status svg{display:block}
+/* Label/Small, content/secondary, capped at 230px and allowed to wrap —
+   per the reason line in Assessment_complete (2054:40281). */
+.row__reasons{
+  color:var(--content-secondary);font-size:14px;line-height:16px;font-weight:500;
+  max-width:230px;
+}
+.row__text{min-width:0;display:flex;flex-direction:column;gap:var(--s2)}
+
+/* ── Swipe stage ─────────────────────────────────────────────────────────── */
+/* The reveal sits directly behind the card at exactly the card's rect, so the
+   card slides off it like a page off a desk. */
+.swipe{position:relative}
+.reveal{
+  position:absolute;inset:0;border-radius:12px;   /* 12, not the card's 8 */
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;
+}
+.reveal--good  {background:var(--reveal-positive);color:var(--content-positive)}
+.reveal--faulty{background:var(--reveal-negative);color:var(--content-negative)}
+.reveal__frame{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.reveal__body{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:var(--s4);
+}
+/* Long part names ("Vehicle side pigtail connector marked good") must wrap to
+   a balanced two lines rather than run the width of the panel. */
+.reveal__body p{
+  color:var(--content-primary);
+  text-align:center;max-width:240px;text-wrap:balance;
+}
+
+/* ── Expanded assessment card ────────────────────────────────────────────── */
+.card{
+  position:relative;z-index:2;
+  width:100%;
+  background:#fff;
+  border-radius:var(--s2);
+  padding:var(--s4);
+  display:flex;flex-direction:column;gap:var(--s2);
+  /* Stroke drawn inside so it costs no layout space — matches Figma's
+     342x344 frame exactly. Elevation is the second shadow. */
+  box-shadow:inset 0 0 0 1px var(--border-primary),
+             0 1px 4.95px rgba(0,0,0,0.1);
+  touch-action:pan-y;                 /* vertical scroll still belongs to the list */
+  cursor:grab;
+  will-change:transform;
+}
+.card--settling{transition:transform .3s cubic-bezier(.22,.61,.36,1)}
+.card--flying{transition:transform .26s cubic-bezier(.4,0,1,1),opacity .26s linear}
+.card__head{display:flex;flex-direction:column;gap:var(--s4)}
+/* Figma: a 353x198 photo at x=-21, y=0 inside a 310x220 box.
+   As a background layer that is size 113.871% x 90%, positioned so the left
+   edge lands at -21px:  -21 / (310 - 353) = 48.837%.
+   Ratios rather than pixels, so the crop is identical at 390pt and still
+   composes correctly on a wider handset. */
+.card__media{
+  height:220px;width:100%;
+  background-color:var(--border-primary);
+  background-repeat:no-repeat;
+  background-size:113.871% 90%;
+  background-position:48.837% 0%;
+  border-radius:var(--s2);overflow:hidden;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--content-tertiary);
+}
+.card__actions{display:flex;align-items:center;gap:var(--s6);width:100%}
+
+.btn-faulty{
+  flex:1 0 0;min-width:0;
+  display:flex;align-items:center;justify-content:center;
+  padding:12px var(--s2);border-radius:100px;border:0;background:none;cursor:pointer;
+}
+.btn-good{
+  flex:1 0 0;min-width:0;
+  display:flex;align-items:center;justify-content:center;
+  padding:4px 0;border-radius:100px;border:0;background:none;cursor:pointer;
+}
+.btn-good__inner{
+  display:flex;align-items:center;justify-content:center;gap:var(--s2);
+  padding:var(--s2) var(--s4) var(--s2) var(--s2);border-radius:100px;
+}
+.btn-label{display:flex;align-items:center;justify-content:center;gap:var(--s2)}
+.btn-label svg{display:block;width:24px;height:24px;flex:0 0 auto}
+.txt-negative{color:var(--content-negative)}
+.txt-positive{color:var(--content-positive)}
+
+/* ── Progress bar ────────────────────────────────────────────────────────── */
+.progress{
+  position:absolute;left:0;bottom:var(--footer-h);
+  width:100%;height:var(--progress-h);
+  background:var(--border-primary);
+  z-index:15;
+}
+.progress__fill{
+  height:100%;background:var(--surface-primary);width:0;
+  transition:width .3s cubic-bezier(.22,.61,.36,1);
+}
+
+/* ── Footer ──────────────────────────────────────────────────────────────── */
+.footer{
+  position:absolute;left:0;bottom:0;width:100%;
+  background:var(--surface-inverse);
+  padding:var(--s6) 0 var(--s9);
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-end;
+  z-index:16;
+}
+.footer__content{
+  width:100%;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 var(--s6) 0 var(--s4);
+}
+.btn-text{
+  display:flex;align-items:center;padding:12px var(--s2);
+  border-radius:100px;border:0;background:none;cursor:pointer;
+}
+.btn-text .label{text-decoration:underline;text-underline-position:from-font;text-decoration-skip-ink:none}
+.btn-primary{
+  display:flex;align-items:center;justify-content:center;
+  padding:22px 36px;border-radius:100px;border:0;cursor:pointer;
+  background:var(--surface-disabled);
+  color:var(--content-disabled);
+  font-family:inherit;
+}
+.btn-primary[disabled]{cursor:default}
+.btn-primary:not([disabled]){background:var(--surface-primary);color:var(--content-inverse)}
+
+/* ── "Mark issue" bottom sheet ───────────────────────────────────────────── */
+.scrim{
+  position:absolute;inset:0;background:rgba(0,0,0,.4);
+  opacity:0;pointer-events:none;transition:opacity .26s ease;z-index:30;
+}
+.scrim.is-open{opacity:1;pointer-events:auto}
+.sheet{
+  position:absolute;left:0;right:0;bottom:0;
+  background:var(--surface-inverse);
+  border-radius:var(--s6) var(--s6) 0 0;
+  display:flex;flex-direction:column;align-items:stretch;
+  transform:translateY(100%);
+  transition:transform .3s cubic-bezier(.22,.61,.36,1);
+  z-index:31;
+}
+.sheet.is-open{transform:translateY(0)}
+.sheet--dragging{transition:none}
+.sheet__top{
+  display:flex;flex-direction:column;align-items:center;gap:var(--s9);
+  padding:var(--s2) 0 var(--s9);
+  border-radius:var(--s6) var(--s6) 0 0;
+  overflow:hidden;
+}
+/* Generous invisible hit area around the 44x4 grabber for drag-to-dismiss. */
+.sheet__grabzone{
+  padding:10px 40px;margin:-10px -40px;display:flex;justify-content:center;
+  touch-action:none;cursor:grab;flex:0 0 auto;
+}
+.sheet__grab{width:44px;height:4px;border-radius:100px;background:var(--border-primary)}
+/* No gap here: the 24px below the part row belongs to the collapsing region,
+   so it disappears with it instead of leaving dead space in the good state. */
+.sheet__stack{
+  display:flex;flex-direction:column;
+  width:342px;max-width:calc(100% - 48px);
+}
+/* Divider + issues collapse together when the part is marked good. The
+   0fr/1fr grid row animates a content-driven height, which a plain height
+   transition cannot do — and because the sheet is anchored to the bottom,
+   its top edge glides up with it. */
+.sheet__collapse{
+  display:grid;grid-template-rows:1fr;
+  transition:grid-template-rows .32s cubic-bezier(.22,.61,.36,1),
+             opacity .22s ease;
+}
+.sheet__collapse.is-collapsed{grid-template-rows:0fr;opacity:0}
+.sheet__collapse.no-anim{transition:none}
+/* The clipping element carries no padding of its own: overflow:hidden clips
+   content, not an element's own padding box, so 24px would survive the
+   collapse. The spacing lives one level in, where it gets clipped too. */
+.sheet__collapseInner{overflow:hidden;min-height:0}
+.sheet__collapseBody{
+  display:flex;flex-direction:column;gap:var(--s6);padding-top:var(--s6);
+}
+.sheet__part{display:flex;gap:var(--s4);align-items:flex-start;width:100%}
+.sheet__lhs{flex:1 0 0;min-width:0;display:flex;gap:var(--s4);align-items:center}
+.sheet__name{flex:1 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sheet__toggle{display:flex;gap:var(--s2);align-items:center;flex:0 0 auto}
+/* Good / Faulty live together as one either-or control in the sheet header,
+   so a part can be re-judged without leaving the sheet. */
+.tog{
+  width:48px;height:48px;border-radius:100px;border:0;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--surface-secondary);
+  transition:background-color .15s ease,color .15s ease;
+}
+.tog svg{display:block;width:24px;height:24px}
+/* Both glyphs read as content/primary when off — an unselected tick tinted
+   green looked like a state it wasn't. Colour arrives only on selection. */
+.tog--faulty{color:var(--content-primary)}
+.tog--good{color:var(--content-primary)}
+.tog--faulty.is-on{background:var(--surface-negative);color:var(--content-inverse)}
+.tog--good.is-on{background:var(--surface-positive);color:var(--content-inverse)}
+.sheet__divider{height:1px;background:var(--border-primary);width:100%}
+.sheet__issues{display:flex;flex-direction:column;gap:var(--s6);width:100%}
+.sheet__issues[hidden]{display:none}
+/* One wrapping run: reasons and "Missing" share a line and flow together. */
+.chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center;width:100%}
+.chip{
+  height:48px;min-width:48px;padding:14px var(--s4);
+  border-radius:100px;
+  background:var(--surface-inverse);
+  border:1px solid var(--border-primary);
+  font-family:inherit;font-size:16px;font-weight:500;line-height:20px;
+  color:var(--content-primary);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;white-space:nowrap;
+  transition:background-color .15s ease,box-shadow .15s ease,color .15s ease;
+}
+/* Inset ring rather than a thicker border, so selecting never shifts layout. */
+.chip.is-selected{
+  background:var(--surface-secondary);
+  border-color:transparent;
+  box-shadow:inset 0 0 0 1.5px var(--border-selected);
+}
+.chip:disabled{
+  background:var(--surface-secondary);
+  border-color:transparent;box-shadow:none;
+  color:var(--content-disabled);
+  cursor:default;
+}
+.sheet__footer{
+  display:flex;flex-direction:column;align-items:stretch;justify-content:flex-end;
+  padding:var(--s6) var(--s9) var(--s9);
+}
+.sheet__footer .btn-primary{width:100%;height:64px;padding:22px 36px}
+
+/* Every collapsed row is tappable — marked ones re-open the sheet, pending
+   ones jump the card to that part. */
+.item--tappable{cursor:pointer}
+.item--tappable:active{background:var(--surface-secondary)}
+</style>
+
+<div class="phone" id="phone">
+
+  <!-- ── App bar ──────────────────────────────────────────────────────────── -->
+  <header class="appbar">
+    <div class="statusbar">
+      <div class="time">9:41</div>
+      <div class="icons">
+        <svg width="20" height="14" viewBox="0 0 20 14" fill="none" aria-hidden="true">
+          <rect x="2" y="7.5" width="2.5" height="4.5" rx=".6" fill="#222"/>
+          <rect x="6.5" y="5.5" width="2.5" height="6.5" rx=".6" fill="#222"/>
+          <rect x="11" y="3.5" width="2.5" height="8.5" rx=".6" fill="#222"/>
+          <rect x="15.5" y="2" width="2.5" height="10" rx=".6" fill="#222"/>
+        </svg>
+        <svg width="16" height="14" viewBox="0 0 16 14" fill="none" aria-hidden="true">
+          <path d="M8 3.1c2.3 0 4.4.85 6 2.26l1-1.2A11 11 0 0 0 8 1.5 11 11 0 0 0 1 4.16l1 1.2A9.2 9.2 0 0 1 8 3.1Z" fill="#222"/>
+          <path d="M8 6.6c1.36 0 2.6.5 3.55 1.32l1-1.2A6.9 6.9 0 0 0 8 5a6.9 6.9 0 0 0-4.55 1.72l1 1.2A5.4 5.4 0 0 1 8 6.6Z" fill="#222"/>
+          <path d="M8 9.9c.68 0 1.3.26 1.77.68L8 12.6 6.23 10.6c.47-.43 1.09-.69 1.77-.69Z" fill="#222"/>
+        </svg>
+        <svg width="25" height="14" viewBox="0 0 25 14" fill="none" aria-hidden="true">
+          <rect x=".5" y="1.5" width="22" height="11" rx="3" stroke="#222" stroke-opacity=".35"/>
+          <rect x="2" y="3" width="19" height="8" rx="1.5" fill="#222"/>
+          <path d="M24 5.5v3a1.6 1.6 0 0 0 0-3Z" fill="#222" fill-opacity=".4"/>
+        </svg>
+      </div>
+    </div>
+
+    <div class="appbar__row">
+      <div class="leading-action">
+        <button class="icon-btn" aria-label="Back">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M10.4538 12L14.5269 16.0731C14.6654 16.2116 14.7362 16.3856 14.7394 16.5952C14.7426 16.8048 14.6718 16.982 14.5269 17.1269C14.382 17.2718 14.2064 17.3442 14 17.3442C13.7936 17.3442 13.618 17.2718 13.4731 17.1269L8.97888 12.6327C8.88528 12.5391 8.81925 12.4404 8.7808 12.3365C8.74233 12.2327 8.7231 12.1205 8.7231 12C8.7231 11.8795 8.74233 11.7673 8.7808 11.6635C8.81925 11.5596 8.88528 11.4609 8.97888 11.3673L13.4731 6.8731C13.6116 6.73463 13.7856 6.6638 13.9952 6.6606C14.2048 6.65738 14.382 6.72822 14.5269 6.8731C14.6718 7.01797 14.7442 7.1936 14.7442 7.4C14.7442 7.6064 14.6718 7.78203 14.5269 7.9269L10.4538 12Z" fill="#222222"/></svg>
+        </button>
+      </div>
+      <div class="appbar__title">
+        <p class="t-label-md">543210<span class="muted"> / Assessment</span></p>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── Checklist ────────────────────────────────────────────────────────── -->
+  <main class="scroll" id="scroll">
+    <div class="list" id="list"></div>
+  </main>
+
+  <!-- ── Progress ─────────────────────────────────────────────────────────── -->
+  <div class="progress"><div class="progress__fill" id="progressFill"></div></div>
+
+  <!-- ── Footer ───────────────────────────────────────────────────────────── -->
+  <footer class="footer">
+    <div class="footer__content">
+      <button class="btn-text" id="addIssues">
+        <span class="btn-label">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M11.25 12.75H6.25C6.0375 12.75 5.85942 12.6781 5.71575 12.5342C5.57192 12.3904 5.5 12.2122 5.5 11.9997C5.5 11.7871 5.57192 11.609 5.71575 11.4655C5.85942 11.3218 6.0375 11.25 6.25 11.25H11.25V6.25C11.25 6.0375 11.3219 5.85942 11.4658 5.71575C11.6096 5.57192 11.7878 5.5 12.0003 5.5C12.2129 5.5 12.391 5.57192 12.5345 5.71575C12.6782 5.85942 12.75 6.0375 12.75 6.25V11.25H17.75C17.9625 11.25 18.1406 11.3219 18.2843 11.4658C18.4281 11.6096 18.5 11.7878 18.5 12.0003C18.5 12.2129 18.4281 12.391 18.2843 12.5345C18.1406 12.6782 17.9625 12.75 17.75 12.75H12.75V17.75C12.75 17.9625 12.6781 18.1406 12.5342 18.2843C12.3904 18.4281 12.2122 18.5 11.9997 18.5C11.7871 18.5 11.609 18.4281 11.4655 18.2843C11.3218 18.1406 11.25 17.9625 11.25 17.75V12.75Z" fill="#222222"/></svg>
+          <span class="t-label-md label">Add issues</span>
+        </span>
+      </button>
+      <button class="btn-primary t-label-md700" id="nextBtn" disabled>Next</button>
+    </div>
+  </footer>
+
+  <!-- ── Part sheet — marks a part faulty and edits any earlier call ─────── -->
+  <div class="scrim" id="scrim"></div>
+  <section class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetName">
+    <div class="sheet__top">
+      <div class="sheet__grabzone" id="sheetGrab"><div class="sheet__grab"></div></div>
+      <div class="sheet__stack">
+        <div class="sheet__part">
+          <div class="sheet__lhs">
+            <div class="thumb" id="sheetThumb"></div>
+            <p class="t-label-md sheet__name" id="sheetName"></p>
+          </div>
+          <div class="sheet__toggle" role="group" aria-label="Mark part">
+            <button class="tog tog--faulty" data-mark="faulty" aria-label="Faulty">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 13.06l-4.24 4.24a.75.75 0 1 1-1.06-1.06L10.94 12 6.7 7.76A.75.75 0 0 1 7.76 6.7L12 10.94l4.24-4.24a.75.75 0 1 1 1.06 1.06L13.06 12l4.24 4.24a.75.75 0 0 1-1.06 1.06L12 13.06Z" fill="currentColor"/></svg>
+            </button>
+            <button class="tog tog--good" data-mark="good" aria-label="Good">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9.55 17.1 4.4 11.95l1.32-1.32 3.83 3.83 8.73-8.73 1.32 1.33z" fill="currentColor"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="sheet__collapse" id="sheetCollapse">
+          <div class="sheet__collapseInner">
+            <div class="sheet__collapseBody">
+              <div class="sheet__divider"></div>
+              <div class="sheet__issues" id="sheetIssues">
+                <p class="t-label-md">Issues</p>
+                <div class="chips" id="issueChips"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="sheet__footer">
+      <button class="btn-primary t-label-md700" id="sheetConfirm" disabled>Confirm</button>
+    </div>
+  </section>
+
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════════════
+   DATA
+   Each part carries its own faulty reasons. Per Barun: reasons differ by part,
+   the reasons are multi-select among themselves, and "Missing" is mutually
+   exclusive with all of them.
+
+   PHOTOS: Figma only supplied four real part photos. Parts that genuinely look
+   alike reuse one (front/rear tyre, front/rear brake). The rest are realistic
+   dummy entries carrying a placeholder, so the list is long enough to test the
+   swipe rhythm and produce a believable progress ratio. Swap `thumb` to a real
+   asset as photography arrives.
+   ═══════════════════════════════════════════════════════════════════════════ */
+const ASSETS = {
+  display : "var(--img-display)",
+  pigtail : "var(--img-pigtail)",
+  tyre    : "var(--img-tyre)",
+  brake   : "var(--img-brake)",
+};
+
+/* Thumbnail crops for the 48px tile. `pigtail` is verbatim from the current
+   Figma frame (2024:33880); the others are the earlier 44px crops scaled by
+   the same 48/44 factor Figma used. */
+const CROPS = {
+  display : {w:54.71, h:53.40, dx:0,     dy:0},
+  pigtail : {w:45.89, h:60.505,dx:1.97,  dy:-2.01},
+  brake   : {w:84.00, h:46.91, dx:-4.91, dy:-1.64},
+  /* No tyre tile in Figma — sized to fill the box at the photo's 1.78 aspect,
+     nudged onto the wheel. */
+  tyre    : {w:85.30, h:48,    dx:-7.6,  dy:-2.2},
+};
+
+const PARTS = [
+  {name:"Display",                        photo:"display", crop:"display",
+   reasons:["Screen cracked","Not powering on","Flickering","Touch not working"]},
+  {name:"Vehicle side pigtail connector", photo:"pigtail", crop:"pigtail",
+   reasons:["Rusting","Pins bent","Loose fit","Burnt"]},
+  {name:"Front tyre",                     photo:"tyre",    crop:"tyre",
+   reasons:["Punctured","Worn out","Cuts","Low pressure"]},
+  {name:"Rear tyre",                      photo:"tyre",    crop:"tyre",
+   reasons:["Punctured","Worn out","Cuts","Low pressure"]},
+  {name:"Front brake",                    photo:"brake",   crop:"brake",
+   reasons:["Pads worn out","Not gripping","Lever loose","Cable snapped"]},
+  {name:"Rear brake",                     photo:"brake",   crop:"brake",
+   reasons:["Pads worn out","Not gripping","Lever loose","Cable snapped"]},
+  {name:"Throttle",                       photo:null,      crop:null,
+   reasons:["Sticky","Not responding","Grip torn"]},
+  {name:"Headlight",                      photo:null,      crop:null,
+   reasons:["Not glowing","Lens cracked","Flickering","Water inside"]},
+  {name:"Tail light",                     photo:null,      crop:null,
+   reasons:["Not glowing","Lens cracked","Flickering"]},
+  {name:"Indicators",                     photo:null,      crop:null,
+   reasons:["Not glowing","Lens cracked","Flickering"]},
+  {name:"Horn",                           photo:null,      crop:null,
+   reasons:["Not sounding","Feeble","Water damage"]},
+  {name:"Charging port",                  photo:null,      crop:null,
+   reasons:["Rusting","Pins bent","Cap broken","Loose fit"]},
+  {name:"Battery lock",                   photo:null,      crop:null,
+   reasons:["Jammed","Key not turning","Rusting"]},
+  {name:"Side stand",                     photo:null,      crop:null,
+   reasons:["Bent","Spring weak","Not retracting"]},
+  {name:"Seat lock",                      photo:null,      crop:null,
+   reasons:["Jammed","Not latching","Rusting"]},
+  {name:"Number plate",                   photo:null,      crop:null,
+   reasons:["Bent","Illegible","Loose"]},
+].map((p,i) => ({id:"p"+i, status:"pending", reasons_selected:[], ...p}));
+
+const MISSING = "Missing";
+
+/* Index of the part currently expanded into the assessment card. */
+let activeIndex = 0;
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ICONS
+   ═══════════════════════════════════════════════════════════════════════════ */
+const ICON = {
+  /* Row status — filled discs, per Assessment_complete (2030:35821). Outlined
+     grey gave good and faulty the same weight, so a failed part did not read
+     when scanning back up a long list. */
+  rowGood:`<svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#00654F"/><path d="M10.6 16.2 6.4 12l1.4-1.4 2.8 2.8 6-6L18 8.8z" fill="#fff"/></svg>`,
+  rowFaulty:`<svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#C13515"/><path d="M12 13.06l-3.06 3.06-1.06-1.06L10.94 12 7.88 8.94 8.94 7.88 12 10.94l3.06-3.06 1.06 1.06L13.06 12l3.06 3.06-1.06 1.06z" fill="#fff"/></svg>`,
+  rowPending:`<svg width="21.5" height="21.5" viewBox="0 0 21.5 21.5" fill="none"><circle cx="10.75" cy="10.75" r="10" stroke="#B0B0B0" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="4 4"/></svg>`,
+  /* Card actions — semantic colour */
+  faulty:`<svg viewBox="0 0 24 24" fill="none"><path d="M12 13.0537L15.073 16.127C15.2115 16.2653 15.3856 16.3362 15.5952 16.3395C15.8047 16.3427 15.982 16.2718 16.127 16.127C16.2718 15.982 16.3443 15.8063 16.3443 15.6C16.3443 15.3937 16.2718 15.218 16.127 15.073L13.0538 12L16.127 8.927C16.2653 8.7885 16.3362 8.61442 16.3395 8.40475C16.3427 8.19525 16.2718 8.018 16.127 7.873C15.982 7.72817 15.8063 7.65575 15.6 7.65575C15.3937 7.65575 15.218 7.72817 15.073 7.873L12 10.9462L8.927 7.873C8.7885 7.73467 8.61442 7.66383 8.40475 7.6605C8.19525 7.65733 8.018 7.72817 7.873 7.873C7.72817 8.018 7.65575 8.19367 7.65575 8.4C7.65575 8.60633 7.72817 8.782 7.873 8.927L10.9462 12L7.873 15.073C7.73467 15.2115 7.66383 15.3856 7.6605 15.5952C7.65733 15.8047 7.72817 15.982 7.873 16.127C8.018 16.2718 8.19367 16.3443 8.4 16.3443C8.60633 16.3443 8.782 16.2718 8.927 16.127L12 13.0537ZM12.0017 21.5C10.6877 21.5 9.45267 21.2507 8.2965 20.752C7.14033 20.2533 6.13467 19.5766 5.2795 18.7218C4.42433 17.8669 3.74725 16.8617 3.24825 15.706C2.74942 14.5503 2.5 13.3156 2.5 12.0017C2.5 10.6877 2.74933 9.45267 3.248 8.2965C3.74667 7.14033 4.42342 6.13467 5.27825 5.2795C6.13308 4.42433 7.13833 3.74725 8.294 3.24825C9.44967 2.74942 10.6844 2.5 11.9982 2.5C13.3122 2.5 14.5473 2.74933 15.7035 3.248C16.8597 3.74667 17.8653 4.42342 18.7205 5.27825C19.5757 6.13308 20.2528 7.13833 20.7518 8.294C21.2506 9.44967 21.5 10.6844 21.5 11.9982C21.5 13.3122 21.2507 14.5473 20.752 15.7035C20.2533 16.8597 19.5766 17.8653 18.7218 18.7205C17.8669 19.5757 16.8617 20.2528 15.706 20.7518C14.5503 21.2506 13.3156 21.5 12.0017 21.5Z" fill="#C13515"/></svg>`,
+  good:`<svg viewBox="0 0 24 24" fill="none"><path d="M10.5808 14.1463L8.25775 11.823C8.11925 11.6847 7.94517 11.6138 7.7355 11.6105C7.526 11.6073 7.34875 11.6782 7.20375 11.823C7.05892 11.968 6.9865 12.1437 6.9865 12.35C6.9865 12.5563 7.05892 12.732 7.20375 12.877L9.948 15.6212C10.1288 15.8019 10.3398 15.8922 10.5808 15.8922C10.8218 15.8922 11.0327 15.8019 11.2135 15.6212L16.777 10.0577C16.9153 9.91925 16.9862 9.74517 16.9895 9.5355C16.9927 9.326 16.9218 9.14875 16.777 9.00375C16.632 8.85892 16.4563 8.7865 16.25 8.7865C16.0437 8.7865 15.868 8.85892 15.723 9.00375L10.5808 14.1463ZM12.0017 21.5C10.6877 21.5 9.45267 21.2507 8.2965 20.752C7.14033 20.2533 6.13467 19.5766 5.2795 18.7218C4.42433 17.8669 3.74725 16.8617 3.24825 15.706C2.74942 14.5503 2.5 13.3156 2.5 12.0017C2.5 10.6877 2.74933 9.45267 3.248 8.2965C3.74667 7.14033 4.42342 6.13467 5.27825 5.2795C6.13308 4.42433 7.13833 3.74725 8.294 3.24825C9.44967 2.74942 10.6844 2.5 11.9982 2.5C13.3122 2.5 14.5473 2.74933 15.7035 3.248C16.8597 3.74667 17.8653 4.42342 18.7205 5.27825C19.5757 6.13308 20.2528 7.13833 20.7518 8.294C21.2506 9.44967 21.5 10.6844 21.5 11.9982C21.5 13.3122 21.2507 14.5473 20.752 15.7035C20.2533 16.8597 19.5766 17.8653 18.7218 18.7205C17.8669 19.5757 16.8617 20.2528 15.706 20.7518C14.5503 21.2506 13.3156 21.5 12.0017 21.5Z" fill="#00654F"/></svg>`,
+  /* Reveal confirmation — 40px filled disc, colour inherited from the reveal */
+  confirm:`<svg width="40" height="40" viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="20" fill="currentColor"/><path d="M17.4 26.3 10.9 19.8l2-2 4.5 4.5 9.6-9.6 2 2z" fill="#fff"/></svg>`,
+  /* Placeholder for parts whose photography has not been shot yet */
+  noPhoto:size=>`<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 5h16a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Zm1 2v9.2l3.6-3.6 2.7 2.7 3.4-3.4L19 15.5V7H5Z" fill="currentColor" opacity=".55"/><circle cx="9" cy="10" r="1.4" fill="currentColor" opacity=".55"/></svg>`,
+};
+
+const statusIcon = s => s === "good" ? ICON.rowGood : s === "faulty" ? ICON.rowFaulty : ICON.rowPending;
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   RENDER
+   ═══════════════════════════════════════════════════════════════════════════ */
+const listEl     = document.getElementById("list");
+const scrollEl   = document.getElementById("scroll");
+const scrimEl    = document.getElementById("scrim");
+const sheetEl    = document.getElementById("sheet");
+const chipsEl    = document.getElementById("issueChips");
+const confirmBtn = document.getElementById("sheetConfirm");
+
+function thumbStyle(part){
+  if (!part.photo) return "";
+  const c = CROPS[part.crop];
+  return `background-image:${ASSETS[part.photo]};`
+       + `background-size:${c.w}px ${c.h}px;`
+       + `background-position:calc(50% + ${c.dx}px) calc(50% + ${c.dy}px);`;
+}
+
+function thumbHTML(part){
+  return part.photo
+    ? `<div class="thumb" style="${thumbStyle(part)}"></div>`
+    : `<div class="thumb">${ICON.noPhoto(24)}</div>`;
+}
+
+function mediaHTML(part){
+  if (!part.photo)
+    return `<div class="card__media">${ICON.noPhoto(56)}</div>`;
+  return `<div class="card__media" role="img" aria-label="${esc(part.name)}"
+               style="background-image:${ASSETS[part.photo]}"></div>`;
+}
+
+function collapsedHTML(part, index){
+  const reasons = part.status === "faulty" && part.reasons_selected.length
+    ? `<p class="row__reasons">${esc(part.reasons_selected.join(", "))}</p>` : "";
+  return `<div class="item item--collapsed item--tappable"
+        data-id="${part.id}" data-index="${index}">
+      <div class="row">
+        <div class="row__lhs">
+          ${thumbHTML(part)}
+          <div class="row__text">
+            <p class="t-label-md row__label">${esc(part.name)}</p>
+            ${reasons}
+          </div>
+        </div>
+        <div class="row__status">${statusIcon(part.status)}</div>
+      </div>
+    </div>`;
+}
+
+/* The dashed frame is an SVG rather than `border:3px dashed`, because CSS
+   cannot express Figma's 4-on / 6-off dash. The 3px stroke sits inside, so the
+   panel stays exactly the card's 342x344; rx is 12 less the 1.5 stroke inset. */
+function revealHTML(kind, label){
+  return `<div class="reveal reveal--${kind}" data-reveal="${kind}">
+      <svg class="reveal__frame" preserveAspectRatio="none" viewBox="0 0 342 344" aria-hidden="true">
+        <rect x="1.5" y="1.5" width="339" height="341" rx="10.5" fill="none"
+              stroke="currentColor" stroke-width="3" stroke-dasharray="4 6"/>
+      </svg>
+      <div class="reveal__body">${ICON.confirm}<p class="t-label-md">${esc(label)}</p></div>
+    </div>`;
+}
+
+function expandedHTML(part){
+  return `<div class="item item--expanded" data-id="${part.id}">
+      <div class="swipe">
+        ${revealHTML("good",   part.name + " marked good")}
+        ${revealHTML("faulty", part.name + " marked Faulty")}
+        <div class="card" data-card="${part.id}">
+          <div class="card__head">
+            <p class="t-label-md700">${esc(part.name)}</p>
+            ${mediaHTML(part)}
+          </div>
+          <div class="card__actions">
+            <button class="btn-faulty" data-action="faulty">
+              <span class="btn-label">${ICON.faulty}<span class="t-label-md txt-negative">Faulty</span></span>
+            </button>
+            <button class="btn-good" data-action="good">
+              <span class="btn-good__inner">
+                <span class="btn-label">${ICON.good}<span class="t-label-md txt-positive">Good</span></span>
+              </span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function render(){
+  listEl.innerHTML = PARTS
+    .map((p,i) => i === activeIndex ? expandedHTML(p) : collapsedHTML(p,i))
+    .join("");
+
+  const done = PARTS.filter(p => p.status !== "pending").length;
+  document.getElementById("progressFill").style.width = (done / PARTS.length * 100) + "%";
+  document.getElementById("nextBtn").disabled = done < PARTS.length;
+
+  bindCard();
+}
+
+/* The card is the list item expanded in place, so it is never forced to a
+   fixed position — it is only scrolled far enough to sit comfortably in view,
+   clamping naturally at either end of the list. */
+function revealActive(behavior){
+  const el = listEl.querySelector(".item--expanded");
+  if (!el) return;
+  const target = el.offsetTop - (scrollEl.clientHeight - el.offsetHeight) / 2;
+  const max = Math.max(0, scrollEl.scrollHeight - scrollEl.clientHeight);
+  scrollEl.scrollTo({top: Math.min(Math.max(0, target), max), behavior: behavior || "auto"});
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SWIPE
+   Right → good, left → faulty. The card tracks the finger and the reveal
+   behind it brightens with distance; past the threshold it flies off.
+   ═══════════════════════════════════════════════════════════════════════════ */
+const COMMIT_RATIO   = 0.30;   /* of card width */
+const FLICK_VELOCITY = 0.65;   /* px per ms */
+let drag = null;
+let busy = false;              /* an outcome is animating — ignore new input */
+
+function bindCard(){
+  const card = listEl.querySelector(".card");
+  if (!card) return;
+  card.addEventListener("pointerdown", onDown);
+  card.querySelector('[data-action="good"]')
+      .addEventListener("click", e => { e.stopPropagation(); if (!busy) flyOut("good"); });
+  card.querySelector('[data-action="faulty"]')
+      .addEventListener("click", e => { e.stopPropagation(); if (!busy) flyOut("faulty"); });
+}
+
+function paint(card, dx){
+  const w   = card.offsetWidth;
+  const rot = Math.max(-10, Math.min(10, dx * 0.045));
+  card.style.transform = `translateX(${dx}px) rotate(${rot}deg)`;
+  const p = Math.min(1, Math.abs(dx) / (w * COMMIT_RATIO));
+  const swipe = card.parentElement;
+  swipe.querySelector('[data-reveal="good"]').style.opacity   = dx > 0 ? p : 0;
+  swipe.querySelector('[data-reveal="faulty"]').style.opacity = dx < 0 ? p : 0;
+}
+
+function onDown(e){
+  if (busy || e.button > 0) return;
+  const card = e.currentTarget;
+  card.classList.remove("card--settling");
+  /* Deliberately no pointer capture yet — capturing here would swallow a
+     vertical drag that the list should be scrolling with. */
+  drag = {card, id:e.pointerId, x0:e.clientX, y0:e.clientY,
+          dx:0, t:e.timeStamp, vx:0, axis:null};
+  card.addEventListener("pointermove", onMove);
+  card.addEventListener("pointerup", onUp);
+  card.addEventListener("pointercancel", onUp);
+}
+
+function onMove(e){
+  if (!drag) return;
+  const dx = e.clientX - drag.x0, dy = e.clientY - drag.y0;
+
+  /* Decide once whether this gesture is a horizontal swipe or a vertical
+     scroll, so the list still scrolls normally under the finger. Only take
+     pointer capture once it is definitely a swipe. */
+  if (!drag.axis){
+    if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+    drag.axis = Math.abs(dx) > Math.abs(dy) ? "x" : "y";
+    if (drag.axis === "y"){ endDrag(); return; }
+    try { drag.card.setPointerCapture(drag.id); } catch (_) {}
+  }
+  const dt = Math.max(1, e.timeStamp - drag.t);
+  drag.vx = (dx - drag.dx) / dt;
+  drag.dx = dx; drag.t = e.timeStamp;
+  paint(drag.card, dx);
+}
+
+function onUp(){
+  if (!drag || drag.axis !== "x"){ endDrag(); return; }
+  const {card, dx, vx} = drag;
+  const past  = Math.abs(dx) >= card.offsetWidth * COMMIT_RATIO;
+  const flick = Math.abs(vx) >= FLICK_VELOCITY && Math.abs(dx) > 24;
+  endDrag();
+
+  if (past || flick) flyOut(dx > 0 ? "good" : "faulty");
+  else springBack(card);
+}
+
+function endDrag(){
+  if (!drag) return;
+  drag.card.removeEventListener("pointermove", onMove);
+  drag.card.removeEventListener("pointerup", onUp);
+  drag.card.removeEventListener("pointercancel", onUp);
+  drag = null;
+}
+
+function springBack(card){
+  card.classList.add("card--settling");
+  card.style.transform = "translateX(0) rotate(0deg)";
+  const swipe = card.parentElement;
+  swipe.querySelectorAll(".reveal").forEach(r => r.style.opacity = 0);
+  setTimeout(() => card.classList.remove("card--settling"), 320);
+}
+
+function flyOut(kind){
+  const card = listEl.querySelector(".card");
+  if (!card || busy) return;
+  busy = true;
+
+  const dir   = kind === "good" ? 1 : -1;
+  const swipe = card.parentElement;
+  swipe.querySelector(`[data-reveal="${kind}"]`).style.opacity = 1;
+  swipe.querySelector(`[data-reveal="${kind === "good" ? "faulty" : "good"}"]`).style.opacity = 0;
+
+  card.classList.remove("card--settling");
+  card.classList.add("card--flying");
+  card.style.transform = `translateX(${dir * (card.offsetWidth + 120)}px) rotate(${dir * 12}deg)`;
+  card.style.opacity = "0";
+
+  /* Let the confirmation sit long enough to be read, then resolve. */
+  setTimeout(() => {
+    if (kind === "good") settle("good");
+    else openSheet(activeIndex, "mark", "faulty");
+  }, 400);
+}
+
+/* Commit the outcome, collapse this item and open the next pending one. */
+function settle(status, reasons){
+  const part = PARTS[activeIndex];
+  part.status = status;
+  part.reasons_selected = reasons || [];
+
+  const next = PARTS.findIndex((p,i) => i > activeIndex && p.status === "pending");
+  activeIndex = next !== -1
+    ? next
+    : PARTS.findIndex(p => p.status === "pending");   /* wrap to any left behind */
+
+  busy = false;
+  render();
+  if (activeIndex !== -1) revealActive("smooth");
+}
+
+/* Restore the card when the mechanic backs out of the reason sheet. */
+function cancelOutcome(){
+  busy = false;
+  render();
+  revealActive();
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PART SHEET
+   One sheet does two jobs: it collects the reasons when a part is swiped
+   faulty, and it re-opens later to change any call already made. The Good /
+   Faulty toggle lives in its header, so a part can be re-judged in place.
+
+   Reasons multi-select among themselves. "Missing" is mutually exclusive with
+   every reason, enforced by *switching* rather than locking both directions.
+   Figma greys "Missing" out once any reason is picked, but taken literally
+   that is a dead end: a mechanic who taps "Cuts", then finds the part is
+   actually gone, cannot reach "Missing" without first clearing every reason.
+   So "Missing" always stays tappable and takes over when tapped; the reasons
+   grey out while it is active and are one tap away again. Same rule, no trap.
+   ═══════════════════════════════════════════════════════════════════════════ */
+const sheetThumb  = document.getElementById("sheetThumb");
+const sheetNameEl = document.getElementById("sheetName");
+const collapseEl  = document.getElementById("sheetCollapse");
+
+/* {index, mode:'mark'|'edit', mark:'good'|'faulty', picked:Set} */
+let sheetState = null;
+
+function openSheet(index, mode, mark){
+  const part = PARTS[index];
+  sheetState = {
+    index, mode,
+    mark: mark || (part.status === "pending" ? "faulty" : part.status),
+    picked: new Set(part.reasons_selected || []),
+  };
+
+  sheetThumb.setAttribute("style", thumbStyle(part));
+  sheetThumb.innerHTML = part.photo ? "" : ICON.noPhoto(24);
+  sheetNameEl.textContent = part.name;
+
+  const chip = r => `<button type="button" class="chip" data-reason="${esc(r)}">${esc(r)}</button>`;
+  chipsEl.innerHTML = part.reasons.concat(MISSING).map(chip).join("");
+
+  /* Settle the collapsed region before the sheet slides up, otherwise the
+     good state visibly folds shut on the way in. */
+  collapseEl.classList.add("no-anim");
+  paintSheet();
+  collapseEl.offsetHeight;                       /* flush the layout */
+  requestAnimationFrame(() => collapseEl.classList.remove("no-anim"));
+
+  scrimEl.classList.add("is-open");
+  sheetEl.classList.add("is-open");
+}
+
+function closeSheet(committed){
+  const mode = sheetState && sheetState.mode;
+  scrimEl.classList.remove("is-open");
+  sheetEl.classList.remove("is-open");
+  sheetEl.style.transform = "";
+  sheetState = null;
+  /* Backing out of a fresh mark undoes the swipe; backing out of an edit just
+     leaves the earlier call standing. */
+  if (!committed && mode === "mark") setTimeout(cancelOutcome, 220);
+}
+
+function paintSheet(){
+  if (!sheetState) return;
+  const {mark, picked} = sheetState;
+
+  sheetEl.querySelector('.tog--faulty').classList.toggle("is-on", mark === "faulty");
+  sheetEl.querySelector('.tog--good').classList.toggle("is-on", mark === "good");
+  collapseEl.classList.toggle("is-collapsed", mark !== "faulty");
+  collapseEl.setAttribute("aria-hidden", String(mark !== "faulty"));
+
+  /* Nothing is ever disabled: every chip stays tappable and simply takes over
+     from the other side. Tapping a reason drops "Missing"; tapping "Missing"
+     drops the reasons. Symmetric, and no state you can get stranded in. */
+  chipsEl.querySelectorAll(".chip").forEach(c => {
+    c.classList.toggle("is-selected", picked.has(c.dataset.reason));
+    c.disabled = false;
+  });
+
+  /* Good needs nothing more; Faulty needs at least one reason. */
+  confirmBtn.disabled = mark === "faulty" && picked.size === 0;
+}
+
+function toggleReason(value){
+  const picked = sheetState.picked;
+  if (value === MISSING){
+    sheetState.picked = picked.has(MISSING) ? new Set() : new Set([MISSING]);
+  } else {
+    picked.delete(MISSING);                 /* a reason rules Missing out */
+    picked.has(value) ? picked.delete(value) : picked.add(value);
+  }
+  paintSheet();
+}
+
+sheetEl.addEventListener("click", e => {
+  if (!sheetState) return;
+  const tog = e.target.closest(".tog");
+  if (tog){ sheetState.mark = tog.dataset.mark; paintSheet(); return; }
+  const chip = e.target.closest(".chip");
+  if (chip && !chip.disabled) toggleReason(chip.dataset.reason);
+});
+
+confirmBtn.addEventListener("click", () => {
+  const {index, mode, mark, picked} = sheetState;
+  const reasons = mark === "faulty" ? [...picked] : [];
+  closeSheet(true);
+  setTimeout(() => {
+    if (mode === "mark") settle(mark, reasons);
+    else {                                  /* editing keeps your place */
+      PARTS[index].status = mark;
+      PARTS[index].reasons_selected = reasons;
+      render();
+    }
+  }, 220);
+});
+
+scrimEl.addEventListener("click", () => closeSheet(false));
+
+/* Any row can be opened at any time — the flow suggests an order, it does not
+   impose one. A part already judged re-opens in the sheet to be changed; a
+   part still pending simply becomes the open card, ready to swipe. */
+listEl.addEventListener("click", e => {
+  if (busy || sheetState) return;
+  const row = e.target.closest("[data-index]");
+  if (!row) return;
+  const i = Number(row.dataset.index);
+  if (PARTS[i].status !== "pending"){
+    openSheet(i, "edit");
+  } else {
+    activeIndex = i;
+    render();
+    revealActive("smooth");
+  }
+});
+
+/* Drag the grabber down to dismiss. */
+(() => {
+  const zone = document.getElementById("sheetGrab");
+  let d = null;
+  zone.addEventListener("pointerdown", e => {
+    d = {y0:e.clientY, dy:0};
+    zone.setPointerCapture(e.pointerId);
+    sheetEl.classList.add("sheet--dragging");
+  });
+  zone.addEventListener("pointermove", e => {
+    if (!d) return;
+    d.dy = Math.max(0, e.clientY - d.y0);
+    sheetEl.style.transform = `translateY(${d.dy}px)`;
+  });
+  const end = () => {
+    if (!d) return;
+    const far = d.dy > 80; d = null;
+    sheetEl.classList.remove("sheet--dragging");
+    if (far) closeSheet(false);
+    else sheetEl.style.transform = "translateY(0)";
+  };
+  zone.addEventListener("pointerup", end);
+  zone.addEventListener("pointercancel", end);
+})();
+
+/* ═══════════════════════════════════════════════════════════════════════════ */
+render();
+revealActive();
+</script>

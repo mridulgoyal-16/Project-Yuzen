@@ -1,0 +1,17 @@
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       Options sheet (⋮) — shared chrome
+       It used to live inside the Assessment screen, which meant only that
+       screen could open it: a sheet nested in an off-canvas screen renders
+       off-canvas too. Mark faults needed the same menu, so it moved out here
+       beside the toast and the camera. The job page's ⋮ can now use it as well.
+       ══════════════════════════════════════════════════════════════════════ -->
+    <div class="scrim" id="optScrim"></div>
+    <section class="sheet" id="optSheet" role="dialog" aria-modal="true" aria-label="More options">
+      <div class="sheet__grabzone" id="optGrab"><div class="sheet__grab"></div></div>
+      <!-- The sheet is the same component everywhere and its rows change per
+           screen, so without a title it is a different-looking menu each time.
+           The title is what makes it recognisably one thing. -->
+      <h2 class="sheet__title t-heading-sm">More options</h2>
+      <div class="sheet__list" id="optList"></div>
+    </section>

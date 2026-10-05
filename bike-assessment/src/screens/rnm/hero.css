@@ -1,0 +1,221 @@
+/* ═══ RnM — the hero: gradient backdrop, app bar, timer, the clips ═══
+   Split out of screens/rnm/style.css. See src/MAP.md. */
+
+  /* ---- Hero ------------------------------------------------------------- */
+  /* 476px — Figma 2470:40219, where the gradient ends. It has been 402 and 416;
+     the restructured frame runs it further down because the readings and the
+     commands both moved onto it as cards rather than banding the screen.
+     426 with the open-tasks sheet up (2470:40853), which is 50px of backdrop
+     given back to the sheet.
+
+     The scroller is gone with the tab strip. Every block in the frame lands on a
+     stated line and the whole 844 is accounted for, so there is nothing left to
+     scroll — and a scroller with nothing to scroll was still swallowing the
+     vertical drags the sheet now wants. */
+  #scrRnm .hero{
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 476px;
+    z-index: 0;
+    background: linear-gradient(168deg, var(--purple-100) 0%, #fff 70%);
+    transition: height 320ms var(--ease-out);
+  }
+  #scrRnm.is-tasks .hero{ height: 426px; }
+
+  /* Bike footage, shared from ../wynn-xp/videos rather than duplicated. The four
+     clips are stacked and crossfaded, and each holds its last frame, so the bike
+     stays in whatever state the controls left it in.
+     build.py inlines them as data URIs, so the built file needs no server; only
+     this working copy reads them off disk. If wynn-xp/ ever moves, re-point the
+     four src paths.
+
+     Sizing is deliberate and looks arbitrary because the bike is not centred in
+     its own 780x840 frame. Two things had to be solved together:
+       - `cover` over the whole hero drew the bike at nearly twice the size the
+         frame does and ran it off the right edge;
+       - sizing it down to the frame's bike exposed the clips' studio backdrop,
+         which is pale grey rather than white, as a hard-edged box wherever the
+         gradient had gone white.
+     So the clip is sized to the design's bike and its edges are feathered, which
+     dissolves the backdrop instead of trying to hide it. */
+  #scrRnm .hero-media{
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+  }
+  /* Measured, not guessed. The bike occupies x 155-640, y 283-595 inside the
+     780x840 clip, and Figma 2470:40222 draws its render 212 wide at x89 y216 —
+     so the clip is scaled to put those two rectangles on top of each other: a
+     341x367 box at x21 y92 lands the bike at x89 y216, 212 wide.
+     One thing cannot be matched: the clip's bike is 485x312 where the frame's
+     render is 212x140, a different camera angle. Matching the width keeps it
+     inside the 24px margins, which leaves it 136 tall rather than 140; matching
+     the height instead would make it 257px wide and crowd the edges.
+     y216 → y210 when the sheet is up, per 2470:40856 — the same 6px the render
+     moves in the frame, not the 50 the gradient loses. */
+  #scrRnm .hero-media video{
+    position: absolute;
+    left: 21px;
+    top: 92px;
+    width: 341px;
+    height: 367px;
+    object-fit: contain;
+    /* Not mirrored. The clips were shot with the bike facing LEFT and that is how
+       they play. They were briefly flipped to agree with the still renders, which
+       face right — flagged here because the disagreement is now real and visible:
+       the moving bike on this page points the opposite way to the hero on the
+       task page, the parked card and the queue. Mirroring those instead is the
+       one-line fix if the flow should read one way throughout. */
+    opacity: 0;
+    transition: opacity 120ms ease, top 320ms var(--ease-out);
+    /* `darken` keeps whichever is darker, clip or gradient, so the design's
+       purple survives at the top instead of being painted over. */
+    mix-blend-mode: darken;
+    -webkit-mask-image:
+      linear-gradient(to right,  transparent 0, #000 60px, #000 calc(100% - 60px), transparent 100%),
+      linear-gradient(to bottom, transparent 0, #000 60px, #000 calc(100% - 60px), transparent 100%);
+    -webkit-mask-composite: source-in;
+    mask-image:
+      linear-gradient(to right,  transparent 0, #000 60px, #000 calc(100% - 60px), transparent 100%),
+      linear-gradient(to bottom, transparent 0, #000 60px, #000 calc(100% - 60px), transparent 100%);
+    mask-composite: intersect;
+  }
+  #scrRnm .hero-media video.is-playing{ opacity: 1; }
+  #scrRnm.is-tasks .hero-media video{ top: 86px; }
+
+  /* Chrome sits above the footage. */
+  #scrRnm .statusbar{ position: relative; z-index: 4; }
+
+  /* Pinned over the frame and transparent throughout: the design has the backdrop
+     running under the buttons, and with the scroller gone there is never anything
+     passing beneath the bar for it to hide. It starts at the very top, not below
+     the status bar, and pushes its own contents down with padding — the status
+     bar is transparent by design and paints over the top (z-index 4). */
+  #scrRnm .rnbar{
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 4;
+    background: transparent;
+  }
+
+  #scrRnm .statusbar{
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 14px 0 21px;
+  }
+  #scrRnm .sb-icons{ display: flex; align-items: center; gap: 4px; }
+  /* The status-bar exports don't match the Figma frame dimensions they're given
+     (wifi and battery were off by 14% and 7%), so contain the fit here too. */
+  #scrRnm .sb-icons img, #scrRnm .statusbar img{ display: block; object-fit: contain; }
+  #scrRnm .sb-signal{ display: flex; align-items: flex-end; gap: 1.5px; height: 14px; }
+  #scrRnm .sb-signal i{ width: 3px; background: var(--content-primary); border-radius: .5px; }
+  #scrRnm .sb-signal i:nth-child(1){ height: 5px; }
+  #scrRnm .sb-signal i:nth-child(2){ height: 8px; }
+  #scrRnm .sb-signal i:nth-child(3){ height: 11px; }
+
+  /* 72px of bar under a 44px status bar. The padding, not the offset, is what
+     holds the buttons on the design's line — see the top:0 note above. */
+  #scrRnm .rnbar{
+    height: calc(var(--status-h) + 72px);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 20px;
+    padding-top: calc(var(--status-h) + 10px);
+  }
+
+  /* ── The assessment has no carousel ────────────────────────────────────────
+     The Part Exchange card is the repair's paperwork and has no counterpart in an
+     assessment, and with it gone there is one slide left — so the dots go too.
+     A one-page carousel is a control that cannot do anything.
+
+     Hidden rather than removed, because the repair flow still has both. The
+     swipe is disarmed in script.js to match: CSS can take the second slide off
+     screen but not stop a drag from sliding the track onto where it was.
+     ─────────────────────────────────────────────────────────────────────────── */
+  #scrRnm.is-assessment .rncar__slide:nth-child(2){ display: none; }
+  #scrRnm.is-assessment #rnCarDots{ display: none; }
+
+  /* ── The bike belongs to Bike essentials ───────────────────────────────────
+     Sagar's call, and the assessment's only. The render is what you look at
+     while you are working the machine, so it sits with the readings and the
+     controls; over Tasks added it was a picture above a list of findings that
+     none of the four rows refer to.
+
+     Only the footage goes. The gradient stays, because the app bar and the timer
+     are drawn on it in both frames, and the four rows are anchored to the tab
+     bar rather than to the bottom of the hero — so nothing above or below moves
+     when the bike leaves.
+
+     .is-tab-bike is set by setRnTab, so this follows the TAB, not the flow: the
+     same screen shows the bike on one panel and not the other.
+     ─────────────────────────────────────────────────────────────────────────── */
+  #scrRnm.is-assessment:not(.is-tab-bike) .hero-media{ display: none; }
+
+  /* ── Live repair timer ─────────────────────────────────────────────────────
+     Figma 2470:40223: two centred lines — a 16/700 title at y60 over a 14/500
+     tertiary clock at y84. Centred on the BAR, not between the buttons, so it
+     stays on the frame's centre line whatever the buttons do either side of it.
+
+     pointer-events:none because it sits over the middle of the header and there
+     is nothing to press on it; without that it would be a dead zone across the
+     top of the hero. */
+  #scrRnm .rntimer{
+    position: absolute;
+    left: 50%;
+    top: calc(var(--status-h) + 36px);
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    pointer-events: none;
+    text-align: center;
+    white-space: nowrap;
+  }
+  #scrRnm .rntimer__label{ color: var(--content-primary); }
+  /* The number rides the label rather than taking its own line: it identifies
+     the repair, it is not a second heading. It inherits the label's size, weight
+     and colour outright — "Live repair · 543210" is one phrase, and colouring
+     half of it made it read as two things stuck together. Only the tabular
+     figures are its own, so the centred block cannot shift as the number
+     changes. */
+  #scrRnm .rntimer__bike{
+    font-variant-numeric: tabular-nums;
+  }
+  /* Label/Small 14/16 tertiary — Figma 2470:40225. Size up, contrast down: at 14
+     it is the second line of a two-line heading rather than a caption, and
+     tertiary is what keeps it from competing with the bold title above it. */
+  #scrRnm .rntimer__clock{
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 16px;
+    color: var(--content-tertiary);
+    /* The seconds change every tick, and proportional digits make the whole line
+       jitter sideways as they do. Tabular figures hold the width still. */
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* 40px white circle, 24px glyph — the design's floating app-bar buttons. */
+  #scrRnm .btn-round{
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: 20px;
+    background: #fff;
+    box-shadow: var(--shadow-btn);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 120ms ease;
+  }
+  #scrRnm .btn-round:active{ transform: scale(.92); }
+  #scrRnm .btn-round img{ display: block; width: 24px; height: 24px; }

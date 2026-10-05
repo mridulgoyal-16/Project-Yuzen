@@ -1,0 +1,54 @@
+
+/* ── Options sheet (⋮) ───────────────────────────────────────────────────────
+   Figma 2186:22468. Shared chrome: four screens open the same sheet, each with
+   its own option list. 24px top corners, 44x4 grabber 8px down, 72px rows with
+   the content inset 24, a 24px icon, 16 to the label, and dividers inset 24 so
+   they stop short of the edges. 36px tail below the last row.
+   ─────────────────────────────────────────────────────────────────────────── */
+.scrim{
+  position:absolute;inset:0;background:rgba(0,0,0,.4);
+  opacity:0;pointer-events:none;transition:opacity .26s ease;z-index:30;
+}
+.scrim.is-open{opacity:1;pointer-events:auto}
+.sheet{
+  position:absolute;left:0;right:0;bottom:0;
+  background:var(--surface-inverse);
+  border-radius:var(--s6) var(--s6) 0 0;
+  display:flex;flex-direction:column;
+  transform:translateY(100%);
+  transition:transform .3s var(--ease-out);
+  z-index:31;
+}
+.sheet.is-open{transform:translateY(0)}
+.sheet--dragging{transition:none}
+/* Grabber sits 8px down per Figma; the zone around it is a generous invisible
+   hit area for drag-to-dismiss, padded so the list still starts at 28. */
+.sheet__grabzone{
+  padding:var(--s2) 40px var(--s4);display:flex;justify-content:center;
+  touch-action:none;cursor:grab;flex:0 0 auto;
+}
+.sheet__grab{width:44px;height:4px;border-radius:100px;background:var(--border-primary)}
+/* Inset 24 to line up with the row labels' left edge rather than their icons —
+   the title heads the list, it is not one of its items. 8 above, 16 below. */
+.sheet__title{
+  padding:var(--s2) var(--s6) var(--s4);
+  color:var(--content-primary);
+  flex:0 0 auto;
+}
+.sheet__list{display:flex;flex-direction:column;padding-bottom:var(--s9)}
+.sheet__opt{
+  height:72px;width:100%;border:0;background:none;cursor:pointer;
+  display:flex;align-items:center;gap:var(--s4);
+  padding:0 var(--s6);text-align:left;
+  color:var(--content-primary);
+}
+.sheet__opt:active{background:var(--surface-secondary)}
+.sheet__opt svg{display:block;width:24px;height:24px;flex:0 0 auto}
+.sheet__opt .lbl{flex:1 1 auto;min-width:0}
+/* Inset 24 either side, so it reads as a list rule rather than a full-bleed
+   band. A border would add a pixel of height to a row spec'd at exactly 72. */
+.sheet__opt + .sheet__opt{
+  background-image:linear-gradient(var(--border-primary),var(--border-primary));
+  background-size:calc(100% - var(--s12)) 1px;
+  background-position:var(--s6) 0;background-repeat:no-repeat;
+}

@@ -1,0 +1,123 @@
+/* ═══ RnM — the open-tasks sheet and its three rows ═══
+   Was tabs.css, which owned the strip and the scroll runway that let it stick.
+   Both are gone: the three tabs became one inline dashboard plus this sheet.
+   See src/MAP.md.
+
+   Why a sheet and not a panel. The tab strip made Open tasks / Commands / Part
+   exchange three peers you switched between, and they are not peers — the
+   commands are tools you reach for while working, the list is the work, and part
+   exchange is a record you read afterwards. A sheet says the true thing: the
+   list comes UP over the dashboard when you want it and goes away when you are
+   done with it, and the bike and its controls are still there underneath.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+  /* The sheet is gone — Open tasks is a tab panel now (tabbar.css), so nothing
+     slides. What survives is the row, which is unchanged: a 60px tile, the name,
+     the tally under it and a chevron. */
+
+  /* ---- Open tasks rows — Figma 2470:40886 -------------------------------- */
+  /* 60px tile, 16 to the text, chevron on the 24px inset. The whole row is the
+     control here, unlike the command cards: there is nothing on it but a way in,
+     so there is no stray tap to protect against. */
+  /* A flex column so the two flows can put the rows in their own order without
+     the markup being reordered — the DOM keeps reading in the repair's order and
+     the assessment's order is a set of `order` values below. */
+  #scrRnm .tasksheet__rows{ display: flex; flex-direction: column; }
+  #scrRnm .trow{
+    width: 100%;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    gap: var(--s4);
+    padding: 0 var(--s6);
+    border: 0;
+    background: none;
+    text-align: left;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: opacity 120ms ease;
+  }
+  #scrRnm .trow + .trow{ margin-top: var(--s4); }
+  #scrRnm .trow:active{ opacity: .6; }
+  /* ── The two flows' rows ────────────────────────────────────────────────────
+     One panel, two readings. A repair lists work still to do — checks and issues
+     to close. An assessment lists what was FOUND, which is a different kind of
+     list: the faults it turned up, split mechanical from electrical, what is
+     still to be looked at, and what it will cost. Same rows, reordered and
+     relabelled by paintRepair; the penalty row exists only on one side.
+     ─────────────────────────────────────────────────────────────────────────── */
+  #scrRnm:not(.is-assessment) #rowFaults,
+  #scrRnm:not(.is-assessment) #rowAssess{ display: none; }
+  /* The penalty row is on NEITHER side now: the repair has no penalty to record,
+     and the assessment reaches it as the second tab of its checklist row. Kept
+     in the markup with its count still painted — see the note in script.js. */
+  /* #scrRnm-scoped, because `#scrRnm .trow` sets display:flex and a bare id
+     selector loses to it — the row went on showing, at the top of the list. */
+  #scrRnm #rowPenalty{ display: none; }
+  /* And the other way round: the two fault rows are the repair's, the merged one
+     is the assessment's. */
+  #scrRnm.is-assessment #rowMech,
+  #scrRnm.is-assessment #rowElec{ display: none; }
+  /* The order a QCA works in, which is not the order the findings read in. It
+     used to be findings-first — what the assessment turned UP — with the
+     checklist that produces them sitting below as a button. That is the report,
+     and this panel is the work: the checklist, then the penalty it feeds, then
+     the two fault lists, then which checklists are running. The CTA below walks
+     exactly this list — see ASSESS_FLOW in script.js. */
+  #scrRnm.is-assessment #rowAssess{ order: 1 }
+  #scrRnm.is-assessment #rowFaults{ order: 2 }
+  #scrRnm.is-assessment #rowChecks{ order: 3 }
+  /* margin-top on the adjacent sibling is a DOM relationship, so reordering
+     leaves the first row on screen carrying a 16px lead-in and the true first
+     row without one. Reset both from the visual order instead. */
+  #scrRnm.is-assessment .trow{ margin-top: var(--s4); }
+  #scrRnm.is-assessment #rowAssess{ margin-top: 0; }
+  #scrRnm .trow__art{
+    flex: 0 0 auto;
+    width: 60px;
+    height: 60px;
+    border-radius: var(--s2);
+    background: var(--surface-secondary);
+    object-fit: contain;
+  }
+  #scrRnm .trow__text{
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  #scrRnm .trow__name{
+    font-weight: 500;
+    font-size: 16px;
+    line-height: 24px;
+    color: var(--content-primary);
+  }
+  #scrRnm .trow__count{
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 20px;
+    color: var(--content-secondary);
+    font-variant-numeric: tabular-nums;
+  }
+  #scrRnm .trow__go{
+    flex: 0 0 auto;
+    display: block;
+    width: 24px;
+    height: 24px;
+  }
+  /* Two trailing marks, one shown per flow. A repair's rows are ways IN, so they
+     carry a chevron. An assessment's rows are STEPS, so they carry the state of
+     the step — the same dashed ring and filled disc the checklist uses on a
+     part, which is the one place in this app that already means "not yet" and
+     "done". A chevron cannot say that, and a row cannot wear both. */
+  #scrRnm .trow__tick{
+    flex: 0 0 auto;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  #scrRnm .trow__tick svg{ display: block; }
+  #scrRnm.is-assessment .trow__go{ display: none; }
+  #scrRnm:not(.is-assessment) .trow__tick{ display: none; }

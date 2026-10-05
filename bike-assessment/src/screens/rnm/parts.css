@@ -1,0 +1,190 @@
+/* ═══ RnM — Parts exchange: what stores issued, and what went back ═══
+   Split out by region like the rest of this screen. See src/MAP.md. */
+
+  /* ---- Header ------------------------------------------------------------ */
+  /* Shared with All vitals — see the .pxappbar class on both overlays. */
+  /* The shared .appbar, with only what this overlay needs on top of it: it is a
+     flex child rather than an absolutely-placed bar, and it clears the host's
+     status bar, which is transparent and drawn over the whole frame. */
+  /* No border-bottom: 2691:32488 draws one divider on this screen, at the foot
+     of the tabs. A second hairline 56px above it boxed the tab strip in. */
+  #scrRnm .pxappbar{ flex: 0 0 auto; margin-top: var(--status-h); border-bottom: 0; }
+  /* base.css sizes .icon-btn svg; this back arrow is an <img>. */
+  #scrRnm .pxappbar .icon-btn img{ display: block; width: 24px; height: 24px; }
+  #scrRnm .pxappbar .appbar__lead{ display: flex; align-items: center; min-width: 0; }
+  #scrRnm .pxappbar .appbar__title p{ white-space: nowrap; }
+
+  /* ---- Tabs -------------------------------------------------------------- */
+  /* Figma 2691:32488: the strip is 56 tall, each tab exactly half of 390, the
+     label Body/Medium 16/500/24 centred — Content/secondary until selected and
+     Content/primary when. Weight is held at 500 both ways, so selection is
+     carried by colour and the underline alone. */
+  /* Inside the scroller now, not a fixed flex child: Return pending sits above it
+     and is as long as the mechanic's hands are full, so the strip has to travel
+     with the content. Its border IS the frame's full-bleed divider at the foot of
+     the tabs. */
+  #scrRnm .pxtabs-wrap{
+    background: var(--surface-inverse);
+    border-bottom: 1px solid var(--border-primary);
+  }
+  #scrRnm .pxtabs{ position: relative; display: flex; align-items: stretch; height: 56px; }
+  /* Half the strip each. There are exactly two and there will only ever be two —
+     a part is old or it is new — so the strip can be divided rather than packed,
+     and each label sits in the middle of the half it governs. */
+  #scrRnm .pxtab{
+    position: relative;
+    flex: 1 1 0;
+    justify-content: center;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s2);
+    padding: 16px;
+    border: 0;
+    background: none;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 24px;
+    color: var(--content-secondary);
+    white-space: nowrap;
+    transition: color .18s ease;
+  }
+  /* The label, tight around its own text. The button is half the strip, so its
+     content box is 163 wide and useless for sizing the underline — the frame's
+     underline is 56, which is the width of "New · 2". This span is the thing
+     that measures. */
+  #scrRnm .pxtab__in{ display: inline-flex; align-items: center; gap: var(--s1); }
+  #scrRnm .pxtab--on{ color: var(--content-primary); }
+  /* No counts on these tabs. 2710:33743 writes them as bare words — Returned,
+     Received — and the one figure that was worth a number moved out of the tabs
+     entirely: what is still to be handed back is the Return pending band at the
+     top of the screen now, where it is a heading rather than a digit. */
+
+  /* One underline that slides, rather than a border per tab — a border would jump
+     between tabs, and the slide is what says the two lists are side by side. */
+  #scrRnm .pxtabs__ink{
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    height: 2px;
+    width: 0;
+    border-radius: 1px;
+    background: var(--content-primary);
+    transition: transform 220ms cubic-bezier(.4,0,.2,1),
+                width     220ms cubic-bezier(.4,0,.2,1);
+    pointer-events: none;
+  }
+
+  /* Flush to the divider: the frame puts the first band's top edge at 173, one
+     pixel under the hairline at 172. */
+  #scrRnm #screenParts .screen-body{ padding: 0 0 var(--s6); }
+  #scrRnm .pxsec[hidden]{ display: none; }
+
+  /* ---- Section bands ----------------------------------------------------- */
+  /* 390x32 on Surface/secondary, Label/Small centred in Content/tertiary. The
+     frame draws 48 — 16 above the line and 16 below — and 8 came off each side:
+     the strip is a divider between two lists, and at 48 it had the presence of a
+     section of its own. 8 + 16 line + 8 = 32. Full bleed, because it separates
+     two lists of identical rows; inset, it would read as a heading belonging to
+     the row directly below it. */
+  #scrRnm .pxband{
+    margin: 0;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--surface-secondary);
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 16px;
+    color: var(--content-tertiary);
+  }
+  #scrRnm .pxlist{ padding: var(--s6) 0; }
+  /* 40 under the last pending row before the tab strip — the frame's number
+     (rows end 385, tabs start 425). Not a token: it is 24 + 16, the gap between
+     bands plus the gap between rows, which is what it reads as. */
+  #scrRnm .pxlist--hold{ padding-bottom: 40px; }
+  /* Nothing in hand to hand back: the band still has to say so. */
+  #scrRnm .pxlist:empty{ display: none; }
+
+  /* A row, not a button. Stores owns this list — the mechanic is being told what
+     was issued and what came back, and there is nothing here for them to change.
+     So no chevron, no cursor, no press state: the same 60px tile and 16px gap as
+     the Open tasks rows, with everything that implied a way in taken off. */
+  #scrRnm .prow{
+    display: flex;
+    align-items: center;
+    gap: var(--s4);
+    padding: 0 var(--s6);
+  }
+  /* 16, not 24: 2710:33743 puts the rows on a 76 pitch — 60 tile plus 16. */
+  #scrRnm .prow + .prow{ margin-top: var(--s4); }
+  /* The whole row, image and text together — a part that is not here yet should
+     recede as one object, not have its name greyed while its photo stays solid. */
+  #scrRnm .prow--faint{ opacity: .4; }
+  #scrRnm .prow__art{
+    flex: 0 0 auto;
+    width: 60px;
+    height: 60px;
+    border-radius: var(--s2);
+    background: var(--surface-secondary);
+    object-fit: contain;
+  }
+  /* 20 + 8 + 16 = 44 inside a 60 tile, so 8 above and 8 below — which is exactly
+     where the frame puts the two lines (title +8, sub-line +36 of a 60 row). */
+  #scrRnm .prow__text{
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--s2);
+  }
+  #scrRnm .prow__name{
+    font-weight: 500;
+    font-size: 16px;
+    line-height: 20px;
+    color: var(--content-primary);
+  }
+  /* Only serialised parts carry this line, so it is absent rather than empty on
+     the ones that do not — an empty second line would shift the name off the
+     row's centre for no reason. */
+  /* Two kinds of sub-line share this rule. On a part you still hold it names
+     WHICH one goes back — Faulty, Good part, or both while the issue is open. On
+     a received or awaited spare it is the serial. Same slot, same style: it is
+     the one extra fact the row carries either way. */
+  #scrRnm .prow__serial{
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 16px;
+    color: var(--content-secondary);
+    font-variant-numeric: tabular-nums;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Return pending is the one band a mechanic reads as a debt, so blank is the
+     wrong answer there — blank is what a list that failed to paint looks like,
+     and the one band you want to be sure about is the one that says you owe
+     stores nothing. The other three stay blank on purpose: their headings
+     already say what would be there, and none of them is a debt.
+
+     380 is close enough to half the frame's 844 to read as deliberate space
+     rather than a gap. It does push the tab strip down while it shows — which is
+     correct, because with nothing to return the records behind the tabs are the
+     only thing left on the screen and they are still reachable by a scroll. */
+  #scrRnm .pxlist--empty{ padding: 0; }
+  #scrRnm .pxempty{
+    min-height: 380px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 var(--s6);
+    text-align: center;
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 20px;
+    color: var(--content-tertiary);
+  }

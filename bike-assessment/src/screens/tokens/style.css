@@ -1,0 +1,412 @@
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   TOKENS — the token queue, ported from Barun's token-task-list
+   His stylesheet, near enough verbatim. Four things changed, and only these:
+     · his :root and * reset dropped — ours already declare the same tokens,
+       including the --content-disabled / --surface-disabled he had to add
+     · the phone frame, status bar, bottom nav and toast rules dropped: this is
+       a screen inside an app now, and that chrome belongs to the app
+     · .appbar / .track / .body renamed .tqbar / .tqtrack / .tqbody — the only
+       three class names our stylesheet also claims. Everything else of his is
+       already unique, so nothing is scoped and nothing leaks either way.
+       Neither side has a bare .is-* rule, so the state classes cannot cross.
+     · --space-8/16/24 mapped to our --s2/--s4/--s6
+   ═══════════════════════════════════════════════════════════════════════════ */
+.screen--tokens{display:flex;flex-direction:column;padding-top:var(--status-h)}
+/* No bottom nav here — this screen is reached from Home's card and leaves by the
+   back button, so the nav would be a second, contradictory way out. */
+.screen--tokens .tqbody{padding-bottom:var(--s6)}
+/* His bar was right-aligned with the title absolutely centred — correct when the
+   only control was Search. The back button has to lead, so the row becomes
+   space-between and the title stays centred on top of it. */
+.screen--tokens .tqbar{justify-content:space-between;padding:10px 12px 10px 4px}
+.screen--tokens .tqbar .leading-action{flex:0 0 auto}
+/* ---- Sticky header ---------------------------------------------------- */
+  /* flex-shrink: 0 on header and footer, flex: 1 on the scroller — the same
+     structure as the task list, so the chrome holds and only content moves. */
+  .header {
+    flex-shrink: 0;
+    background: #fff;
+    position: relative;
+    z-index: 10;
+  }
+.sb-icons img, .statusbar img { display: block; object-fit: contain; }
+.sb-signal i { width: 3px; background: var(--content-primary); border-radius: .5px; }
+.sb-signal i:nth-child(2) { height: 8px; }
+.tqbar {
+    height: 72px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 10px 12px 10px 4px;
+    position: relative;
+  }
+  .tqbar-title {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    font-weight: 700;
+    font-size: 16px;
+    line-height: 20px;
+    color: var(--content-primary);
+    white-space: nowrap;
+  }
+
+  .btn-icon {
+    border: 0;
+    background: none;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    border-radius: 999px;
+    padding: 12px;
+    transition: transform 120ms ease, background-color 120ms ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .btn-icon img { display: block; width: 24px; height: 24px; object-fit: contain; }
+  .btn-icon:active { transform: scale(.9); background: rgba(0, 0, 0, .06); }
+
+  /* ---- Tabs ------------------------------------------------------------- */
+  .tabs-wrap { border-bottom: .5px solid var(--border-primary); }
+  /* `hidden` is only display:none in the UA sheet, so any author display rule
+     silently beats it. Without this, hiding a flex container does nothing. */
+  [hidden] { display: none !important; }
+  .tabs {
+    display: flex;
+    align-items: center;
+    height: 55px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    position: relative;
+  }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab {
+    flex-shrink: 0;
+    border: 0;
+    background: none;
+    height: 55px;
+    padding: 16px;
+    font-family: inherit;
+    font-weight: 500;
+    font-size: 16px;
+    line-height: 24px;
+    color: var(--content-secondary);
+    white-space: nowrap;
+    cursor: pointer;
+    transition: color 180ms ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .tab:first-of-type { padding-left: var(--s6); }
+  .tab.is-active { color: var(--content-primary); }
+  .tabs-underline {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 2px;
+    width: 0;
+    border-radius: 1px;
+    background: var(--content-primary);
+    transition: transform 220ms cubic-bezier(.4, 0, .2, 1),
+                width     220ms cubic-bezier(.4, 0, .2, 1);
+  }
+
+  /* ---- Scrolling body --------------------------------------------------- */
+  .tqbody {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+    /* No top padding: sticky `top: 0` is measured from the padding edge, so a
+       top padding here would pin the chips that far below the tabs. The 36px
+       lead-in lives on the first child instead. */
+    padding: 0 0 24px;
+    transition: opacity 140ms ease;
+  }
+  .tqbody.is-swapping { opacity: 0; }
+
+  /* ---- Active token card ------------------------------------------------ */
+  .active-card {
+    width: 342px;
+    margin: 36px auto 0;
+    background: var(--surface-secondary);
+    border-radius: 16px;
+    padding: var(--s6);
+    display: flex;
+    flex-direction: column;
+    gap: var(--s4);
+  }
+
+  .token-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    border: 0;
+    background: none;
+    padding: 0;
+    font-family: inherit;
+    text-align: left;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 120ms ease;
+  }
+  .token-row:active { transform: scale(.98); }
+
+  /* Active token badge: green with the design's top-down darkening. */
+  .badge {
+    flex-shrink: 0;
+    width: 48px;
+    height: 48px;
+    border-radius: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 20px;
+    line-height: 28px;
+  }
+  .badge-active {
+    background:
+      linear-gradient(180deg, rgba(0, 0, 0, .3) 0%, rgba(0, 0, 0, 0) 100%),
+      var(--content-positive);
+    color: #fff;
+  }
+  /* Ongoing: the same pie idea as the bell, behind the token number, so the
+     captain reads repair progress without asking a mechanic. */
+  .badge-wrap { position: relative; flex-shrink: 0; width: 48px; height: 48px; margin: 6px; }
+  .badge-wrap .badge { position: absolute; inset: 0; }
+  .badge-pie { position: absolute; inset: -6px; transform: rotate(-90deg); pointer-events: none; }
+  .badge-pie .tqtrack { fill: none; stroke: var(--content-primary); opacity: .12; stroke-width: 6; }
+  /* butt caps, not round: a flat edge at 12 o'clock shows where the arc starts,
+     so a short arc reads as "just began" instead of a floating pill. */
+  .badge-pie .fill  { fill: none; stroke: var(--content-primary); opacity: .65; stroke-width: 6;
+                      stroke-linecap: butt; transition: stroke-dashoffset 400ms ease,
+                      stroke 300ms ease, opacity 300ms ease; }
+  /* Finished repair: full-strength green, so "ready" is legible at a glance. */
+  .badge-pie.is-complete .fill { stroke: var(--content-positive); opacity: 1; }
+  .token-stage { color: var(--content-secondary); }
+  .token-pct { font-weight: 700; font-variant-numeric: tabular-nums; }
+
+  .badge-upcoming {
+    background: #fff;
+    color: var(--content-primary);
+  }
+
+  .token-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--s2); }
+  .token-name {
+    font-weight: 700;
+    font-size: 20px;
+    line-height: 28px;
+    color: var(--content-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .token-sub {
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 20px;
+    color: var(--content-tertiary);
+  }
+  .token-row > img { display: block; width: 24px; height: 24px; flex-shrink: 0; object-fit: contain; }
+
+  /* Hairlines are .5px throughout — 1px reads heavy against #f7f7f7. */
+  .card-divider { height: .5px; background: var(--border-primary); width: 100%; }
+
+  .card-actions { display: flex; align-items: center; gap: 64px; }
+  .card-action {
+    display: flex;
+    align-items: center;
+    gap: var(--s2);
+    border: 0;
+    background: none;
+    padding: 0;
+    font-family: inherit;
+    font-weight: 500;
+    font-size: 16px;
+    line-height: 20px;
+    color: var(--content-primary);
+    white-space: nowrap;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: opacity 120ms ease, transform 120ms ease;
+  }
+  .card-action:active { opacity: .55; transform: scale(.96); }
+  .card-action img { display: block; width: 24px; height: 24px; object-fit: contain; }
+
+  /* Some Figma icons export as the inner glyph only, already inset inside their
+     24px frame — call.svg comes out 17x17. Scaling those up to fill 24px makes
+     them read much heavier than the icons that genuinely are 24x24. The slot
+     keeps the 24px footprint so labels still line up; the glyph draws true size. */
+  .icon-slot {
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .card-action .icon-slot img { width: 17px; height: 17px; }
+
+  /* ---- Upcoming section ------------------------------------------------- */
+  .section { margin-top: 36px; }
+  .section-title {
+    padding: 0 var(--s6);
+    font-weight: 700;
+    font-size: 20px;
+    line-height: 28px;
+    color: var(--content-primary);
+  }
+
+  /* Sticky filter bar: pins to the top of the scroller once you reach it, so the
+     type filter stays reachable however far down the queue you are. The white
+     background and vertical padding are what make it work — without them the
+     token cards would scroll through it. Spacing is preserved: 12px margin plus
+     12px padding still reads as the design's 24px on each side. */
+  .chips {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    display: flex;
+    gap: var(--s2);
+    padding: 12px var(--s6);
+    margin-top: 12px;
+    background: #fff;
+    overflow-x: auto;
+    scrollbar-width: none;
+    transition: box-shadow 200ms ease;
+  }
+  .chips::-webkit-scrollbar { display: none; }
+  /* Only once actually pinned — a permanent edge looks wrong at rest. */
+  .chips.is-stuck { box-shadow: 0 1px 0 var(--border-primary), 0 6px 16px rgba(0, 0, 0, .05); }
+
+  /* Zero-height probe sitting just above the chips; when it scrolls out of the
+     scroller, the chips are pinned. Cheaper and steadier than reading scrollTop. */
+  .chips-sentinel { height: 0; }
+  .chip {
+    flex-shrink: 0;
+    height: 48px;
+    min-width: 48px;
+    padding: 14px 16px;
+    border-radius: 100px;
+    background: #fff;
+    border: 1px solid var(--border-primary);
+    font-family: inherit;
+    font-weight: 500;
+    font-size: 16px;
+    line-height: 20px;
+    color: var(--content-primary);
+    white-space: nowrap;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background-color 160ms ease, border-color 160ms ease, transform 120ms ease;
+  }
+  .chip:active { transform: scale(.95); }
+  .chip.is-selected {
+    background: var(--surface-secondary);
+    border: 1.5px solid var(--border-selected);
+  }
+
+  .token-list {
+    margin-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: var(--s4);
+    align-items: center;
+  }
+
+  .token-card {
+    width: 342px;
+    min-height: 104px;
+    background: var(--surface-secondary);
+    border-radius: 16px;
+    padding: var(--s6);
+    display: flex;
+    align-items: center;
+  }
+
+  /* The bell is its own button inside the card, so tapping it doesn't open
+     the token. */
+  .bell {
+    flex-shrink: 0;
+    border: 0;
+    background: none;
+    padding: 0;
+    min-width: 24px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 120ms ease, opacity 160ms ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    font: inherit;
+    color: var(--content-primary);
+  }
+  .bell:disabled { cursor: default; }
+  .bell:disabled:active { transform: none; }
+  /* While the wait runs the bell stays lit and filled — it is the record that
+     the phone went off. The pie behind it drains instead, and the bell only
+     becomes tappable again once the pie is gone. */
+  .bell-stack { position: relative; width: 36px; height: 36px; display: grid; place-items: center; }
+  .bell-pie { position: absolute; inset: 0; transform: rotate(-90deg); pointer-events: none; }
+  /* r=9 with an 18-wide stroke fills the disc, so the arc reads as a pie. */
+  .bell-pie circle {
+    fill: none; stroke: var(--content-primary); opacity: .12;
+    stroke-width: 18; stroke-dasharray: 56.55;
+    transition: stroke-dashoffset 1s linear;
+  }
+  .bell-glyph { position: relative; width: 24px; height: 24px; }
+  .bell-glyph img, .bell-glyph svg { display: block; width: 24px; height: 24px; }
+  .bell.is-waiting { color: var(--content-primary); }
+  .bell img { display: block; width: 24px; height: 24px; object-fit: contain; }
+  .bell:active { transform: scale(.85); }
+  @keyframes bell-ring {
+    0%, 100% { transform: rotate(0); }
+    20% { transform: rotate(14deg); }
+    40% { transform: rotate(-11deg); }
+    60% { transform: rotate(7deg); }
+    80% { transform: rotate(-4deg); }
+  }
+  .bell.is-ringing .bell-glyph { animation: bell-ring 520ms ease-in-out; }
+
+  /* Skip is a FLIP, not a slide: the active card shrinks into the first queue
+     slot while the token below it grows into the active slot. Both travel their
+     real distance, so the sizes visibly trade places. */
+  .is-flipping { will-change: transform; }
+  .is-flipping .token-row, .is-flipping .bell { pointer-events: none; }
+  /* The inner column holds its own scale so text does not squash while the
+     card's height changes. */
+  .is-flipping > .token-row > .token-main { will-change: transform; }
+
+  /* Completed tokens are served and closed: inert card, disabled palette,
+     and no bell — you cannot call over someone already dealt with. */
+  /* Completed keeps full-contrast name and detail — still information the
+     captain reads. The token number is spent, so it drops to disabled, and the
+     tick is neutral because the outcome is settled, not an alert. */
+  .token-card.is-done .badge { color: var(--content-disabled); }
+  .token-done {
+    flex-shrink: 0; width: 24px; height: 24px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--content-tertiary);
+  }
+  .token-done svg { display: block; width: 24px; height: 24px; }
+  /* Same affordance as the active card in Pending — the row opens. */
+  .token-more { flex-shrink: 0; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; }
+  .token-more img { display: block; width: 24px; height: 24px; }
+
+  .empty {
+    padding: 64px var(--s6);
+    text-align: center;
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 20px;
+    color: var(--content-tertiary);
+  }
+
+  /* ---- Sticky bottom nav ------------------------------------------------ */
+.nav-item img { display: block; width: 24px; height: 24px; opacity: .55; object-fit: contain; transition: opacity 160ms ease; }
+.nav-item.is-active img { opacity: 1; }
+/* Toast for the bell, so notifying a user visibly does something. */
+.toast.is-shown { opacity: 1; transform: translate(-50%, 0); }

@@ -1,0 +1,69 @@
+/* ========================================================================
+   RnM DASHBOARD — ported from RnM-home-page/prototype.html
+   Every rule is scoped under #scrRnm as well as renamed. Renaming stops his
+   declarations landing on this app's elements; scoping stops this app's rules
+   landing on his, which renaming alone would not — an unscoped `.appbar` here
+   still adds a border-bottom to anything called appbar anywhere.
+   ======================================================================== */
+
+  #scrRnm{
+    --content-primary: #222;
+    --content-secondary: #717171;
+    --content-disabled: #b0b0b0;
+    --content-positive: #00654f;
+    --content-negative: #c13515;
+    --content-inverse: #fff;
+    --surface-primary: #222;
+    --surface-secondary: #f7f7f7;
+    --surface-disabled: #ddd;
+    --border-primary: #e8e8e8;
+    --purple-100: #e3e5fc;
+    --shadow-1: 0 4px 16px rgba(0, 0, 0, .08);
+    --shadow-btn: 0 4px 8px rgba(0, 0, 0, .08);
+    --s2: 8px;
+    --s4: 16px;
+    --s6: 24px;
+  }
+
+  /* Not a flex column any more, and no scroller inside it. The restructured frame
+     places every block on a stated line and accounts for the whole 844 — hero to
+     476, readings at 420, commands at 488, progress at 714, footer at 720 — so
+     this screen is a stack of absolutely-placed regions and there is nothing left
+     to scroll. That also frees the vertical drag, which the open-tasks sheet now
+     owns.
+
+     No padding-top. The gradient runs UNDER the host's transparent status bar, as
+     the frame draws it; only the app bar needs holding clear of it, and it does
+     that with its own padding. */
+  #scrRnm{
+    background: var(--canvas-primary);
+    overflow: hidden;
+  }
+
+  @property --fill {
+    syntax: '<percentage>';
+    inherits: false;
+    initial-value: 100%;
+  }
+
+  
+  /* Buttons and inputs do not inherit the family on their own, so anything
+     with a label in it would silently fall back to the system sans. */
+  
+
+  
+
+  
+
+  
+
+/* The rest of this screen is split by region — hero.css, vitals.css,
+   tasksheet.css, parts.css, commands.css, footer.css — all listed in build.py's
+   CSS_ORDER directly after this file. It was one 799-line sheet; a change to one
+   region meant opening the whole screen. */
+
+  /* No `position: relative` here. .screen is already position:absolute, which is
+     containing block enough for the chrome — and overriding it to relative put the
+     screen back in flow, so it sized to its content (1284px) instead of the 844px
+     frame. A scroller can only scroll if its parent is capped, so that one line
+     was why the page had no scroll at all. */

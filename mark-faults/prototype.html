@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
+<title>Mark faults — prototype</title>
+<link rel="preconnect" href="https://api.fontshare.com" crossorigin />
+<link href="https://api.fontshare.com/v2/css?f[]=satoshi@500,700&display=swap" rel="stylesheet" />
+<style>
+/* ───────────────────────── design tokens (from Figma variables) ───────── */
+:root{
+  --content-primary:#222222;
+  --content-secondary:#717171;
+  --content-tertiary:#919191;
+  --content-inverse:#ffffff;
+  /* not in the Figma library — see README */
+  --content-success:#12874a;
+
+  --surface-primary:#222222;
+  --surface-secondary:#f7f7f7;
+  --surface-inverse:#ffffff;
+  --surface-thumb:#f3f3f3;
+
+  --border-primary:#e8e8e8;
+  --border-selected:#222222;
+
+  --sp-8:8px;
+  --sp-16:16px;
+  --sp-24:24px;
+  --sp-36:36px;
+
+  --radius-pill:100px;
+  --radius-card:15.284px;
+  --radius-thumb:8px;
+
+  --ease:cubic-bezier(.4,0,.2,1);
+  --dur:280ms;
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;}
+body{
+  font-family:'Satoshi',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  background:#0f0f0f;
+  display:flex;align-items:center;justify-content:center;
+  -webkit-font-smoothing:antialiased;
+}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer;}
+img{display:block;}
+
+/* ───────────────────────── device frame ───────────────────────────────── */
+.phone{
+  position:relative;
+  width:390px;height:844px;
+  background:var(--surface-inverse);
+  border-radius:16px;
+  overflow:hidden;
+  display:flex;flex-direction:column;
+}
+@media (max-width:430px),(pointer:coarse){
+  body{display:block;background:var(--surface-inverse);}
+  .phone{width:100%;height:100dvh;border-radius:0;}
+}
+
+/* ───────────────────────── status bar ─────────────────────────────────── */
+.statusbar{
+  flex:0 0 44px;height:44px;position:relative;background:#fff;
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+}
+.statusbar .time{
+  position:absolute;left:21px;top:12px;width:54px;height:21px;
+  display:flex;align-items:center;
+  font-size:15px;font-weight:600;letter-spacing:-.2px;color:var(--content-primary);
+}
+.statusbar .icons{
+  position:absolute;right:14px;top:16px;height:14px;
+  display:flex;align-items:center;gap:4px;
+}
+
+/* ───────────────────────── header ─────────────────────────────────────── */
+.header{
+  flex:0 0 72px;height:72px;
+  background:#fff;
+  border-bottom:1px solid var(--border-primary);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:var(--sp-8) var(--sp-24) var(--sp-8) 4px;
+  position:relative;z-index:3;
+}
+.header .lhs{display:flex;align-items:center;}
+.header .back{display:flex;align-items:center;padding:12px;}
+.header .crumb{
+  font-size:16px;font-weight:500;line-height:20px;color:var(--content-primary);
+  white-space:nowrap;
+}
+.header .crumb .muted{color:var(--content-tertiary);}
+
+.icon-btn{
+  width:40px;height:40px;border-radius:20px;
+  background:var(--surface-secondary);
+  display:flex;align-items:center;justify-content:center;
+  transition:background var(--dur) var(--ease);
+}
+.icon-btn img{width:24px;height:24px;transition:filter var(--dur) var(--ease);}
+.icon-btn[aria-pressed="true"]{background:var(--surface-primary);}
+.icon-btn[aria-pressed="true"] img{filter:invert(1) brightness(2);}
+
+/* ───────────────────────── customer photos carousel ───────────────────── */
+.carousel{
+  flex:0 0 auto;height:0;overflow:hidden;
+  transition:height var(--dur) var(--ease);
+  position:relative;z-index:2;
+}
+.carousel.open{height:248px;}
+.carousel-inner{
+  height:248px;position:relative;
+  background:var(--surface-secondary);
+  border-bottom:1px solid var(--border-primary);
+}
+.track{
+  height:248px;display:flex;
+  overflow-x:auto;overflow-y:hidden;
+  scroll-snap-type:x mandatory;
+  scrollbar-width:none;-webkit-overflow-scrolling:touch;
+}
+.track::-webkit-scrollbar{display:none;}
+.slide{flex:0 0 100%;height:248px;scroll-snap-align:start;}
+.slide img{width:100%;height:100%;object-fit:cover;}
+.scrim{
+  position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(to bottom,rgba(0,0,0,0) 66.298%,rgba(0,0,0,.8) 100%);
+}
+.carousel-label{
+  position:absolute;left:16px;top:16px;pointer-events:none;
+  background:var(--surface-primary);opacity:.8;
+  border-radius:var(--radius-pill);
+  padding:4px var(--sp-8);
+  font-size:12px;font-weight:500;line-height:16px;color:#fff;
+}
+.dots{
+  position:absolute;left:0;right:0;bottom:21px;
+  display:flex;justify-content:center;gap:var(--sp-8);
+}
+.dots button{
+  width:8px;height:8px;border-radius:50%;
+  background:rgba(255,255,255,.32);
+  transition:background 200ms var(--ease);
+}
+.dots button[aria-current="true"]{background:#fff;}
+
+/* ───────────────────────── list ───────────────────────────────────────── */
+.list{
+  flex:1 1 auto;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  padding-bottom:var(--sp-24);
+  position:relative;z-index:1;
+}
+
+.item{background:var(--surface-inverse);transition:background var(--dur) var(--ease);}
+.item.active{background:var(--surface-secondary);}
+.item-inner{padding-top:var(--sp-24);}
+.pad{padding:0 var(--sp-24);}
+.divider{height:1px;background:var(--border-primary);}
+
+/* part row */
+.row{
+  width:100%;height:48px;
+  display:flex;align-items:center;justify-content:space-between;gap:var(--sp-16);
+  text-align:left;
+}
+.row .lhs{display:flex;align-items:center;gap:var(--sp-16);flex:1 1 0;min-width:0;}
+.thumb{
+  position:relative;width:48px;height:48px;flex:none;
+  border-radius:var(--radius-thumb);overflow:hidden;
+  background:var(--surface-thumb);
+  transition:background var(--dur) var(--ease);
+}
+.item.active .thumb{background:var(--surface-inverse);}
+.thumb img{position:absolute;width:248.01%;height:274.26%;left:-89.19%;top:-126.17%;max-width:none;}
+.copy{display:flex;flex-direction:column;gap:var(--sp-8);max-width:204px;min-width:0;flex:1 1 0;}
+.copy .title{
+  font-size:16px;font-weight:500;line-height:20px;color:var(--content-primary);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.copy .sub{
+  font-size:14px;font-weight:500;line-height:20px;color:var(--content-tertiary);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.row-end{display:flex;align-items:center;gap:var(--sp-8);flex:none;}
+.check{width:20px;height:20px;flex:none;}
+.check.pop{animation:pop 220ms var(--ease);}
+@keyframes pop{from{opacity:0;transform:scale(.6);}to{opacity:1;transform:scale(1);}}
+.chev{width:24px;height:24px;flex:none;transition:transform var(--dur) var(--ease);}
+.item.active .chev{transform:rotate(180deg);}
+
+/* collapsible detail block */
+.details{
+  display:grid;grid-template-rows:minmax(0,0fr);
+  transition:grid-template-rows var(--dur) var(--ease);
+}
+.item.active .details{grid-template-rows:minmax(0,1fr);}
+.details > .details-inner{overflow:hidden;}
+.details-inner{
+  padding-top:var(--sp-24);
+  display:flex;flex-direction:column;gap:var(--sp-24);
+}
+.tail{height:var(--sp-24);transition:height var(--dur) var(--ease);}
+.item.active .tail{height:var(--sp-36);}
+
+.spec-row{height:48px;display:flex;align-items:center;justify-content:space-between;gap:var(--sp-8);}
+.spec-row .label,.photos-row .label{
+  font-size:16px;font-weight:500;line-height:20px;color:var(--content-primary);
+}
+.chips{display:flex;align-items:center;gap:var(--sp-8);}
+.chip{
+  height:40px;padding:0 var(--sp-16);
+  display:inline-flex;align-items:center;justify-content:center;
+  background:var(--surface-inverse);
+  border:1px solid var(--border-primary);
+  border-radius:var(--radius-pill);
+  font-size:16px;font-weight:500;line-height:20px;color:var(--content-primary);
+  white-space:nowrap;
+  transition:border-color 160ms var(--ease),border-width 160ms var(--ease);
+}
+.chip[aria-pressed="true"]{border:1.5px solid var(--border-selected);}
+
+.photos-row{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-8);}
+.photos{display:flex;align-items:center;gap:7.64px;}
+.photo-thumb{
+  position:relative;width:64px;height:64px;flex:none;
+  border-radius:var(--radius-card);overflow:hidden;
+}
+.photo-thumb img{width:100%;height:100%;object-fit:cover;}
+.photo-thumb .remove{
+  position:absolute;top:4px;right:4px;width:18px;height:18px;border-radius:9px;
+  background:rgba(34,34,34,.72);color:#fff;
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;line-height:1;font-weight:700;
+}
+.add-photo{
+  width:64px;height:64px;flex:none;
+  border-radius:var(--radius-card);
+  background:var(--surface-inverse);
+  display:flex;align-items:center;justify-content:center;
+}
+.add-photo img{width:26.67px;height:26.67px;}
+
+/* ───────────────────────── footer ─────────────────────────────────────── */
+/* in flow, not an overlay: it consumes layout height and squeezes the list */
+.footer{
+  flex:0 0 auto;
+  background:var(--surface-inverse);
+  padding:var(--sp-24) var(--sp-24) var(--sp-36);
+  display:flex;align-items:center;justify-content:center;
+  margin-bottom:-124px;
+  transition:margin-bottom var(--dur) var(--ease);
+  z-index:4;
+}
+.footer.show{margin-bottom:0;}
+.btn-primary{
+  background:var(--surface-primary);
+  border-radius:var(--radius-pill);
+  padding:22px 36px;
+  display:flex;align-items:center;justify-content:center;
+}
+.btn-primary span{
+  width:246px;text-align:center;
+  font-size:16px;font-weight:700;line-height:20px;color:var(--content-inverse);
+}
+.btn-primary:active{opacity:.9;}
+
+/* done overlay */
+.done-toast{
+  position:absolute;left:50%;bottom:140px;transform:translate(-50%,8px);
+  background:var(--surface-primary);color:#fff;
+  font-size:14px;font-weight:500;line-height:20px;
+  padding:12px 20px;border-radius:var(--radius-pill);
+  opacity:0;pointer-events:none;transition:opacity 200ms var(--ease),transform 200ms var(--ease);
+  z-index:5;
+}
+.done-toast.show{opacity:1;transform:translate(-50%,0);}
+
+.visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);}
+</style>
+</head>
+<body>
+
+<div class="phone" id="phone">
+
+  <!-- status bar -->
+  <div class="statusbar">
+    <div class="time">9:41</div>
+    <div class="icons">
+      <svg width="20" height="14" viewBox="0 0 20 14" fill="none" aria-hidden="true">
+        <rect x="1" y="9"  width="3" height="4"  rx="1" fill="#222"/>
+        <rect x="6" y="6.5" width="3" height="6.5" rx="1" fill="#222"/>
+        <rect x="11" y="4" width="3" height="9"  rx="1" fill="#222"/>
+        <rect x="16" y="1.5" width="3" height="11.5" rx="1" fill="#222" opacity=".3"/>
+      </svg>
+      <svg width="16" height="14" viewBox="0 0 16 14" fill="none" aria-hidden="true">
+        <path d="M8 12.2 6.2 10.1a2.8 2.8 0 0 1 3.6 0L8 12.2Z" fill="#222"/>
+        <path d="M11.4 8.2a5.3 5.3 0 0 0-6.8 0L3.4 6.8a7.1 7.1 0 0 1 9.2 0l-1.2 1.4Z" fill="#222"/>
+        <path d="M14.3 4.8a9.7 9.7 0 0 0-12.6 0L.5 3.4a11.5 11.5 0 0 1 15 0l-1.2 1.4Z" fill="#222"/>
+      </svg>
+      <svg width="25" height="14" viewBox="0 0 25 14" fill="none" aria-hidden="true">
+        <rect x=".5" y="1.5" width="22" height="11" rx="3" stroke="#222" opacity=".35"/>
+        <rect x="2" y="3" width="19" height="8" rx="1.5" fill="#222"/>
+        <rect x="24" y="5" width="1" height="4" rx=".5" fill="#222" opacity=".4"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- header -->
+  <header class="header">
+    <div class="lhs">
+      <button class="back" id="backBtn" aria-label="Back">
+        <img src="assets/icon-back.svg" width="24" height="24" alt="" />
+      </button>
+      <div class="crumb"><span id="bikeNo">543210</span><span class="muted"> / Mark faults</span></div>
+    </div>
+    <button class="icon-btn" id="photosToggle" aria-pressed="false" aria-controls="carousel" aria-label="Customer's photos">
+      <img src="assets/icon-photo.svg" width="24" height="24" alt="" />
+    </button>
+  </header>
+
+  <!-- customer photos carousel -->
+  <section class="carousel" id="carousel" aria-hidden="true">
+    <div class="carousel-inner">
+      <div class="track" id="track"></div>
+      <div class="scrim"></div>
+      <div class="carousel-label">Customer&rsquo;s photos</div>
+      <div class="dots" id="dots"></div>
+    </div>
+  </section>
+
+  <!-- faulty parts list -->
+  <main class="list" id="list"></main>
+
+  <!-- footer CTA -->
+  <div class="footer" id="footer">
+    <button class="btn-primary" id="submitBtn"><span>Submit</span></button>
+  </div>
+
+  <div class="done-toast" id="toast"></div>
+
+  <input type="file" id="cameraInput" class="visually-hidden"
+         accept="image/*" capture="environment" tabindex="-1" aria-hidden="true" />
+</div>
+
+<script>
+/* ══════════════════════════════════════════════════════════════════════════
+   CONFIG — flip these while play-testing the flow
+   ═════════════════════════════════════════════════════════════════════════ */
+const CONFIG = {
+  /* auto-open the next incomplete part as soon as penalty + damage are set.
+     off by default: photos are optional and are usually added last.          */
+  AUTO_ADVANCE: false,
+  /* how the camera card behaves.
+     'auto'   → real camera on touch devices, sample photo on desktop
+     'camera' → always open the OS camera / file picker
+     'sample' → always drop in the sample photo (fastest for demoing)         */
+  CAMERA_MODE: 'auto',
+  MAX_PHOTOS: 3,
+};
+
+/* ══════════════════════════════════════════════════════════════════════════
+   DATA — the parts flagged as faulty in the previous step
+   ═════════════════════════════════════════════════════════════════════════ */
+const PARTS = [
+  { id:'rear-headlight', name:'Rear headlight' },
+  { id:'front-tyre',     name:'Front tyre'     },
+  { id:'tail-light',     name:'Tail light'     },
+  { id:'seat',           name:'Seat'           },
+  { id:'back-tyre',      name:'Back tyre'      },
+];
+
+const CUSTOMER_PHOTOS = [
+  'assets/customer-photo-1.jpg',
+  'assets/customer-photo-2.jpg',
+  'assets/customer-photo-3.jpg',
+  'assets/customer-photo-4.jpg',
+];
+
+const DAMAGE_LABEL = { major:'Major damage', minor:'Minor damage', missing:'Missing' };
+
+/* completion tick — no success colour exists in the Figma library yet (see README) */
+const checkSvg = pop => `
+  <svg class="check${pop ? ' pop' : ''}" viewBox="0 0 24 24" role="img" aria-label="Completed">
+    <circle cx="12" cy="12" r="10" fill="var(--content-success)"/>
+    <path d="M10.6 16.2 6.4 12l1.4-1.4 2.8 2.8 5.6-5.6 1.4 1.4z" fill="#fff"/>
+  </svg>`;
+
+/* ══════════════════════════════════════════════════════════════════════════
+   STATE
+   ═════════════════════════════════════════════════════════════════════════ */
+const state = {
+  activeId: PARTS[0].id,
+  carouselOpen: false,
+  slide: 0,
+  parts: Object.fromEntries(
+    PARTS.map(p => [p.id, { penalty:null, damage:null, photos:[] }])
+  ),
+};
+
+const isComplete = id => {
+  const p = state.parts[id];
+  return p.penalty !== null && p.damage !== null;
+};
+const allComplete = () => PARTS.every(p => isComplete(p.id));
+const subtextFor = id => {
+  const p = state.parts[id];
+  return `${p.penalty === 'yes' ? 'Penalty' : 'No penalty'} | ${DAMAGE_LABEL[p.damage]}`;
+};
+
+/* ══════════════════════════════════════════════════════════════════════════
+   RENDER — list
+   ═════════════════════════════════════════════════════════════════════════ */
+const listEl   = document.getElementById('list');
+const footerEl = document.getElementById('footer');
+const toastEl  = document.getElementById('toast');
+
+function chip(label, value, group, id, selected){
+  return `<button class="chip" data-act="set" data-group="${group}" data-id="${id}"
+            data-value="${value}" aria-pressed="${selected}">${label}</button>`;
+}
+
+function photosMarkup(id){
+  const p = state.parts[id];
+  const thumbs = p.photos.map((src,i) => `
+    <div class="photo-thumb">
+      <img src="${src}" alt="Photo ${i+1} of ${PARTS.find(x=>x.id===id).name}" />
+      <button class="remove" data-act="unphoto" data-id="${id}" data-index="${i}"
+              aria-label="Remove photo ${i+1}">&times;</button>
+    </div>`).join('');
+  const addBtn = p.photos.length < CONFIG.MAX_PHOTOS ? `
+    <button class="add-photo" data-act="photo" data-id="${id}" aria-label="Add photo">
+      <img src="assets/icon-add-photo-fill.svg" alt="" />
+    </button>` : '';
+  return thumbs + addBtn;
+}
+
+function itemMarkup(part){
+  const active = state.activeId === part.id;
+  const done   = isComplete(part.id);
+  const p      = state.parts[part.id];
+  const sub    = (!active && done) ? `<div class="sub">${subtextFor(part.id)}</div>` : '';
+
+  return `
+  <section class="item${active ? ' active' : ''}" data-id="${part.id}">
+    <div class="item-inner">
+      <div class="pad">
+        <button class="row" data-act="toggle" data-id="${part.id}"
+                aria-expanded="${active}">
+          <span class="lhs">
+            <span class="thumb"><img src="assets/part-illustration.png" alt="" /></span>
+            <span class="copy">
+              <span class="title">${part.name}</span>
+              ${sub}
+            </span>
+          </span>
+          <span class="row-end">
+            ${done ? checkSvg(!seenComplete.has(part.id)) : ''}
+            <img class="chev" src="assets/icon-chevron-down.svg" width="24" height="24" alt="" />
+          </span>
+        </button>
+
+        <div class="details">
+          <div class="details-inner">
+            <div class="spec-row">
+              <div class="label">Penalty applicable:</div>
+              <div class="chips">
+                ${chip('Yes','yes','penalty',part.id,p.penalty==='yes')}
+                ${chip('No','no','penalty',part.id,p.penalty==='no')}
+              </div>
+            </div>
+            <div class="spec-row">
+              <div class="label">Damage:</div>
+              <div class="chips">
+                ${chip('Major','major','damage',part.id,p.damage==='major')}
+                ${chip('Minor','minor','damage',part.id,p.damage==='minor')}
+                ${chip('Missing','missing','damage',part.id,p.damage==='missing')}
+              </div>
+            </div>
+            <div class="photos-row">
+              <div class="label">Photos:</div>
+              <div class="photos">${photosMarkup(part.id)}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="tail"></div>
+    </div>
+    <div class="divider"></div>
+  </section>`;
+}
+
+/* parts whose tick has already animated in — keeps it from re-popping on every render */
+const seenComplete = new Set();
+
+function render(){
+  const scroll = listEl.scrollTop;
+  listEl.innerHTML = PARTS.map(itemMarkup).join('');
+  listEl.scrollTop = scroll;
+  PARTS.forEach(p => isComplete(p.id) ? seenComplete.add(p.id) : seenComplete.delete(p.id));
+  footerEl.classList.toggle('show', allComplete());
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   RENDER — carousel
+   ═════════════════════════════════════════════════════════════════════════ */
+const carouselEl = document.getElementById('carousel');
+const trackEl    = document.getElementById('track');
+const dotsEl     = document.getElementById('dots');
+const toggleEl   = document.getElementById('photosToggle');
+
+trackEl.innerHTML = CUSTOMER_PHOTOS.map((src,i) =>
+  `<div class="slide"><img src="${src}" alt="Customer photo ${i+1}" loading="lazy" /></div>`).join('');
+dotsEl.innerHTML = CUSTOMER_PHOTOS.map((_,i) =>
+  `<button data-slide="${i}" aria-label="Photo ${i+1}" aria-current="${i===0}"></button>`).join('');
+
+function setCarousel(open){
+  state.carouselOpen = open;
+  carouselEl.classList.toggle('open', open);
+  carouselEl.setAttribute('aria-hidden', String(!open));
+  toggleEl.setAttribute('aria-pressed', String(open));
+  if (open) trackEl.scrollLeft = state.slide * trackEl.clientWidth;
+}
+
+toggleEl.addEventListener('click', () => setCarousel(!state.carouselOpen));
+
+trackEl.addEventListener('scroll', () => {
+  const w = trackEl.clientWidth || 1;
+  const i = Math.round(trackEl.scrollLeft / w);
+  if (i === state.slide) return;
+  state.slide = i;
+  [...dotsEl.children].forEach((d,n) => d.setAttribute('aria-current', String(n === i)));
+}, { passive:true });
+
+dotsEl.addEventListener('click', e => {
+  const btn = e.target.closest('[data-slide]');
+  if (!btn) return;
+  trackEl.scrollTo({ left: +btn.dataset.slide * trackEl.clientWidth, behavior:'smooth' });
+});
+
+/* ══════════════════════════════════════════════════════════════════════════
+   CAMERA
+   ═════════════════════════════════════════════════════════════════════════ */
+const cameraInput = document.getElementById('cameraInput');
+let pendingPhotoId = null;
+
+const useRealCamera = () => CONFIG.CAMERA_MODE === 'camera'
+  || (CONFIG.CAMERA_MODE === 'auto' && window.matchMedia('(pointer: coarse)').matches);
+
+function capturePhoto(id){
+  if (state.parts[id].photos.length >= CONFIG.MAX_PHOTOS) return;
+  if (useRealCamera()){
+    pendingPhotoId = id;
+    cameraInput.value = '';
+    cameraInput.click();
+  } else {
+    state.parts[id].photos.push('assets/captured-photo.jpg');
+    render();
+  }
+}
+
+cameraInput.addEventListener('change', () => {
+  const file = cameraInput.files && cameraInput.files[0];
+  if (file && pendingPhotoId){
+    state.parts[pendingPhotoId].photos.push(URL.createObjectURL(file));
+    render();
+  }
+  pendingPhotoId = null;
+});
+
+/* ══════════════════════════════════════════════════════════════════════════
+   INTERACTIONS
+   ═════════════════════════════════════════════════════════════════════════ */
+function openPart(id){
+  state.activeId = id;
+  render();
+  const el = listEl.querySelector(`.item[data-id="${id}"]`);
+  if (el) el.scrollIntoView({ behavior:'smooth', block:'nearest' });
+}
+
+function nextIncompleteAfter(id){
+  const i = PARTS.findIndex(p => p.id === id);
+  for (let n = 1; n <= PARTS.length; n++){
+    const cand = PARTS[(i + n) % PARTS.length];
+    if (!isComplete(cand.id)) return cand.id;
+  }
+  return null;
+}
+
+listEl.addEventListener('click', e => {
+  const el = e.target.closest('[data-act]');
+  if (!el) return;
+  const { act, id } = el.dataset;
+
+  if (act === 'toggle'){
+    state.activeId = state.activeId === id ? null : id;
+    render();
+    return;
+  }
+
+  if (act === 'set'){
+    const { group, value } = el.dataset;
+    const p = state.parts[id];
+    p[group] = p[group] === value ? null : value;   // tap again to clear
+    const justCompleted = isComplete(id);
+    render();
+    if (CONFIG.AUTO_ADVANCE && justCompleted){
+      const next = nextIncompleteAfter(id);
+      if (next) setTimeout(() => openPart(next), 260);
+    }
+    return;
+  }
+
+  if (act === 'photo'){ capturePhoto(id); return; }
+
+  if (act === 'unphoto'){
+    state.parts[id].photos.splice(+el.dataset.index, 1);
+    render();
+  }
+});
+
+document.getElementById('submitBtn').addEventListener('click', () => {
+  const payload = PARTS.map(p => ({
+    part: p.name,
+    penalty: state.parts[p.id].penalty === 'yes',
+    damage: state.parts[p.id].damage,
+    photos: state.parts[p.id].photos.length,
+  }));
+  console.log('Submit →', payload);
+  showToast(`Submitted ${payload.length} faults`);
+});
+
+document.getElementById('backBtn').addEventListener('click', () => showToast('Back — previous step'));
+
+let toastTimer;
+function showToast(msg){
+  toastEl.textContent = msg;
+  toastEl.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toastEl.classList.remove('show'), 1800);
+}
+
+render();
+</script>
+</body>
+</html>

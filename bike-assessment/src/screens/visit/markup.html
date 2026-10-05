@@ -1,0 +1,34 @@
+  <!-- ══════════════════════════════════════════════════════════════════════
+       ONE REPAIR VISIT
+       ══════════════════════════════════════════════════════════════════════
+       A level under the Bike Info tab's repair history. The header and the back
+       arrow are the whole screen for now — Sagar is briefing what goes in the
+       body. The breadcrumb names the row that opened it ("20 days ago"), which
+       is the only thing a QCA has to identify one visit by, so it is written by
+       openRepairVisit() rather than fixed here.
+       ══════════════════════════════════════════════════════════════════════ -->
+  <section class="screen screen--visit" id="scrVisit" data-pos="right" aria-label="Repair visit">
+
+    <header class="appbar">
+      <div class="appbar__row">
+        <div class="appbar__lhs">
+          <div class="leading-action">
+            <button class="icon-btn" id="visitBack" aria-label="Back">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M10.4538 12L14.5269 16.0731C14.6654 16.2116 14.7362 16.3856 14.7394 16.5952C14.7426 16.8048 14.6718 16.982 14.5269 17.1269C14.382 17.2718 14.2064 17.3442 14 17.3442C13.7936 17.3442 13.618 17.2718 13.4731 17.1269L8.97888 12.6327C8.88528 12.5391 8.81925 12.4404 8.7808 12.3365C8.74233 12.2327 8.7231 12.1205 8.7231 12C8.7231 11.8795 8.74233 11.7673 8.7808 11.6635C8.81925 11.5596 8.88528 11.4609 8.97888 11.3673L13.4731 6.8731C13.6116 6.73463 13.7856 6.6638 13.9952 6.6606C14.2048 6.65738 14.382 6.72822 14.5269 6.8731C14.6718 7.01797 14.7442 7.1936 14.7442 7.4C14.7442 7.6064 14.6718 7.78203 14.5269 7.9269L10.4538 12Z" fill="#222222"/></svg>
+            </button>
+          </div>
+          <div class="appbar__titles">
+            <p class="t-label-md"><span data-bike-id>543210</span><span class="appbar__suffix" aria-hidden="true">&nbsp;/ <span id="visitWhen">Repair</span></span></p>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="visitscroll" id="visitScroll">
+      <div class="listhead">
+        <h2 class="t-title-page" id="visitHead">Repair</h2>
+      </div>
+      <!-- Body to come. Left empty rather than filled with a placeholder: an
+           invented layout here is a design decision taken by the wrong person. -->
+    </main>
+  </section>

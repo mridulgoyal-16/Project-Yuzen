@@ -1,0 +1,159 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   HOME — Home/mechanic
+   Built from Figma 2137:29516. Scrolling body over a fixed bottom nav.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.screen--home{display:flex;flex-direction:column;padding-top:var(--status-h)}
+.hmbody{
+  flex:1 1 auto;overflow-y:auto;overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;scrollbar-width:none;
+  /* 16 top, so the shift bar rests at 60 from the top of the screen — 44 of status
+     bar plus this — exactly where it sat when it was pinned above the scroller.
+     It used to be 48: the extra pushed the workbench captions clear of the nav so
+     the tile row read as a deliberate half-height peek rather than as text sliced
+     through the middle. That tuning is gone, and could not survive: a third row of
+     task cards put the shortcuts below the fold outright, and the shift bar now
+     scrolls rather than staying put. See the README — the fold is an open item. */
+  padding:var(--s4) var(--s6) 124px;      /* bottom clears the 100px nav */
+  display:flex;flex-direction:column;
+}
+.hmbody::-webkit-scrollbar{display:none}
+
+/* Content, not pinned chrome — it scrolls away with the page. It was pinned above
+   the scroller for a while, so that the shift status stayed on screen wherever you
+   were on the page; Sagar reversed that. No horizontal margin now, because the
+   scroller supplies the 24px inset that the margin used to. */
+/* A button now, not a div — it opens the shift page. The reset is explicit
+   because a <button> brings its own border, font and centring. */
+.hm__shift{
+  border:0;width:100%;text-align:left;font:inherit;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+  height:56px;flex:0 0 auto;border-radius:12px;
+  background:var(--surface-secondary);
+  display:flex;align-items:center;gap:13px;padding:0 var(--s4);
+}
+.hm__shift svg{display:block;width:24px;height:24px;flex:0 0 auto}
+.hm__shift p{flex:1 1 auto;min-width:0;color:var(--content-primary)}
+.hm__shift:active{background:var(--surface-disabled)}
+.hm__tag{
+  flex:0 0 auto;border-radius:100px;padding:var(--s2) var(--s4);
+  background:var(--surface-positive);color:var(--content-inverse);
+}
+/* Off duty is a state, not an achievement — it loses the positive fill. */
+.hm__tag--off{background:var(--surface-disabled);color:var(--content-secondary)}
+
+/* 72, not the frame's 94. The frame draws 94px of nothing between the shift bar
+   and My Tasks, and with two rows of cards that was affordable. With three it is
+   not: at 94 the fold fell at 700 straight through the middle of the QC pending
+   and RTD pending labels, which sat 690-706 — text sliced through its own middle,
+   which is the one thing the old top padding was tuned to avoid. 72 pulls the
+   third row up so it clears the fold entirely.
+
+   This is the gap giving way rather than the shift bar, which still rests at its
+   measured 60, or the 160px cards. It was already the least defensible number on
+   the screen — 94px of white space above a six-card grid — and it is the only one
+   here not measured against something.
+
+   72 is now the FLOOR, not the value. paintHomePeek() in this screen's script
+   raises it per profile so the first row of workbench icons rests half behind
+   the nav — the peek this comment used to leave as an open question. The height
+   here is what the pre-rendered DOM ships and what an unscripted render falls
+   back to; the script overwrites it on every entry. */
+.hm__gap{height:72px;flex:0 0 auto}
+.hm__heading{
+  flex:0 0 auto;display:flex;align-items:baseline;justify-content:space-between;
+  color:var(--content-primary);
+}
+.hm__heading a{color:var(--content-secondary);cursor:pointer}
+
+.hm__tasks{
+  flex:0 0 auto;margin-top:var(--s4);
+  display:grid;grid-template-columns:1fr 1fr;gap:var(--s6);
+}
+/* QC always starts a row, so QC and RTD sit together with RTD on the right.
+   That is the Quality Associate's home: Assessment pending and Assessment done
+   take the first row — the empty half beside the first used to be intended, and
+   is now filled — and the two pending counts pair underneath.
+
+   Done by breaking the row rather than reordering the markup, so the DOM keeps
+   reading in pipeline order and tab order still follows what you see. Auto
+   placement does the rest: pinning QC to column 1 pushes it to the next row
+   where column 1 is free, and RTD flows into the cell beside it.
+
+   Costs the other profiles nothing. Neither is shown QC, and a display:none
+   card takes part in no grid at all. */
+.hm__task[data-task="qc"]{grid-column:1}
+/* 24px padding with the pair pushed to the bottom lands the count at 92 and the
+   label at 120 inside a 160px card, exactly as Figma. */
+.hm__task{
+  height:160px;border:0;cursor:pointer;text-align:left;
+  border-radius:12px;background:var(--surface-secondary);
+  padding:var(--s6);
+  display:flex;flex-direction:column;justify-content:flex-end;gap:var(--s2);
+}
+/* Figma 2149:31286 puts the illustration at x=24, y=20 inside the 160px card,
+   with the count and label still landing at 92 and 120. So the top padding drops
+   to 20 and the icon takes `margin-bottom:auto` — it pins to the top while the
+   pair stays pushed to the bottom by the card's own flex-end. */
+.hm__task{padding-top:20px}
+.hm__task .ic{
+  display:block;margin-bottom:auto;
+  width:60px;height:60px;object-fit:contain;
+  /* The renders carry their own soft shadow, so nothing is added here. */
+}
+/* The dropped-bikes illustration is the one that is not square — 80x64 in the
+   frame, because the bike sits on a mat that runs wider than it is tall. */
+.hm__task[data-task="dropped"] .ic{width:80px;height:64px}
+/* The ticket render leans the wrong way against the three cards beside it —
+   mirrored rather than re-exported, since the art is symmetrical apart from the
+   lean and there is no text in it to come out backwards. */
+.hm__task[data-task="tokens"] .ic{transform:scaleX(-1)}
+
+.hm__task .n{color:var(--content-primary)}
+.hm__task .l{color:var(--content-secondary)}
+
+/* 8px between columns, 36px between rows — the frame's own figures. They were a
+   single 16px gap while each icon carried a 64px plate; without the plate the
+   columns need to close up and the rows need to open out, or the captions of one
+   row crowd the icons of the next. */
+.hm__shortcuts{
+  flex:0 0 auto;margin-top:var(--s4);
+  display:grid;grid-template-columns:repeat(3,1fr);
+  column-gap:var(--s2);row-gap:var(--s9);
+}
+/* 48px icon over a centred caption, per Figma 2189:31118 — no tile behind it.
+   The frame gives each cell 109 of a 343 row at 8px gaps, which is what the
+   grid above already produces inside the screen's 24px margins. */
+.hm__sc{
+  border:0;background:none;padding:0;cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;
+}
+.hm__sc i{
+  display:block;width:48px;height:48px;
+  background-position:center;background-size:contain;background-repeat:no-repeat;
+}
+/* 16px from the frame — the icon's box is the icon, with no plate padding it out,
+   so this is measured off the render rather than off a tile. */
+.hm__sc .cap{
+  display:block;margin-top:var(--s4);text-align:center;
+  color:var(--content-primary);
+}
+
+.hmnav{
+  flex:0 0 auto;height:100px;background:var(--surface-inverse);
+  box-shadow:inset 0 .5px 0 var(--border-primary);
+  display:flex;align-items:flex-start;justify-content:space-between;
+  padding:15.5px 54px 0;
+}
+/* min-width, not width: "Performance" is 70px at Label/XSmall and would hang 3px
+   out of a fixed 64px box. Sizing to content keeps every centre exactly where it
+   was — with space-between and three items, the middle one is centred by symmetry
+   whatever its width, and the outer two are pinned to the padding edges. Measured
+   at 86 / 195 / 304 before and after. */
+.hmnav button{
+  min-width:64px;border:0;background:none;padding:0;cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;gap:var(--s1);
+  color:var(--content-tertiary);white-space:nowrap;
+}
+.hmnav button svg{display:block;width:24px;height:24px}
+.hmnav button[aria-current="page"]{color:var(--content-primary)}
+

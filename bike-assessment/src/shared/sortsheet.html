@@ -1,0 +1,26 @@
+  <!-- ══════════════════════════════════════════════════════════════════════
+       Sort sheet — the listing's ordering control
+
+       Shared chrome for the same reason the filter sheet is: a sheet nested
+       inside an off-canvas screen renders off-canvas too, and every listing is
+       off-canvas until you open it.
+
+       Empty by design. The options are built on open from the listing's own
+       kind — see QUEUE_KINDS.sorts — so nothing here names a sort or a queue.
+       ══════════════════════════════════════════════════════════════════════ -->
+    <div class="scrim" id="srtScrim"></div>
+    <section class="sheet srtsheet" id="srtSheet" role="dialog" aria-modal="true" aria-label="Sort">
+      <div class="srtsheet__head" id="srtGrab">
+        <h2 class="srtsheet__title t-heading-lg">Sort by</h2>
+        <!-- Disabled until the order has been moved OFF the kind's default.
+             Reset does not mean "no order" — a list always has one, and one chip
+             in here is always pressed — it means back to that default. -->
+        <button class="srtsheet__reset" id="srtReset" type="button" disabled data-icon="reset">
+          <span class="t-label-md">Reset</span>
+        </button>
+      </div>
+      <!-- No footer, for the reason the filter sheet has none: the row IS the
+           action, the list behind re-orders as you tap, and the way out is to
+           slide the sheet down. -->
+      <div class="srtsheet__body" id="srtBody"></div>
+    </section>

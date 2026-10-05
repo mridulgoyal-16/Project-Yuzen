@@ -1,0 +1,40 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   TIME DETAILS
+   ═══════════════════════════════════════════════════════════════════════════
+   App bar, the allocation page's own banner, then two lists of label/value
+   rows. It borrows .al-head from screens/alloc deliberately: it is the same
+   claim about the same person one screen further in, and a second banner drawn
+   its own way would read as a different bike.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.screen--alloctime{display:flex;flex-direction:column;padding-top:var(--status-h)}
+.screen--alloctime .appbar{flex:0 0 auto}
+.screen--alloctime .appbar__suffix{
+  max-width:200px;opacity:1;transform:none;color:var(--content-tertiary);
+}
+.atscroll{
+  flex:1 1 auto;overflow-y:auto;overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;scrollbar-width:none;
+  padding:0 var(--s6) var(--s9);
+}
+.atscroll::-webkit-scrollbar{display:none}
+
+#scrAllocTime .at-sec{margin:var(--s6) 0 var(--s2);color:var(--content-primary)}
+
+/* Label left, figure right, one hairline between rows — the shape every
+   read-only list in this app uses. */
+#scrAllocTime .at-rows{display:flex;flex-direction:column}
+#scrAllocTime .at-row{
+  display:flex;align-items:center;justify-content:space-between;gap:var(--s4);
+  min-height:56px;padding:var(--s4) 0;
+  box-shadow:inset 0 -1px 0 var(--border-primary);
+}
+#scrAllocTime .at-row:last-child{box-shadow:none}
+#scrAllocTime .at-rowl{color:var(--content-secondary)}
+#scrAllocTime .at-rowv{
+  color:var(--content-primary);white-space:nowrap;
+  font-variant-numeric:tabular-nums;
+}
+/* The one that is still running, and the total. Neither is a different KIND of
+   figure, so neither gets a colour — the label says which is which. */
+#scrAllocTime .at-row--total .at-rowl,
+#scrAllocTime .at-row--total .at-rowv{font-weight:700}

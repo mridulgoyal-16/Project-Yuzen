@@ -1,0 +1,26 @@
+  <!-- ══════════════════════════════════════════════════════════════════════
+       Filter sheet — Figma 2872:22873
+
+       Shared chrome for the same reason the ⋮ sheet is: a sheet nested inside an
+       off-canvas screen renders off-canvas too, and every listing is off-canvas
+       until you open it. It belongs to the task listing and to nothing else, but
+       it cannot live inside it.
+
+       Empty by design. The groups are built on open from the listing's own kind
+       — see QUEUE_KINDS.filters — so nothing here names a filter either.
+       ══════════════════════════════════════════════════════════════════════ -->
+    <div class="scrim" id="fltScrim"></div>
+    <section class="sheet flsheet" id="fltSheet" role="dialog" aria-modal="true" aria-label="Filters">
+      <div class="flsheet__head" id="fltGrab">
+        <h2 class="flsheet__title t-heading-lg">Filters</h2>
+        <!-- Disabled until there is something to clear, which is the only honest
+             state for it: a Reset with nothing to reset is a button that lies. -->
+        <button class="flsheet__reset" id="fltReset" type="button" disabled data-icon="reset">
+          <span class="t-label-md">Reset</span>
+        </button>
+      </div>
+      <!-- No footer. A chip IS the action here — see filtersheet.js — so there is
+           nothing left for an Apply to confirm, and the rule above it went with
+           it. The sheet ends 24 under the last group. -->
+      <div class="flsheet__body" id="fltBody"></div>
+    </section>

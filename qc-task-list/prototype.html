@@ -1,0 +1,756 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>My tasks · Yuzen</title>
+<link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@500,700&display=swap">
+<style>
+  :root {
+    --content-primary: #222;
+    --content-secondary: #717171;
+    --content-tertiary: #919191;
+    --content-inverse: #fff;
+    --surface-primary: #222;
+    --border-primary: #e8e8e8;
+    --space-4: 4px;
+    --space-16: 16px;
+    --space-24: 24px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Satoshi', -apple-system, system-ui, sans-serif;
+    background: #f4f4f4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Phone shell — a device frame on desktop, full-bleed on a real phone. */
+  .phone {
+    position: relative;
+    width: 390px;
+    height: 844px;
+    background: #fff;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    border-radius: 44px;
+    box-shadow: 0 24px 70px rgba(0, 0, 0, .18);
+  }
+
+  @media (max-width: 767px) {
+    body { display: block; background: #fff; }
+    .phone {
+      width: 100%;
+      height: 100vh;
+      height: 100dvh;
+      border-radius: 0;
+      box-shadow: none;
+    }
+  }
+
+  /* ---- Sticky header ---------------------------------------------------- */
+  /* The header is a flex child of .phone with flex-shrink: 0, so it holds its
+     height and never scrolls. Only the list region (Task 3) scrolls. */
+  .header {
+    flex-shrink: 0;
+    background: #fff;
+    position: relative;
+    z-index: 10;
+  }
+
+  .statusbar {
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 14px 0 21px;
+  }
+  .sb-time { display: block; }
+  .sb-icons { display: flex; align-items: center; gap: var(--space-4); }
+  /* The status-bar exports don't match the Figma frame dimensions they're given
+     (wifi and battery were stretched 14% and 7%), so contain the fit. */
+  .sb-icons img { display: block; object-fit: contain; }
+
+  /* Signal bars, drawn in CSS — see Task 1 Step 2 for why. */
+  .sb-signal { display: flex; align-items: flex-end; gap: 1.5px; height: 14px; }
+  .sb-signal i {
+    width: 3px;
+    background: var(--content-primary);
+    border-radius: .5px;
+  }
+  .sb-signal i:nth-child(1) { height: 5px; }
+  .sb-signal i:nth-child(2) { height: 8px; }
+  .sb-signal i:nth-child(3) { height: 11px; }
+
+  .appbar {
+    height: 72px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 10px 12px 10px 4px;
+    position: relative;
+  }
+  .appbar-title {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    font-weight: 700;
+    font-size: 16px;
+    line-height: 20px;
+    color: var(--content-primary);
+    white-space: nowrap;
+  }
+  .appbar-search { padding: 12px; }
+
+  /* Shared press feedback for icon buttons. */
+  .btn-icon {
+    border: 0;
+    background: none;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    border-radius: 999px;
+    transition: transform 120ms ease, background-color 120ms ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .btn-icon img { display: block; }
+  .btn-icon:active {
+    transform: scale(.9);
+    background: rgba(0, 0, 0, .06);
+  }
+
+  /* ---- Tab strip (sticky, inside .header) ------------------------------- */
+  .tabs-wrap {
+    padding-top: var(--space-24);
+    border-bottom: 1px solid var(--border-primary);
+  }
+  .tabs {
+    display: flex;
+    align-items: center;
+    height: 55px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    position: relative;
+    scroll-behavior: smooth;
+  }
+  .tabs::-webkit-scrollbar { display: none; }
+
+  .tab {
+    flex-shrink: 0;
+    border: 0;
+    background: none;
+    height: 55px;
+    padding: 16px;
+    font-family: inherit;
+    font-weight: 500;
+    font-size: 16px;
+    line-height: 24px;
+    color: var(--content-secondary);
+    white-space: nowrap;
+    cursor: pointer;
+    transition: color 180ms ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+  /* First tab is inset 24px from the frame edge, per the design. */
+  .tab:first-of-type { padding-left: var(--space-24); }
+  .tab.is-active { color: var(--content-primary); }
+
+  /* One underline element that slides, rather than a border per tab. */
+  .tabs-underline {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 2px;
+    width: 0;
+    border-radius: 1px;
+    background: var(--content-primary);
+    transition: transform 220ms cubic-bezier(.4, 0, .2, 1),
+                width     220ms cubic-bezier(.4, 0, .2, 1);
+  }
+
+  /* ---- Scrolling list -------------------------------------------------- */
+  /* flex: 1 makes this the only element that can scroll: the header and footer
+     are flex-shrink: 0, so all leftover height lands here. */
+  .list {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    height: 72px;              /* exact, per spec */
+    padding: var(--space-24);
+    border: 0;
+    background: #fff;
+    font-family: inherit;
+    text-align: left;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    /* Divider sits ON the boundary via a negative-offset inset shadow, so it
+       adds no height. A border-bottom would make the row 73px. */
+    box-shadow: inset 0 -1px 0 var(--border-primary);
+    transition: transform 120ms ease, background-color 120ms ease;
+  }
+  .row:active {
+    transform: scale(.985);
+    background: #f7f7f7;
+  }
+
+  .row-id {
+    font-weight: 500;
+    font-size: 16px;
+    line-height: 20px;
+    color: var(--content-primary);
+  }
+  .row-name { color: var(--content-tertiary); }
+
+  .row-battery {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    font-weight: 500;
+    font-size: 16px;
+    line-height: 20px;
+    color: var(--content-tertiary);
+  }
+  .row-battery img { display: block; }
+
+  /* ---- Sticky footer ---------------------------------------------------- */
+  .footer {
+    flex-shrink: 0;
+    background: #fff;
+    position: relative;
+    z-index: 10;
+  }
+
+  .scan-band {
+    height: 104px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-top: 1px solid var(--border-primary);
+    background: #fff;
+    /* Clip the button's downward exit so it vanishes at the band edge rather
+       than overlapping the nav. */
+    overflow: hidden;
+    flex-shrink: 0;
+    /* Collapses to nothing when the button hides, handing its 104px to the
+       list so more rows are visible. */
+    transition: height           260ms cubic-bezier(.22, 1, .36, 1),
+                border-top-width 260ms cubic-bezier(.22, 1, .36, 1);
+  }
+
+  /* Height AND border go to zero — leaving the 1px border would strand a
+     hairline floating above the nav. */
+  .scan-band.is-collapsed {
+    height: 0;
+    border-top-width: 0;
+  }
+
+  .scan {
+    width: 318px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 20px 24px;
+    border: 0;
+    border-radius: 100px;
+    background: var(--surface-primary);
+    color: var(--content-inverse);
+    font-family: inherit;
+    font-weight: 700;
+    font-size: 16px;
+    line-height: 20px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 260ms cubic-bezier(.22, 1, .36, 1),
+                opacity   260ms cubic-bezier(.22, 1, .36, 1);
+  }
+  .scan img { display: block; }
+  /* scan.svg exports as the inner glyph (17x17) already inset in its 24px Figma
+     frame. Filling 24px made it read ~40% heavier than the 16px label beside it,
+     so keep a 24px slot for spacing and draw the glyph true size. */
+  .scan .icon-slot {
+    width: 24px; height: 24px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .scan .icon-slot img { width: 17px; height: 17px; }
+  .scan:active { transform: scale(.97); }
+
+  /* Task 5 toggles this. The "go down" exit. */
+  .scan.is-hidden {
+    transform: translateY(120%);
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .bottomnav {
+    height: 100px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding: 15.5px 54px 0;
+    border-top: .5px solid var(--border-primary);
+    background: #fff;
+  }
+
+  .nav-item {
+    position: relative;
+    width: 64px;
+    height: 44px;
+    border: 0;
+    background: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    color: var(--content-tertiary);
+    -webkit-tap-highlight-color: transparent;
+    transition: color 160ms ease;
+  }
+  .nav-item img { display: block; opacity: .55; transition: opacity 160ms ease; }
+  .nav-label {
+    font-weight: 500;
+    font-size: 12px;
+    line-height: 16px;
+    color: inherit;
+  }
+
+  .nav-item.is-active { color: var(--content-primary); }
+  .nav-item.is-active img { opacity: 1; }
+
+  /* 44×2 indicator on the top edge of the nav, above the active item. */
+  .nav-bar {
+    position: absolute;
+    top: -15.5px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 44px;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--content-primary);
+    opacity: 0;
+    transition: opacity 160ms ease;
+  }
+  .nav-item.is-active .nav-bar { opacity: 1; }
+
+  .list.is-swapping { opacity: 0; }
+  .list { transition: opacity 140ms ease; }
+</style>
+</head>
+<body>
+  <div class="phone">
+    <header class="header">
+      <div class="statusbar">
+        <img class="sb-time" src="assets/status-time.svg" alt="9:41" width="33" height="15">
+        <div class="sb-icons">
+          <div class="sb-signal" aria-hidden="true"><i></i><i></i><i></i></div>
+          <img src="assets/status-wifi.svg" alt="" width="16" height="14">
+          <img src="assets/status-battery.svg" alt="" width="25" height="14">
+        </div>
+      </div>
+
+      <div class="appbar">
+        <h1 class="appbar-title">My tasks</h1>
+        <button class="btn-icon appbar-search" type="button" aria-label="Search">
+          <img src="assets/search.svg" alt="" width="24" height="24">
+        </button>
+      </div>
+
+      <div class="tabs-wrap">
+        <div class="tabs" id="tabs">
+          <div class="tabs-underline" id="tabsUnderline"></div>
+        </div>
+      </div>
+    </header>
+    <main class="list" id="list"></main>
+    <footer class="footer">
+      <div class="scan-band">
+        <button class="scan" id="scanBtn" type="button">
+          <span class="icon-slot"><img src="assets/scan.svg" alt=""></span>
+          <span>Scan bike</span>
+        </button>
+      </div>
+
+      <nav class="bottomnav" id="bottomnav">
+        <button class="nav-item" type="button" data-nav="home">
+          <span class="nav-bar" aria-hidden="true"></span>
+          <img src="assets/nav-home.svg" alt="" width="24" height="24">
+          <span class="nav-label">Home</span>
+        </button>
+        <button class="nav-item" type="button" data-nav="tasks">
+          <span class="nav-bar" aria-hidden="true"></span>
+          <img src="assets/nav-tasks.svg" alt="" width="24" height="24">
+          <span class="nav-label">Tasks</span>
+        </button>
+        <button class="nav-item" type="button" data-nav="profile">
+          <span class="nav-bar" aria-hidden="true"></span>
+          <img src="assets/nav-profile.svg" alt="" width="24" height="24">
+          <span class="nav-label">Profile</span>
+        </button>
+      </nav>
+    </footer>
+  </div>
+<script>
+  'use strict';
+
+  /* ======================================================================
+     STITCHING CONTRACT — this is the page's whole outbound surface.
+     To wire this page into the assembled prototype, replace the three
+     function bodies below. Nothing else in this file needs to change.
+     ====================================================================== */
+  window.Yuzen = {
+    // A task row was tapped. Entry point to the task flow.
+    onTaskOpen({ id, name, battery, tab }) {
+      console.log('[Yuzen] onTaskOpen', { id, name, battery, tab });
+    },
+    // The "Scan bike" button was tapped.
+    onScanTapped({ tab }) {
+      console.log('[Yuzen] onScanTapped', { tab });
+    },
+    // A bottom-nav item was tapped. This page only changes its own active
+    // state; actual navigation is the caller's job.
+    onNavigate(destination) {
+      console.log('[Yuzen] onNavigate', destination);
+    },
+  };
+
+  /* ---- Data ------------------------------------------------------------- */
+  const TABS = [
+    { id: 'revive',     label: 'Revive',     count: 2  },
+    { id: 'assessment', label: 'Assessment', count: 14 },
+    { id: 'qc',         label: 'QC',         count: 14 },
+    { id: 'rtd',        label: 'RTD',        count: 14 },
+  ];
+
+  // Real vehicle models. Rows repeat models on purpose — a station genuinely
+  // holds several of each, so the vehicle number is what tells them apart.
+  const NAMES = ['Miracle 2.5', 'Miracle 3.0', 'DeX 2.5', 'DeX 3.0'];
+
+  // Deterministic generator — same rows on every load, so a tester's session
+  // and a screenshot taken later always agree.
+  function makeTasks(tabId, count, seed) {
+    return Array.from({ length: count }, (_, i) => ({
+      id: String(5078900 + seed * 137 + i * 11),
+      name: NAMES[(seed * 3 + i) % NAMES.length],
+      battery: 12 + ((seed * 17 + i * 23) % 84),
+    }));
+  }
+
+  const TASKS = TABS.reduce((acc, tab, i) => {
+    acc[tab.id] = makeTasks(tab.id, tab.count, i + 1);
+    return acc;
+  }, {});
+
+  /* ---- State ------------------------------------------------------------ */
+  const S = {
+    tab: 'assessment',   // default active tab, per spec
+    nav: 'tasks',        // default active nav item
+  };
+
+  /* ---- Rendering -------------------------------------------------------- */
+  const elTabs = document.getElementById('tabs');
+  const elUnderline = document.getElementById('tabsUnderline');
+  const elList = document.getElementById('list');
+
+  function renderTabs() {
+    // Insert buttons before the underline so it stays the last child.
+    TABS.forEach(tab => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'tab';
+      b.dataset.tab = tab.id;
+      b.textContent = `${tab.label} • ${tab.count}`;
+      elTabs.insertBefore(b, elUnderline);
+    });
+  }
+
+  function renderList(tabId) {
+    const rows = TASKS[tabId].map(t => `
+      <button class="row" type="button"
+              data-id="${t.id}" data-name="${t.name}" data-battery="${t.battery}">
+        <span class="row-id">${t.id} <span class="row-name">• ${t.name}</span></span>
+        <span class="row-battery">
+          <img src="assets/bolt.svg" alt="" width="20" height="20">${t.battery}%
+        </span>
+      </button>`).join('');
+    elList.innerHTML = rows;
+  }
+
+  function moveUnderline() {
+    const active = elTabs.querySelector('.tab.is-active');
+    if (!active) return;
+    elUnderline.style.width = `${active.offsetWidth}px`;
+    elUnderline.style.transform = `translateX(${active.offsetLeft}px)`;
+  }
+
+  function setTab(tabId) {
+    S.tab = tabId;
+    elTabs.querySelectorAll('.tab').forEach(b => {
+      b.classList.toggle('is-active', b.dataset.tab === tabId);
+    });
+    moveUnderline();
+    elTabs.querySelector('.tab.is-active')
+      .scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+    renderList(tabId);
+    elList.scrollTop = 0;
+  }
+
+  elTabs.addEventListener('click', e => {
+    const btn = e.target.closest('.tab');
+    if (btn) { tap(); setTab(btn.dataset.tab); }
+  });
+
+  renderTabs();
+  setTab(S.tab);
+  // Fonts change label widths, which changes the underline geometry.
+  document.fonts.ready.then(moveUnderline);
+
+  /* ---- Bottom nav ------------------------------------------------------- */
+  const elNav = document.getElementById('bottomnav');
+
+  function setNav(navId) {
+    S.nav = navId;
+    elNav.querySelectorAll('.nav-item').forEach(b => {
+      b.classList.toggle('is-active', b.dataset.nav === navId);
+    });
+  }
+
+  elNav.addEventListener('click', e => {
+    const btn = e.target.closest('.nav-item');
+    if (!btn) return;
+    tap();
+    setNav(btn.dataset.nav);          // visual state only
+    window.Yuzen.onNavigate(btn.dataset.nav);
+  });
+
+  setNav(S.nav);
+
+  /* ---- Scroll-reactive scan button -------------------------------------- */
+  /* Direction-based: any downward scroll hides the button, any upward scroll
+     brings it back — mid-list, not only at the top. The 8px threshold exists
+     purely so trackpad and finger noise can't make it flicker. */
+  const elScan = document.getElementById('scanBtn');
+  const elScanBand = document.querySelector('.scan-band');
+  const SCROLL_THRESHOLD = 8;
+  const BAND_ANIM_MS = 260;
+
+  let lastY = 0;
+  let accum = 0;
+  let scanVisible = true;
+  let ticking = false;
+  /* True while the band is collapsing or expanding. Collapsing hands 104px to
+     the list, which grows its viewport; if the list is scrolled near the bottom
+     the browser clamps scrollTop downward to fit. That clamp looks exactly like
+     an upward scroll, which would flip the button straight back on and start it
+     oscillating. So while the band animates we absorb deltas instead of reading
+     direction from them. */
+  let banding = false;
+  let bandTimer = 0;
+
+  function showScan(visible) {
+    if (visible === scanVisible) return;
+    scanVisible = visible;
+    elScan.classList.toggle('is-hidden', !visible);
+    elScanBand.classList.toggle('is-collapsed', !visible);
+
+    banding = true;
+    accum = 0;
+    clearTimeout(bandTimer);
+    // A timer rather than transitionend: transitionend does not fire if the
+    // height was already at its target, which would strand banding at true.
+    bandTimer = setTimeout(() => {
+      banding = false;
+      lastY = elList.scrollTop;
+    }, BAND_ANIM_MS + 40);
+  }
+
+  function onScrollFrame() {
+    ticking = false;
+    const y = elList.scrollTop;
+    const delta = y - lastY;
+    lastY = y;
+    if (delta === 0) return;
+    // Resize-induced scroll, not the user's finger — track position, ignore direction.
+    if (banding) return;
+
+    // Reset the accumulator whenever direction flips, so a reversal responds
+    // after 8px of new movement rather than having to undo old movement.
+    if ((delta > 0) !== (accum > 0)) accum = 0;
+    accum += delta;
+
+    if (accum > SCROLL_THRESHOLD) { showScan(false); accum = 0; }
+    else if (accum < -SCROLL_THRESHOLD) { showScan(true); accum = 0; }
+
+    // Always visible at the very top, regardless of accumulator state.
+    if (y <= 0) showScan(true);
+  }
+
+  elList.addEventListener('scroll', () => {
+    if (!ticking) { ticking = true; requestAnimationFrame(onScrollFrame); }
+  }, { passive: true });
+
+  // Switching tabs resets the list to the top, so the button must come back.
+  const _setTab = setTab;
+  setTab = function (tabId) {
+    _setTab(tabId);
+    lastY = 0;
+    accum = 0;
+    showScan(true);
+  };
+
+  /* ---- Haptics ---------------------------------------------------------- */
+  function tap() {
+    if (navigator.vibrate) navigator.vibrate(10);
+  }
+
+  /* ---- Row taps --------------------------------------------------------- */
+  /* A committed swipe must not also open the row under the pointer, so each
+     input source keeps its OWN suppression flag, owned end-to-end by that
+     source: `touchDragged` is set on touchend and cleared on touchstart;
+     `mouseDragged` is set on mouseup and cleared on mousedown. The click
+     handler suppresses the open if EITHER is set, and clears both.
+
+     Per-source ownership is what makes this correct on hybrid touch+mouse
+     devices. All the touch listeners are { passive: true } (so they can never
+     block scrolling), which means preventDefault() is never called and the
+     browser always follows a touch gesture with a synthesized mousedown →
+     mouseup → click. That synthesized mousedown now only clears the MOUSE
+     flag, so it can no longer wipe the touch flag touchend just set. And a
+     mouse-only swipe (which fires no click, so nothing consumes its flag)
+     leaves only `mouseDragged` set, which the next real mousedown clears —
+     no cross-source timing window is needed, and none is used. */
+  let touchDragged = false;
+  let mouseDragged = false;
+
+  elList.addEventListener('click', e => {
+    if (touchDragged || mouseDragged) { touchDragged = mouseDragged = false; return; }
+    const row = e.target.closest('.row');
+    if (!row) return;
+    tap();
+    window.Yuzen.onTaskOpen({
+      id: row.dataset.id,
+      name: row.dataset.name,
+      battery: Number(row.dataset.battery),
+      tab: S.tab,
+    });
+  });
+
+  /* ---- Scan tap --------------------------------------------------------- */
+  elScan.addEventListener('click', () => {
+    tap();
+    window.Yuzen.onScanTapped({ tab: S.tab });
+  });
+
+  /* ---- Swipe between tabs ----------------------------------------------- */
+  /* Horizontal drag on the list switches tabs. Vertical intent wins: once a
+     gesture is judged vertical it is abandoned so normal scrolling is never
+     hijacked. */
+  const SWIPE_MIN = 50;      // px of horizontal travel to commit
+  const SWIPE_RATIO = 1.4;   // how much more horizontal than vertical
+
+  let sx = 0, sy = 0, tracking = false, decided = false;
+
+  elList.addEventListener('touchstart', e => {
+    if (e.touches.length !== 1) return;
+    touchDragged = false;   // a new touch gesture is proof the last one is over
+    sx = e.touches[0].clientX;
+    sy = e.touches[0].clientY;
+    tracking = true;
+    decided = false;
+  }, { passive: true });
+
+  elList.addEventListener('touchmove', e => {
+    if (!tracking || decided) return;
+    const dx = e.touches[0].clientX - sx;
+    const dy = e.touches[0].clientY - sy;
+    if (Math.abs(dx) < 10 && Math.abs(dy) < 10) return;   // not yet meaningful
+    decided = true;
+    // Vertical gesture — hand it back to the scroller.
+    if (Math.abs(dy) >= Math.abs(dx) / SWIPE_RATIO) tracking = false;
+  }, { passive: true });
+
+  elList.addEventListener('touchend', e => {
+    if (!tracking) return;
+    tracking = false;
+    const dx = e.changedTouches[0].clientX - sx;
+    if (Math.abs(dx) < SWIPE_MIN) return;
+    const i = TABS.findIndex(t => t.id === S.tab);
+    const next = dx < 0 ? i + 1 : i - 1;   // swipe left → next tab
+    if (next < 0 || next >= TABS.length) return;   // no wrap at the ends
+    touchDragged = true;   // cleared by the next touchstart, or by the click this produces
+    tap();
+    setTab(TABS[next].id);
+  }, { passive: true });
+
+  /* Mouse drag, so the swipe is testable on a desktop during a session. */
+  let mdx = 0, mdown = false;
+  elList.addEventListener('mousedown', e => {
+    mouseDragged = false;   // only the mouse source's own flag
+    mdown = true;
+    mdx = e.clientX;
+  });
+  window.addEventListener('mouseup', e => {
+    if (!mdown) return;
+    mdown = false;
+    const dx = e.clientX - mdx;
+    if (Math.abs(dx) < SWIPE_MIN) return;
+    const i = TABS.findIndex(t => t.id === S.tab);
+    const next = dx < 0 ? i + 1 : i - 1;
+    if (next < 0 || next >= TABS.length) return;
+    mouseDragged = true;   // cleared by the next mousedown, or by the click this produces
+    setTab(TABS[next].id);
+  });
+
+  /* ---- Cross-fade on tab change ------------------------------------------ */
+  const _setTabFade = setTab;
+  setTab = function (tabId) {
+    if (tabId === S.tab) {
+      // Re-tapping the active tab is a valid "scroll me back to top" gesture —
+      // still run the inner chain (which resets scroll position and restores
+      // the scan button) but skip the fade so there's no pointless flicker.
+      _setTabFade(tabId);
+      return;
+    }
+    // Two approaches were tried and measurably failed before this one, using
+    // transitionrun/transitionstart/transitionend listeners as ground truth
+    // (not opacity sampling, which was too noisy to trust):
+    //  - double rAF: DID fire real transition events, but the two queued rAF
+    //    callbacks ran only ~8ms apart, so the opacity:0 state got retargeted
+    //    back to 1 almost immediately — a technically-real but visually
+    //    imperceptible flicker, not a 140ms fade.
+    //  - add class + forced reflow (read offsetHeight) + remove class, all
+    //    synchronously: fired ZERO transition events. A forced layout flush
+    //    does not, by itself, give the transition engine a distinct "before"
+    //    style to animate from when the very next statement changes it again
+    //    in the same synchronous script.
+    // What actually works: make the "fade out" an instant, non-animated snap
+    // (transition disabled) so there's no first transition to interrupt, then
+    // re-enable the transition and change to opacity 1 on the following
+    // frame. That produces a single, uninterrupted, full-duration transition
+    // (verified: transitionend fires with elapsedTime === the declared 140ms).
+    elList.style.transition = 'none';
+    elList.classList.add('is-swapping');
+    void elList.offsetHeight;        // commit opacity:0 while transitions are off
+    elList.style.transition = '';    // restore the 140ms rule from the stylesheet
+    _setTabFade(tabId);
+    requestAnimationFrame(() => elList.classList.remove('is-swapping'));
+  };
+</script>
+</body>
+</html>

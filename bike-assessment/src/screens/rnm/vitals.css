@@ -1,0 +1,129 @@
+/* ═══ RnM — the vitals card on the dashboard: three readings and their states ═══
+   Split out of screens/rnm/style.css. See src/MAP.md.
+
+   The card's SHAPE is not here — it is shared/vcard.css, one component for the
+   dashboard and the Bike commands sheet both. This file is the two things only
+   the dashboard needs: where the card sits in the 844 frame, and the read/alert/
+   pending states, which the sheet's copy does not have because nothing there
+   reads the bike back. */
+
+  /* ---- Placement — Figma 2470:40693 -------------------------------------- */
+  /* x24 y420, 342x68. The host places the card; the card carries no margin of
+     its own. y374 with the open-tasks sheet up (2470:40979) — it rides up 46 so
+     the sheet has 450 to start from and the readings stay clear of it. */
+  #scrRnm .vcard{
+    position: absolute;
+    left: var(--s6);
+    right: var(--s6);
+    top: 420px;
+    z-index: 1;
+    transition: top 320ms var(--ease-out);
+  }
+  #scrRnm.is-tasks .vcard{ top: 374px; }
+
+  /* ---- The reading states ------------------------------------------------ */
+  /* The glyphs are masks over a gradient, not <img>. Two things fall out of that:
+     a state can recolour them with a token instead of shipping a red copy of
+     every icon, and moving the gradient's hard stop reveals the glyph
+     progressively — which is what gives each vital its own read animation.
+     --fill is driven from JS, 0% to 100%.
+
+     background-color is cleared because vcard.css paints the glyph with
+     currentColor; here the gradient is the paint, and leaving the colour under it
+     showed through the mask's soft edges. */
+  #scrRnm .vcard__item i{
+    --fill: 100%;
+    --von: var(--content-primary);
+    --voff: var(--surface-disabled);
+    background-color: transparent;
+    /* Default sweep: left to right, for the battery filling up. */
+    background-image: linear-gradient(90deg,
+      var(--von) 0 var(--fill), var(--voff) var(--fill) 100%);
+  }
+  /* Grows outward from the glyph's dot, so the arcs light one after another. */
+  #scrRnm .vcard__item--bloom i{
+    background-image: radial-gradient(circle at 50% 84%,
+      var(--von) 0 var(--fill), var(--voff) var(--fill) 100%);
+  }
+  /* Bluetooth blooms from the middle: the rune first, then the two side dots. */
+  #scrRnm .vcard__item--bloom-mid i{
+    background-image: radial-gradient(circle at 50% 50%,
+      var(--von) 0 var(--fill), var(--voff) var(--fill) 100%);
+  }
+  /* The reading is what the BIKE is reporting, not what the mechanic is being
+     asked to act on: the glyph above it carries the state, so the number sits
+     back at secondary and only speaks up when something is wrong. */
+  #scrRnm .vcard__item span{
+    position: relative;
+    font-variant-numeric: tabular-nums;
+  }
+  /* No link to the bike, or a reading low enough to act on. The label goes red
+     with the glyph — a red icon over a secondary number reads as half a state,
+     and the number is the part being called into question. */
+  #scrRnm .vcard__item.is-alert i{ --von: var(--content-negative); --voff: var(--content-negative); }
+  #scrRnm .vcard__item.is-alert span{ color: var(--content-negative); }
+  /* Nothing read yet — not a fault, just unknown. */
+  #scrRnm .vcard__item.is-idle i{ --von: var(--content-disabled); --voff: var(--content-disabled); }
+
+  /* Shimmer while a reading is on its way. It sits on the label, not the column,
+     because the label is the part that has nothing to show yet. min-width gives
+     the sweep something to travel across when the text is only a dash or two. */
+  @keyframes vital-shimmer {
+    0%   { background-position: 150% 0; }
+    100% { background-position: -50% 0; }
+  }
+  #scrRnm .vcard__item.is-pending span{
+    min-width: 44px;
+    text-align: center;
+    color: var(--content-disabled);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  #scrRnm .vcard__item.is-pending span::after{
+    content: '';
+    position: absolute;
+    inset: 0;
+    /* White over white now: the card is surface/inverse, where the old strip was
+       surface/secondary. */
+    background-image: linear-gradient(100deg,
+      rgba(255, 255, 255, 0) 36%,
+      rgba(232, 232, 232, .9) 50%,
+      rgba(255, 255, 255, 0) 64%);
+    background-size: 260% 100%;
+    background-repeat: no-repeat;
+    animation: vital-shimmer 1.1s ease-in-out infinite;
+    pointer-events: none;
+  }
+
+  /* ---- Repair progress — Figma 2470:40229 -------------------------------- */
+  /* 390x6 at y714, full bleed, on the seam between the page and the footer. It
+     has moved three times: the repair panel's top edge, the vitals' bottom edge,
+     the vitals' top edge, and now the footer's. This is the honest place for it —
+     the bar is the whole repair, and the footer is where the repair is acted on,
+     so the total sits directly above the two things you can do about it.
+
+     Still 6px, deliberately: --progress-h is 6 on the job page and on the parked
+     task band, and the same number should wear the same form everywhere it
+     appears.
+
+     Above the open-tasks sheet, which stops at 714: a sheet about part of the
+     work must not cover the total. */
+  /* Rides directly on top of the footer, so it is measured up from the floor
+     rather than down from 714 — same reason as .rn-foot. 714 was 720 minus this
+     strip's own 6, which only ever meant "just above the footer". */
+  #scrRnm .sheet-bar{
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: var(--rn-footer-h);
+    height: var(--progress-h);
+    background: var(--border-primary);
+    z-index: 3;
+  }
+  #scrRnm .sheet-bar i{
+    display: block;
+    height: 100%;
+    width: 0;
+    background: var(--surface-primary);
+    transition: width 320ms var(--ease-out);
+  }

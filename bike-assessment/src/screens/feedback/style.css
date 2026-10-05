@@ -1,0 +1,98 @@
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   FEEDBACK — Figma 1993:30144
+   Everything is a 342-wide block inset 24. The frame's y positions convert to a
+   simple rhythm: 8 above the first heading, 64 from a heading to its content,
+   48 either side of the divider.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.screen--feedback{display:flex;flex-direction:column;padding-top:var(--status-h)}
+.screen--feedback .appbar{flex:0 0 auto}
+/* This app bar centres its title rather than running a breadcrumb, so the row is
+   a plain flex line with the back button absolutely placed — centring against a
+   flex sibling would shift the title by the button's width. */
+.fb__row{position:relative;justify-content:center}
+.fb__row .leading-action{position:absolute;left:4px;top:12px}
+/* Absolute like the back button, and for the same reason: this row centres its
+   title with justify-content, so anything joining the flex line would shove the
+   title off centre by its own width. right:4px mirrors the back button's left:4px,
+   which puts both 24px glyphs 16 from their respective edges — .icon-btn carries
+   12px of padding. top:12px centres 48 in the 72px row. */
+.fb__row .fb__more{position:absolute;right:4px;top:12px}
+.fb__pagetitle{color:var(--content-primary)}
+
+.fbbody{
+  flex:1 1 auto;overflow-y:auto;overflow-x:hidden;scrollbar-width:none;
+  padding:var(--s2) var(--s6) 124px;    /* bottom clears the 124px footer */
+}
+.fbbody::-webkit-scrollbar{display:none}
+.fbbody h2{color:var(--content-primary)}
+/* Headings/Small — 20/28 Bold. Named in the library, unlike the 20/24 the page
+   titles use, so it is a real style rather than a local one. */
+.t-heading-sm{font-size:20px;font-weight:700;line-height:28px;letter-spacing:0}
+
+/* 64 from the heading to the first block, per the frame. */
+.fbaudio{
+  margin-top:36px;height:64px;border-radius:32px;
+  background:var(--surface-secondary);
+  padding:0 var(--s4);
+  display:flex;align-items:center;gap:var(--s2);
+}
+.fbaudio__play{
+  width:36px;height:36px;flex:0 0 auto;border:0;cursor:pointer;border-radius:18px;
+  background:var(--surface-inverse);color:var(--content-primary);
+  display:flex;align-items:center;justify-content:center;
+}
+.fbaudio__play svg{display:block;width:20px;height:20px}
+.fbaudio__time{flex:0 0 auto;color:var(--content-secondary);margin-left:var(--s1)}
+.fbaudio__dot{
+  width:6px;height:6px;border-radius:3px;flex:0 0 auto;
+  background:var(--content-disabled);
+}
+/* The waveform is drawn, not an asset: 30-odd 2px bars of varying height. A
+   flat image would not survive the row being any other width. */
+.fbaudio__wave{flex:1 1 auto;min-width:0;display:flex;align-items:center;gap:2.6px;height:16px}
+.fbaudio__wave i{flex:1 1 auto;background:var(--content-disabled);border-radius:1px}
+.fbaudio__rate{
+  width:36px;height:36px;flex:0 0 auto;border:0;cursor:pointer;border-radius:18px;
+  background:var(--surface-inverse);color:var(--content-primary);
+  display:flex;align-items:center;justify-content:center;white-space:nowrap;
+}
+
+/* 16 below the bar, 16 of padding inside, 3 lines of Body/Medium = 104. */
+.fbquote{
+  margin-top:var(--s4);border-radius:var(--s2);
+  background:var(--surface-secondary);
+  padding:var(--s4);
+}
+.fbquote p{color:var(--content-secondary)}
+/* Bulleted, but with the marker drawn rather than a list-style disc: the disc
+   sits on the text baseline and a wrapped second line hangs under it. This puts
+   the dot in its own column so every line of a point aligns with the first. */
+.fbquote__list{list-style:none;padding:0;margin:0;
+  display:flex;flex-direction:column;gap:var(--s2)}
+/* Hanging indent, NOT a two-column grid. Grid made every inline child of the li
+   its own grid item, so each <strong> was torn onto its own row — one point came
+   out as three lines. The li stays a plain block and the dot is positioned out of
+   the flow, which leaves the sentence to wrap as a sentence. */
+.fbquote__list li{
+  position:relative;
+  padding-left:var(--s4);
+  color:var(--content-secondary);
+}
+.fbquote__list li::before{
+  content:"";position:absolute;left:4px;
+  width:4px;height:4px;border-radius:2px;
+  background:var(--content-tertiary);
+  /* On the first line's cap height, not its box top. */
+  top:.62em;
+}
+.fbquote strong{font-weight:500;color:var(--content-primary)}
+
+/* 48 either side, and inset nothing: the body already carries the 24. */
+.fbdivider{height:1px;background:var(--border-primary);margin:var(--s12) 0}
+
+.fblist{margin-top:36px;padding-left:0;list-style:none;
+  display:flex;flex-direction:column;gap:var(--s4)}
+.fblist li{color:var(--content-primary);counter-increment:fb}
+.fblist{counter-reset:fb}
+.fblist li::before{content:counter(fb) ". "}

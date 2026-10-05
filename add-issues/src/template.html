@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mark Issues — Mechanic</title>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+/* ===== Design tokens — yulu-design-system-main/tokens ===== */
+:root {
+    /* semantic-colors.md */
+    --content-primary: #222222;
+    --content-secondary: #717171;
+    --content-tertiary: #919191;
+    --content-disabled: #B0B0B0;
+    --content-inverse: #FFFFFF;
+    --content-positive: #00654F;
+    --content-caution: #E07912;
+    --content-negative: #C13515;
+
+    --surface-primary: #222222;
+    --surface-secondary: #F7F7F7;
+    --surface-disabled: #DDDDDD;
+    --surface-inverse: #FFFFFF;
+    --surface-positive: #00654F;
+    --surface-caution: #E07912;
+    --surface-negative: #C13515;
+
+    --border-primary: #E8E8E8;
+    --border-secondary: #B0B0B0;
+    --border-selected: #222222;
+    --border-positive: #00654F;
+    --border-negative: #C13515;
+
+    --canvas-primary: #FFFFFF;
+    --canvas-inverse: #222222;
+
+    /* spacing.md */
+    --spacing-1: 4px;
+    --spacing-2: 8px;
+    --spacing-4: 16px;
+    --spacing-6: 24px;
+    --spacing-9: 36px;
+    --spacing-12: 48px;
+    --spacing-16: 64px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+body {
+    font-family: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+    background: #E5E5E5;
+    display: flex;
+    justify-content: center;
+    min-height: 100vh;
+}
+
+/* typography.md */
+.type-heading-small   { font-size: 20px; font-weight: 700; line-height: 28px; }
+.type-label-medium700 { font-size: 16px; font-weight: 700; line-height: 20px; }
+.type-label-medium    { font-size: 16px; font-weight: 500; line-height: 20px; }
+.type-label-small     { font-size: 14px; font-weight: 500; line-height: 16px; }
+.type-label-xsmall    { font-size: 12px; font-weight: 500; line-height: 16px; }
+.type-body-medium     { font-size: 16px; font-weight: 500; line-height: 24px; }
+.type-body-small      { font-size: 14px; font-weight: 500; line-height: 20px; }
+
+/* ===== Device frame ===== */
+.app {
+    width: 390px;
+    height: 844px;
+    background: var(--canvas-primary);
+    position: relative;
+    overflow: hidden;
+    align-self: center;
+    box-shadow: 0 8px 40px rgba(0,0,0,.18);
+}
+
+/* ===== Status bar ===== */
+.status-bar {
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 21px 0 21px;
+    flex: none;
+}
+.status-bar .time { font-size: 15px; font-weight: 700; color: var(--content-primary); }
+.status-icons { display: flex; align-items: center; gap: var(--spacing-1); }
+
+/* ===== Top app bar ===== */
+.top-app-bar {
+    height: 72px;
+    background: var(--surface-inverse);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px 10px 4px;
+    position: relative;
+    flex: none;
+}
+.tab-icon-btn {
+    display: flex; align-items: center; padding: 12px;
+    background: none; border: none; cursor: pointer;
+}
+.top-app-bar .title {
+    position: absolute; left: 50%; transform: translateX(-50%);
+    max-width: 160px; text-align: center; color: var(--content-primary);
+    white-space: nowrap;
+}
+
+/* ===== Tabs ===== */
+/* Figma: 56px tall, hairline at y=55, indicator rect y=54 h=2 painted over it.
+   The indicator hugs the label text (x=24 w=110 for "Recommended"), not the
+   tab's padded box — so it lives inside .tab-inner, which shrink-wraps the text. */
+.tabs {
+    height: 56px;
+    display: flex;
+    align-items: stretch;
+    background: var(--surface-inverse);
+    flex: none;
+    position: relative;
+}
+.tabs::after {
+    content: ""; position: absolute; left: 0; right: 0; bottom: 0;
+    height: 1px; background: var(--border-primary);
+}
+.tab {
+    display: flex; align-items: flex-start; justify-content: center;
+    padding: var(--spacing-4) var(--spacing-4) 0;
+    background: none; border: none; cursor: pointer;
+    color: var(--content-secondary); font-family: inherit;
+}
+.tab:first-child { padding-left: var(--spacing-6); padding-right: var(--spacing-4); }
+.tab.active { color: var(--content-primary); }
+.tab-inner { display: flex; flex-direction: column; gap: 14px; }
+.tab .bar {
+    height: 2px; border-radius: 1px; width: 100%; background: transparent;
+    position: relative; z-index: 1;
+}
+.tab.active .bar { background: var(--content-primary); }
+
+/* ===== Scroll body ===== */
+.body-scroll { flex: 1 1 auto; overflow-y: auto; overflow-x: hidden; }
+.body-scroll::-webkit-scrollbar { width: 0; }
+
+.screen { display: flex; flex-direction: column; height: 100%; }
+
+/* ===== Parts grid (Recommended) ===== */
+.parts-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--spacing-4);
+    padding: var(--spacing-6);
+}
+.part-tile {
+    position: relative;
+    aspect-ratio: 1 / 1;
+    border-radius: 8px;
+    background: #f4f4f4;
+    border: 2px solid var(--border-primary);
+    overflow: hidden;
+    cursor: pointer;
+    padding: 0;
+    transition: border-color .15s ease, transform .1s ease;
+}
+.part-tile:active { transform: scale(.97); }
+/* Fault-marked tiles read as "already handled" purely by fading back —
+   no red outline or dot; the border stays border/primary at 2px throughout. */
+.part-tile.marked .photo { opacity: .3; }
+.part-tile.marked .label { color: var(--content-disabled); }
+/* Figma: 188×105 fill, offset -37px inside the 103px tile */
+.part-tile .photo {
+    position: absolute; top: 0; left: -37px;
+    width: 188px; height: 105px; object-fit: cover; pointer-events: none;
+}
+.part-tile .scrim {
+    position: absolute; bottom: 0; left: 0; right: 0; height: 70px;
+    background: linear-gradient(to bottom, rgba(0,0,0,0) 7.889%, rgba(0,0,0,.4) 50.036%, #232222 100%);
+}
+.part-tile .label {
+    position: absolute; bottom: var(--spacing-2); left: 4px; right: 4px;
+    text-align: center; color: var(--content-inverse);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+/* ===== List rows (Front / Middle / Rear) ===== */
+.list-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: var(--spacing-6); width: 100%; background: none; border: none;
+    cursor: pointer; font-family: inherit; text-align: left;
+}
+.list-row { transition: padding-bottom .28s cubic-bezier(.2, .8, .2, 1); }
+.list-row.expanded-head { padding-bottom: var(--spacing-2); }
+.row-group { background: var(--surface-inverse); transition: background .28s ease; }
+.row-group.open { background: var(--surface-secondary); }
+
+/* Accordion. Height is measured in JS and animated explicitly —
+   `grid-template-rows: 0fr -> 1fr` does NOT interpolate in Chrome, it snaps.
+   Everything below the row slides because the row's own height animates. */
+.collapse {
+    overflow: hidden;
+    transition: height .28s cubic-bezier(.2, .8, .2, 1);
+}
+.row-chips { opacity: 0; transition: opacity .18s ease; }
+.row-group.open .row-chips { opacity: 1; transition-delay: .08s; }
+.row-lhs { display: flex; align-items: center; gap: var(--spacing-4); flex: 1 1 0; min-width: 0; }
+.part-thumb {
+    width: 56px; height: 56px; border-radius: 9.333px;
+    background: var(--surface-secondary); overflow: hidden;
+    position: relative; flex: none;
+}
+.part-thumb img {
+    position: absolute; top: -1px; left: -23px;
+    width: 101px; height: 57px; object-fit: cover;
+}
+.row-text { display: flex; flex-direction: column; min-width: 0; flex: 1 1 0; }
+.row-text .name { color: var(--content-primary); }
+/* Tags collapse on expand (the chips replace them) — animated with the
+   same grid trick so the header doesn't jump mid-transition. The 16px
+   gap lives inside the clipped area so it collapses too. */
+.row-tags {
+    display: flex; align-items: center; gap: var(--spacing-2);
+    color: var(--content-secondary); flex-wrap: wrap;
+    padding-top: var(--spacing-4);
+}
+.tag-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--content-secondary); flex: none; }
+.chevron { display: flex; align-items: center; padding: 12px; flex: none; transition: transform .2s ease; }
+.chevron.up { transform: rotate(180deg); }
+.row-divider { height: 1px; background: var(--border-primary); margin: 0 var(--spacing-6); }
+.row-chips { padding: 0 var(--spacing-6) var(--spacing-6); }
+
+/* ===== Chips — components/chips/README.md ===== */
+.chip-group { display: flex; flex-wrap: wrap; gap: var(--spacing-2); }
+.chip {
+    height: 48px; min-width: 48px;
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: 14px 16px; border-radius: 100px;
+    background: var(--surface-inverse);
+    border: 1px solid var(--border-primary);
+    color: var(--content-primary);
+    cursor: pointer; font-family: inherit; white-space: nowrap;
+    transition: background .12s ease, border-color .12s ease;
+}
+.chip.selected {
+    background: var(--surface-secondary);
+    border: 1.5px solid var(--border-selected);
+}
+
+/* ===== Footer ===== */
+.footer {
+    background: var(--surface-inverse);
+    border-top: 1px solid var(--border-primary);
+    padding: var(--spacing-6) var(--spacing-9) var(--spacing-9);
+    flex: none;
+}
+.btn-primary {
+    width: 100%; height: 64px; border-radius: 100px;
+    background: var(--surface-primary); color: var(--content-inverse);
+    border: none; cursor: pointer; font-family: inherit;
+    display: flex; align-items: center; justify-content: center;
+    transition: opacity .12s ease;
+}
+.btn-primary:disabled {
+    background: var(--surface-disabled); color: var(--content-disabled); cursor: not-allowed;
+}
+.btn-primary:not(:disabled):active { opacity: .85; }
+
+/* ===== Bottom sheet ===== */
+.scrim-overlay {
+    position: absolute; inset: 0; background: rgba(0,0,0,.5);
+    z-index: 10; animation: fade .2s ease;
+}
+@keyframes fade { from { opacity: 0 } to { opacity: 1 } }
+.sheet {
+    position: absolute; left: 0; right: 0; bottom: 0; z-index: 11;
+    background: var(--surface-inverse);
+    border-radius: 24px 24px 0 0;
+    display: flex; flex-direction: column;
+    animation: slideUp .25s cubic-bezier(.2,.8,.2,1);
+}
+@keyframes slideUp { from { transform: translateY(100%) } to { transform: translateY(0) } }
+.sheet-body {
+    display: flex; flex-direction: column; align-items: center;
+    gap: var(--spacing-9);
+    padding: var(--spacing-2) 0 var(--spacing-9);
+}
+.sheet-handle {
+    width: 44px; height: 4px; border-radius: 100px; background: var(--border-primary);
+}
+.sheet-content { display: flex; flex-direction: column; gap: var(--spacing-6); width: 342px; }
+.sheet-part { display: flex; align-items: center; gap: var(--spacing-4); height: 48px; }
+.sheet-part .thumb {
+    width: 48px; height: 48px; border-radius: 3.728px; background: #f4f4f4;
+    overflow: hidden; position: relative; flex: none;
+}
+/* Figma: 87×49 fill, offset -17px inside the 48px thumb */
+.sheet-part .thumb img {
+    position: absolute; top: 0; left: -17px;
+    width: 87px; height: 49px; object-fit: cover;
+}
+.sheet-divider { height: 1px; background: var(--border-primary); width: 100%; }
+.sheet-footer {
+    background: var(--surface-inverse);
+    padding: var(--spacing-6) var(--spacing-9) var(--spacing-9);
+}
+
+/* ===== Toast ===== */
+.toast {
+    position: absolute; left: var(--spacing-6); right: var(--spacing-6); bottom: 140px;
+    background: var(--surface-primary); color: var(--content-inverse);
+    border-radius: 12px; padding: var(--spacing-4) var(--spacing-6);
+    z-index: 20; display: flex; align-items: center; gap: var(--spacing-2);
+    animation: toastIn .25s cubic-bezier(.2,.8,.2,1);
+}
+@keyframes toastIn { from { opacity: 0; transform: translateY(12px) } to { opacity: 1; transform: translateY(0) } }
+
+.empty-note {
+    padding: var(--spacing-12) var(--spacing-6); text-align: center;
+    color: var(--content-tertiary);
+}
+
+/* ===== Search screen ===== */
+.search-head {
+    display: flex; flex-direction: column;
+    background: var(--canvas-primary); flex: none;
+}
+/* Height matches .top-app-bar (72px) so the back button sits at exactly the
+   same Y as on the Add issues screen — no jump when entering search.
+   Row padding: 4px before the back button, 16px after the field.
+   Back button carries 16px on its right so the field clears the icon by 16. */
+.search-head-row {
+    height: 72px;
+    display: flex; align-items: center;
+    padding-left: var(--spacing-1); padding-right: var(--spacing-4);
+}
+.search-back {
+    display: flex; align-items: center; flex: none;
+    padding: 12px var(--spacing-4) 12px 12px;
+    background: none; border: none; cursor: pointer;
+}
+.search-field-wrap { flex: 1 1 0; min-width: 0; }
+/* Circular search affordance in the Add issues top app bar */
+.search-btn {
+    width: 40px; height: 40px; border-radius: 50%;
+    background: var(--surface-secondary);
+    display: flex; align-items: center; justify-content: center;
+    border: none; cursor: pointer; padding: 0; flex: none;
+}
+.search-cancel {
+    display: flex; align-items: center; justify-content: center;
+    background: none; border: none; cursor: pointer; padding: 8px; flex: none;
+}
+.search-field {
+    height: 64px; border-radius: 100px;
+    background: var(--surface-secondary);
+    border: 1.5px solid transparent;
+    display: flex; align-items: center; gap: var(--spacing-2);
+    padding: 22px var(--spacing-2) 22px var(--spacing-6);
+    transition: background .15s ease, border-color .15s ease;
+}
+/* Figma search/typing: fill drops to canvas, outline appears */
+.search-field.typing {
+    background: var(--canvas-primary);
+    border-color: var(--border-selected);
+}
+.search-field input {
+    flex: 1 1 0; min-width: 0; border: none; outline: none; background: none;
+    font-family: inherit; color: var(--content-primary);
+    font-size: 16px; font-weight: 500; line-height: 20px;
+}
+.search-field input::placeholder { color: var(--content-tertiary); }
+
+.search-results { display: flex; flex-direction: column; gap: var(--spacing-6); }
+.search-section-title { padding: 0 var(--spacing-6); color: var(--content-primary); }
+.search-row {
+    display: flex; align-items: center; justify-content: space-between;
+    width: 100%; padding: var(--spacing-2) var(--spacing-6);
+    background: none; border: none; cursor: pointer;
+    font-family: inherit; text-align: left;
+}
+.search-row .row-lhs { gap: var(--spacing-4); }
+.search-row .name { color: var(--content-primary); }
+/* Figma renders the matched substring in Label/Medium700, not a colour fill */
+.search-row .match { font-weight: 700; }
+.search-divider { height: 1px; background: var(--border-primary); }
+.search-arrow { display: flex; align-items: center; padding: 12px; flex: none; }
+
+/* ===== iOS keyboard — rebuilt from the reference so each key is tappable.
+   Colours/metrics traced from the pasted 390x353 asset. ===== */
+.keyboard {
+    flex: none; width: 100%; background: #D1D5DB;
+    user-select: none; -webkit-user-select: none;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+.kb-accessory {
+    height: 39px; background: #F1F1F1;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 var(--spacing-4);
+}
+.kb-chevrons { display: flex; gap: var(--spacing-6); }
+.kb-chevrons svg { display: block; }
+.kb-done {
+    background: none; border: none; cursor: pointer;
+    font: 600 17px/1 -apple-system, BlinkMacSystemFont, sans-serif;
+    color: #1B3A6B; padding: 4px;
+}
+.kb-predictive {
+    height: 46px; display: flex; align-items: center;
+    font-size: 15px; color: #1C1C1E;
+}
+.kb-predictive span { flex: 1; text-align: center; }
+.kb-predictive .sep { flex: none; width: 1px; height: 22px; background: #B0B4BC; }
+.kb-rows { padding: 4px 3px 0; display: flex; flex-direction: column; gap: 11px; }
+.kb-row { display: flex; gap: 6px; justify-content: center; }
+.kb-row.indent { padding: 0 20px; }
+.key {
+    flex: 1 1 0; height: 42px; min-width: 0;
+    background: #FFFFFF; border: none; border-radius: 5px;
+    box-shadow: 0 1px 0 rgba(0,0,0,.28);
+    font: 400 22px/1 -apple-system, BlinkMacSystemFont, sans-serif;
+    color: #000; cursor: pointer; padding: 0;
+    display: flex; align-items: center; justify-content: center;
+    transition: background .08s ease;
+}
+.key:active { background: #B9BEC7; }
+.key.grey { background: #ACB2BC; box-shadow: 0 1px 0 rgba(0,0,0,.28); }
+.key.grey:active { background: #FFFFFF; }
+.key.mod { flex: 1.42 1 0; }
+.key.space { flex: 5.4 1 0; font-size: 16px; }
+.key.action { flex: 2.1 1 0; font-size: 16px; }
+.key.on { background: #FFFFFF; }
+.kb-bottom {
+    height: 44px; display: flex; align-items: center;
+    justify-content: space-between; padding: 0 18px;
+}
+.kb-bottom button { background: none; border: none; cursor: pointer; padding: 4px; }
+.kb-home {
+    height: 22px; display: flex; align-items: center; justify-content: center;
+}
+.kb-home i { display: block; width: 140px; height: 5px; border-radius: 3px; background: #000; }
+
+/* Row flash after arriving from a search result */
+@keyframes rowFlash {
+    0%   { background: var(--surface-secondary); }
+    100% { background: transparent; }
+}
+.row-group.flash { animation: rowFlash 1.8s ease-out; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useMemo, useRef, useLayoutEffect } = React;
+
+/* Animates between 0 and the content's measured height, then hands back to
+   `auto` so the content can still reflow (e.g. chips re-wrapping). */
+function Collapse({ open, children }) {
+    const ref = useRef(null);
+    const first = useRef(true);
+    const [height, setHeight] = useState(open ? "auto" : 0);
+
+    useLayoutEffect(() => {
+        const el = ref.current;
+        if (!el) return;
+        if (first.current) { first.current = false; return; }
+
+        const target = el.scrollHeight;
+        if (open) {
+            setHeight(target);
+            const t = setTimeout(() => setHeight("auto"), 300);
+            return () => clearTimeout(t);
+        }
+        // Pin the current height for one frame so there's something to animate from
+        setHeight(target);
+        const r = requestAnimationFrame(() =>
+            requestAnimationFrame(() => setHeight(0))
+        );
+        return () => cancelAnimationFrame(r);
+    }, [open]);
+
+    return (
+        <div
+            ref={ref}
+            className="collapse"
+            style={{ height: height === "auto" ? "auto" : height + "px" }}
+            aria-hidden={!open}
+        >
+            {children}
+        </div>
+    );
+}
+
+/* ---------------------------------------------------------------
+   Placeholder part photo. Every part reuses this single asset —
+   the Figma frames do the same. Swap PART_IMG for real per-part
+   photos by giving each entry in PARTS its own `img`.
+---------------------------------------------------------------- */
+const PART_IMG = "__IMG_TYRE__";
+
+/* The iOS keyboard is built in markup (see <Keyboard/>) rather than used as a
+   flat image, so individual keys are tappable. */
+
+/* ---------------------------------------------------------------
+   Part catalogue.
+   `zone` places the part under the Front / Middle / Rear tabs.
+   `recommended` surfaces it in the Recommended grid.
+   "Missing" is appended to every part's issue list automatically
+   and is mutually exclusive with all other issues.
+---------------------------------------------------------------- */
+const MISSING = "Missing";
+
+const PARTS = [
+    // --- Front ---
+    { id: "front-tyre",     name: "Front tyre",       zone: "front",  recommended: true, issues: ["Rusting", "Cuts", "Wear out"] },
+    { id: "front-shocker",  name: "Shocker",          zone: "front",  recommended: true, issues: ["Oil leak", "Bent", "Makes noise"] },
+    { id: "front-brake",    name: "Brake",            zone: "front",  recommended: true, issues: ["Worn pads", "Low bite", "Cable snapped"] },
+    { id: "air-nozzle",     name: "Air nozzle",       zone: "front",  recommended: true, issues: ["Air leak", "Cap missing", "Bent"] },
+    { id: "display",        name: "Display",          zone: "front",  recommended: true, issues: ["Screen cracked", "Not lighting up", "Flickering"] },
+    { id: "handlebar",      name: "Handlebar",        zone: "front",  recommended: false, issues: ["Bent", "Grip torn", "Loose"] },
+    { id: "headlight",      name: "Headlight",        zone: "front",  recommended: false, issues: ["Not glowing", "Dim", "Cracked lens"] },
+    { id: "front-fender",   name: "Front fender",     zone: "front",  recommended: false, issues: ["Cracked", "Loose", "Rubbing tyre"] },
+
+    // --- Middle ---
+    { id: "battery-bucket", name: "Battery bucket",   zone: "middle", recommended: true, issues: ["Lock broken", "Rust", "Dented"] },
+    { id: "iot",            name: "IOT",              zone: "middle", recommended: true, issues: ["Not powering on", "No network", "Loose mount"] },
+    { id: "pigtail",        name: "Pigtail connector",zone: "middle", recommended: true, issues: ["Wear out", "Cuts", "Rust"] },
+    { id: "footboard",      name: "Footboard",        zone: "middle", recommended: true, issues: ["Cracked", "Loose", "Rust"] },
+    { id: "seat",           name: "Seat",             zone: "middle", recommended: false, issues: ["Torn", "Loose", "Lock broken"] },
+    { id: "frame",          name: "Frame",            zone: "middle", recommended: false, issues: ["Cracked", "Rust", "Bent"] },
+    { id: "side-stand",     name: "Side stand",       zone: "middle", recommended: false, issues: ["Loose", "Spring broken", "Bent"] },
+    { id: "charging-port",  name: "Charging port",    zone: "middle", recommended: false, issues: ["Pins bent", "Not charging", "Cover damaged"] },
+
+    // --- Rear ---
+    { id: "swing-arm",      name: "Swing arm",        zone: "rear",   recommended: true, issues: ["Bent", "Rust", "Loose bolts"] },
+    { id: "rear-shocker",   name: "Rear shocker",     zone: "rear",   recommended: true, issues: ["Oil leak", "Makes noise", "Spring broken"] },
+    { id: "tail-lamp",      name: "Tail lamp",        zone: "rear",   recommended: true, issues: ["Not glowing", "Cracked lens", "Loose wiring"] },
+    { id: "rear-tyre",      name: "Rear tyre",        zone: "rear",   recommended: false, issues: ["Wear out", "Cuts", "Puncture"] },
+    { id: "rear-brake",     name: "Rear brake",       zone: "rear",   recommended: false, issues: ["Worn pads", "Low bite", "Cable snapped"] },
+    { id: "mudguard",       name: "Mudguard",         zone: "rear",   recommended: false, issues: ["Cracked", "Loose", "Rust"] },
+    { id: "carrier",        name: "Carrier",          zone: "rear",   recommended: false, issues: ["Bent", "Loose", "Rust"] },
+    { id: "motor-hub",      name: "Motor hub",        zone: "rear",   recommended: false, issues: ["Makes noise", "Overheating", "Not running"] },
+];
+
+const TABS = [
+    { id: "recommended", label: "Recommended" },
+    { id: "front",       label: "Front" },
+    { id: "middle",      label: "Middle" },
+    { id: "rear",        label: "Rear" },
+];
+
+const byId = Object.fromEntries(PARTS.map(p => [p.id, p]));
+const issuesFor = part => [...part.issues, MISSING];
+
+/* Order-insensitive comparison — used to tell whether the sheet is "dirty". */
+function sameSet(a, b) {
+    return a.length === b.length && a.every(x => b.includes(x));
+}
+
+/* "Missing" cancels every other issue, and any other issue cancels "Missing". */
+function toggleIssue(current, issue) {
+    const has = current.includes(issue);
+    if (issue === MISSING) return has ? [] : [MISSING];
+    const next = has ? current.filter(i => i !== issue) : [...current, issue];
+    return next.filter(i => i !== MISSING);
+}
+
+/* ===================== Icons ===================== */
+const BackIcon = () => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+        <path d="M15 19l-7-7 7-7" stroke="var(--content-primary)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+);
+const SearchIcon = () => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+        <circle cx="11" cy="11" r="7" stroke="var(--content-primary)" strokeWidth="1.8"/>
+        <path d="M20 20l-3.5-3.5" stroke="var(--content-primary)" strokeWidth="1.8" strokeLinecap="round"/>
+    </svg>
+);
+const ChevronIcon = () => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+        <path d="M6 9l6 6 6-6" stroke="var(--content-primary)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+);
+/* Figma `arrow_insert`. Placeholder until the exported asset lands —
+   swap for <img src={ARROW_INSERT_IMG} /> when it does. */
+const ArrowInsertIcon = () => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+        <path d="M7 17L17 7" stroke="var(--content-primary)" strokeWidth="1.8" strokeLinecap="round"/>
+        <path d="M8.5 7H17v8.5" stroke="var(--content-primary)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+);
+const CancelIcon = () => (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+        <path d="M6.5 6.5l11 11M17.5 6.5l-11 11" stroke="var(--content-primary)" strokeWidth="1.8" strokeLinecap="round"/>
+    </svg>
+);
+const CheckIcon = () => (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+        <path d="M4 12.5l5.5 5.5L20 7" stroke="var(--content-inverse)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+);
+
+/* ===================== Chrome ===================== */
+function StatusBar() {
+    return (
+        <div className="status-bar">
+            <span className="time">9:41</span>
+            <div className="status-icons">
+                <svg width="20" height="14" viewBox="0 0 20 14"><rect x="0" y="9" width="3" height="5" rx="1" fill="#222"/><rect x="5" y="6" width="3" height="8" rx="1" fill="#222"/><rect x="10" y="3" width="3" height="11" rx="1" fill="#222"/><rect x="15" y="0" width="3" height="14" rx="1" fill="#222"/></svg>
+                <svg width="16" height="14" viewBox="0 0 16 12"><path d="M8 10.5l2-2.2a2.9 2.9 0 00-4 0l2 2.2z" fill="#222"/><path d="M2.6 4.6a7.8 7.8 0 0110.8 0" stroke="#222" strokeWidth="1.5" fill="none" strokeLinecap="round"/><path d="M4.8 6.9a4.7 4.7 0 016.4 0" stroke="#222" strokeWidth="1.5" fill="none" strokeLinecap="round"/></svg>
+                <svg width="25" height="14" viewBox="0 0 25 14"><rect x="0.5" y="1.5" width="22" height="11" rx="2.5" stroke="#222" fill="none"/><rect x="2" y="3" width="19" height="8" rx="1" fill="#222"/><rect x="24" y="5" width="1" height="4" rx="0.5" fill="#222"/></svg>
+            </div>
+        </div>
+    );
+}
+
+function TopAppBar({ onSearch }) {
+    return (
+        <div className="top-app-bar">
+            <button className="tab-icon-btn" aria-label="Back"><BackIcon /></button>
+            <span className="title type-label-medium700">Mark Issues</span>
+            <button className="search-btn" aria-label="Search" onClick={onSearch}>
+                <SearchIcon />
+            </button>
+        </div>
+    );
+}
+
+function Tabs({ active, onChange }) {
+    return (
+        <div className="tabs">
+            {TABS.map(t => (
+                <button
+                    key={t.id}
+                    className={"tab type-body-medium" + (active === t.id ? " active" : "")}
+                    onClick={() => onChange(t.id)}
+                >
+                    <span className="tab-inner">
+                        <span>{t.label}</span>
+                        <span className="bar" />
+                    </span>
+                </button>
+            ))}
+        </div>
+    );
+}
+
+function Chip({ label, selected, onClick }) {
+    return (
+        <button className={"chip type-label-medium" + (selected ? " selected" : "")} onClick={onClick}>
+            {label}
+        </button>
+    );
+}
+
+/* ===================== Recommended grid ===================== */
+function PartTile({ part, marked, onClick }) {
+    return (
+        <button className={"part-tile" + (marked ? " marked" : "")} onClick={onClick}>
+            <img className="photo" src={PART_IMG} alt="" />
+            <div className="scrim" />
+            <span className="label type-label-xsmall">{part.name}</span>
+        </button>
+    );
+}
+
+function RecommendedGrid({ marks, onOpen }) {
+    const parts = PARTS.filter(p => p.recommended);
+    return (
+        <div className="parts-grid">
+            {parts.map(p => (
+                <PartTile
+                    key={p.id}
+                    part={p}
+                    marked={(marks[p.id] || []).length > 0}
+                    onClick={() => onOpen(p.id)}
+                />
+            ))}
+        </div>
+    );
+}
+
+/* ===================== Zone list ===================== */
+function ZoneList({ zone, marks, expanded, flashed, onToggleRow, onToggleIssue }) {
+    const parts = PARTS.filter(p => p.zone === zone);
+    return (
+        <div>
+            {parts.map((p, i) => {
+                const selected = marks[p.id] || [];
+                const open = expanded === p.id;
+                return (
+                    <div
+                        key={p.id}
+                        id={"row-" + p.id}
+                        className={"row-group" + (open ? " open" : "") + (flashed === p.id ? " flash" : "")}
+                    >
+                        <button
+                            className={"list-row" + (open ? " expanded-head" : "")}
+                            onClick={() => onToggleRow(p.id)}
+                        >
+                            <span className="row-lhs">
+                                <span className="part-thumb"><img src={PART_IMG} alt="" /></span>
+                                <span className="row-text">
+                                    <span className="name type-label-medium">{p.name}</span>
+                                    {selected.length > 0 && (
+                                        <Collapse open={!open}>
+                                            <span className="row-tags type-label-medium">
+                                                {selected.map((s, idx) => (
+                                                    <React.Fragment key={s}>
+                                                        {idx > 0 && <span className="tag-dot" />}
+                                                        <span>{s}</span>
+                                                    </React.Fragment>
+                                                ))}
+                                            </span>
+                                        </Collapse>
+                                    )}
+                                </span>
+                            </span>
+                            <span className={"chevron" + (open ? " up" : "")}><ChevronIcon /></span>
+                        </button>
+
+                        {/* Always mounted so it can animate open *and* closed */}
+                        <Collapse open={open}>
+                            <div className="row-chips">
+                                <div className="chip-group">
+                                    {issuesFor(p).map(issue => (
+                                        <Chip
+                                            key={issue}
+                                            label={issue}
+                                            selected={selected.includes(issue)}
+                                            onClick={() => onToggleIssue(p.id, issue)}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+                        </Collapse>
+
+                        {i < parts.length - 1 && <div className="row-divider" />}
+                    </div>
+                );
+            })}
+        </div>
+    );
+}
+
+/* ===================== Search ===================== */
+
+/* Case-insensitive substring match; returns the name split so the
+   matched run can be bolded (Figma renders it in Label/Medium700). */
+function splitMatch(name, query) {
+    if (!query) return [{ text: name, hit: false }];
+    const i = name.toLowerCase().indexOf(query.toLowerCase());
+    if (i === -1) return [{ text: name, hit: false }];
+    return [
+        { text: name.slice(0, i), hit: false },
+        { text: name.slice(i, i + query.length), hit: true },
+        { text: name.slice(i + query.length), hit: false },
+    ].filter(s => s.text);
+}
+
+const matchesQuery = (part, q) =>
+    part.name.toLowerCase().includes(q.trim().toLowerCase());
+
+function SearchRow({ part, query, onPick }) {
+    return (
+        <button className="search-row" onClick={() => onPick(part)}>
+            <span className="row-lhs">
+                <span className="part-thumb"><img src={PART_IMG} alt="" /></span>
+                <span className="name type-label-medium">
+                    {splitMatch(part.name, query).map((s, i) => (
+                        <span key={i} className={s.hit ? "match" : undefined}>{s.text}</span>
+                    ))}
+                </span>
+            </span>
+            <span className="search-arrow"><ArrowInsertIcon /></span>
+        </button>
+    );
+}
+
+const KB_ROWS = [
+    ["Q","W","E","R","T","Y","U","I","O","P"],
+    ["A","S","D","F","G","H","J","K","L"],
+    ["Z","X","C","V","B","N","M"],
+];
+
+function Keyboard({ onKey, onBackspace, onDone }) {
+    const [shift, setShift] = useState(false);
+
+    const tapLetter = ch => {
+        onKey(shift ? ch.toUpperCase() : ch.toLowerCase());
+        if (shift) setShift(false);   // one-shot shift, as on iOS
+    };
+
+    return (
+        <div className="keyboard">
+            <div className="kb-accessory">
+                <div className="kb-chevrons">
+                    <svg width="20" height="12" viewBox="0 0 20 12" fill="none">
+                        <path d="M2 10L10 2l8 8" stroke="#9A9DA3" strokeWidth="2"
+                              strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                    <svg width="20" height="12" viewBox="0 0 20 12" fill="none">
+                        <path d="M2 2l8 8 8-8" stroke="#6E7176" strokeWidth="2"
+                              strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                </div>
+                <button className="kb-done" onClick={onDone}>Done</button>
+            </div>
+
+            <div className="kb-predictive">
+                <span>“GREENDRIVE”</span>
+                <i className="sep" />
+                <span />
+                <i className="sep" />
+                <span />
+            </div>
+
+            <div className="kb-rows">
+                <div className="kb-row">
+                    {KB_ROWS[0].map(c => (
+                        <button key={c} className="key" onClick={() => tapLetter(c)}>{c}</button>
+                    ))}
+                </div>
+                <div className="kb-row indent">
+                    {KB_ROWS[1].map(c => (
+                        <button key={c} className="key" onClick={() => tapLetter(c)}>{c}</button>
+                    ))}
+                </div>
+                <div className="kb-row">
+                    <button
+                        className={"key grey mod" + (shift ? " on" : "")}
+                        onClick={() => setShift(s => !s)}
+                        aria-label="Shift"
+                    >
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                            <path d="M10 2.5L3 9.5h3.6v4.2h6.8V9.5H17L10 2.5z" fill="#000"/>
+                            <rect x="6.6" y="15" width="6.8" height="2.4" fill="#000"/>
+                        </svg>
+                    </button>
+                    {KB_ROWS[2].map(c => (
+                        <button key={c} className="key" onClick={() => tapLetter(c)}>{c}</button>
+                    ))}
+                    <button className="key grey mod" onClick={onBackspace} aria-label="Backspace">
+                        <svg width="25" height="19" viewBox="0 0 25 19" fill="none">
+                            <path d="M8 1.6h14a1.6 1.6 0 011.6 1.6v12.2A1.6 1.6 0 0122 17H8L1.3 9.6 8 1.6z"
+                                  stroke="#fff" strokeWidth="1.5" fill="none"/>
+                            <path d="M11.5 6.8l6 5.4M17.5 6.8l-6 5.4" stroke="#fff"
+                                  strokeWidth="1.5" strokeLinecap="round"/>
+                        </svg>
+                    </button>
+                </div>
+                <div className="kb-row">
+                    <button className="key grey action">123</button>
+                    <button className="key space" onClick={() => onKey(" ")}>space</button>
+                    <button className="key grey action" onClick={onDone}>return</button>
+                </div>
+            </div>
+
+            <div className="kb-bottom">
+                <button aria-label="Emoji">
+                    <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
+                        <circle cx="13" cy="13" r="11" stroke="#4A4A4A" strokeWidth="1.6"/>
+                        <circle cx="9.2" cy="10.5" r="1.4" fill="#4A4A4A"/>
+                        <circle cx="16.8" cy="10.5" r="1.4" fill="#4A4A4A"/>
+                        <path d="M8.4 15.4a5.4 5.4 0 009.2 0" stroke="#4A4A4A"
+                              strokeWidth="1.6" strokeLinecap="round"/>
+                    </svg>
+                </button>
+                <button aria-label="Dictate">
+                    <svg width="20" height="28" viewBox="0 0 20 28" fill="none">
+                        <rect x="6.6" y="2" width="6.8" height="13" rx="3.4"
+                              stroke="#4A4A4A" strokeWidth="1.6"/>
+                        <path d="M3.4 12.6a6.6 6.6 0 0013.2 0M10 19.2V24" stroke="#4A4A4A"
+                              strokeWidth="1.6" strokeLinecap="round"/>
+                    </svg>
+                </button>
+            </div>
+            <div className="kb-home"><i /></div>
+        </div>
+    );
+}
+
+function SearchScreen({ onPick, onDone }) {
+    const [query, setQuery] = useState("");
+    const typing = query.length > 0;
+
+    /* Default state shows top suggestions; typing filters across every
+       part in the catalogue, not just the current tab. */
+    const results = typing
+        ? PARTS.filter(p => matchesQuery(p, query))
+        : PARTS.filter(p => p.recommended).slice(0, 6);
+
+    return (
+        <div className="screen">
+            <div className="search-head">
+                <StatusBar />
+                <div className="search-head-row">
+                    <button className="search-back" aria-label="Back" onClick={onDone}>
+                        <BackIcon />
+                    </button>
+                    <div className="search-field-wrap">
+                        <div className={"search-field" + (typing ? " typing" : "")}>
+                            <SearchIcon />
+                            <input
+                                autoFocus
+                                value={query}
+                                placeholder="Search parts, try tyre"
+                                onChange={e => setQuery(e.target.value)}
+                                onKeyDown={e => e.key === "Escape" && onDone()}
+                            />
+                            {/* Cancel clears the query, returning search to its default state */}
+                            {typing && (
+                                <button
+                                    className="search-cancel"
+                                    aria-label="Clear search"
+                                    onClick={() => setQuery("")}
+                                >
+                                    <CancelIcon />
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div className="body-scroll" style={{ paddingTop: "var(--spacing-6)" }}>
+                {results.length === 0 ? (
+                    <p className="empty-note type-body-medium">No parts match “{query}”</p>
+                ) : (
+                    <div className="search-results">
+                        {/* Title only in the default state — filtered results stand alone */}
+                        {!typing && (
+                            <h2 className="search-section-title type-heading-small">Suggestions</h2>
+                        )}
+                        {results.map((p, i) => (
+                            <React.Fragment key={p.id}>
+                                <SearchRow part={p} query={typing ? query : ""} onPick={onPick} />
+                                {i < results.length - 1 && <div className="search-divider" />}
+                            </React.Fragment>
+                        ))}
+                    </div>
+                )}
+            </div>
+
+            <Keyboard
+                onKey={ch => setQuery(q => q + ch)}
+                onBackspace={() => setQuery(q => q.slice(0, -1))}
+                onDone={onDone}
+            />
+        </div>
+    );
+}
+
+/* ===================== Bottom sheet ===================== */
+function MarkIssueSheet({ part, draft, dirty, onToggle, onConfirm, onDismiss }) {
+    const all = issuesFor(part);
+    return (
+        <React.Fragment>
+            <div className="scrim-overlay" onClick={onDismiss} />
+            <div className="sheet">
+                <div className="sheet-body">
+                    <div className="sheet-handle" />
+                    <div className="sheet-content">
+                        <div className="sheet-part">
+                            <span className="thumb"><img src={PART_IMG} alt="" /></span>
+                            <span className="type-label-medium">{part.name}</span>
+                        </div>
+                        <div className="sheet-divider" />
+                        <div style={{ display: "flex", flexDirection: "column", gap: "var(--spacing-6)" }}>
+                            <span className="type-label-medium">Mark issues</span>
+                            <div className="chip-group">
+                                {all.map(issue => (
+                                    <Chip
+                                        key={issue}
+                                        label={issue}
+                                        selected={draft.includes(issue)}
+                                        onClick={() => onToggle(issue)}
+                                    />
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div className="sheet-footer">
+                    <button
+                        className="btn-primary type-label-medium700"
+                        disabled={!dirty}
+                        onClick={onConfirm}
+                    >
+                        Confirm
+                    </button>
+                </div>
+            </div>
+        </React.Fragment>
+    );
+}
+
+/* ===================== App ===================== */
+function App() {
+    const [tab, setTab]           = useState("recommended");
+    const [marks, setMarks]       = useState({});      // { partId: [issue, ...] }
+    const [sheetId, setSheetId]   = useState(null);
+    const [draft, setDraft]       = useState([]);
+    const [expanded, setExpanded] = useState(null);
+    const [toast, setToast]       = useState(null);
+    const [screen, setScreen]     = useState("main");   // "main" | "search"
+    const [flashed, setFlashed]   = useState(null);
+
+    /* A search hit always lands on the part's zone tab — Recommended is a
+       grid with no row to expand. Expand it, flash it, scroll it into view. */
+    const pickFromSearch = part => {
+        setScreen("main");
+        setTab(part.zone);
+        setExpanded(part.id);
+        setFlashed(part.id);
+        setTimeout(() => {
+            const el = document.getElementById("row-" + part.id);
+            if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+        }, 60);
+        setTimeout(() => setFlashed(null), 1900);
+    };
+
+    const totals = useMemo(() => {
+        const entries = Object.entries(marks).filter(([, v]) => v.length > 0);
+        return {
+            parts:  entries.length,
+            issues: entries.reduce((n, [, v]) => n + v.length, 0),
+        };
+    }, [marks]);
+
+    const openSheet = id => {
+        setSheetId(id);
+        setDraft(marks[id] || []);
+    };
+
+    const commitSheet = () => {
+        setMarks(prev => {
+            const next = { ...prev };
+            if (draft.length) next[sheetId] = draft;
+            else delete next[sheetId];
+            return next;
+        });
+        setSheetId(null);
+    };
+
+    const toggleRowIssue = (partId, issue) => {
+        setMarks(prev => {
+            const next = { ...prev };
+            const updated = toggleIssue(prev[partId] || [], issue);
+            if (updated.length) next[partId] = updated;
+            else delete next[partId];
+            return next;
+        });
+    };
+
+    const update = () => {
+        setToast(
+            `${totals.issues} issue${totals.issues === 1 ? "" : "s"} marked on ` +
+            `${totals.parts} part${totals.parts === 1 ? "" : "s"}`
+        );
+        setTimeout(() => setToast(null), 2600);
+    };
+
+    if (screen === "search") {
+        return (
+            <div className="app">
+                <SearchScreen onPick={pickFromSearch} onDone={() => setScreen("main")} />
+            </div>
+        );
+    }
+
+    return (
+        <div className="app">
+            <div className="screen">
+                <StatusBar />
+                <TopAppBar onSearch={() => setScreen("search")} />
+                <Tabs active={tab} onChange={t => { setTab(t); setExpanded(null); }} />
+
+                <div className="body-scroll">
+                    {tab === "recommended"
+                        ? <RecommendedGrid marks={marks} onOpen={openSheet} />
+                        : <ZoneList
+                            zone={tab}
+                            marks={marks}
+                            expanded={expanded}
+                            flashed={flashed}
+                            onToggleRow={id => setExpanded(expanded === id ? null : id)}
+                            onToggleIssue={toggleRowIssue}
+                          />
+                    }
+                </div>
+
+                <div className="footer">
+                    <button
+                        className="btn-primary type-label-medium700"
+                        disabled={totals.issues === 0}
+                        onClick={update}
+                    >
+                        {totals.issues > 0 ? `Update issues (${totals.issues})` : "Update issues"}
+                    </button>
+                </div>
+            </div>
+
+            {toast && (
+                <div className="toast type-label-medium">
+                    <CheckIcon />
+                    <span>{toast}</span>
+                </div>
+            )}
+
+            {sheetId && (
+                <MarkIssueSheet
+                    part={byId[sheetId]}
+                    draft={draft}
+                    /* Enabled only once the selection differs from what's saved:
+                       covers both an untouched fresh part and an untouched marked one. */
+                    dirty={!sameSet(draft, marks[sheetId] || [])}
+                    onToggle={issue => setDraft(d => toggleIssue(d, issue))}
+                    onConfirm={commitSheet}
+                    onDismiss={() => setSheetId(null)}
+                />
+            )}
+        </div>
+    );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>

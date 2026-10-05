@@ -1,0 +1,66 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   INSTALLED TO A HOME SCREEN — the only rules that know about deployment
+   ═══════════════════════════════════════════════════════════════════════════
+   Keyed on display-mode, not on a width. The card-on-grey layout is right in a
+   browser at any size — including the 460px the geometry suite runs at — and
+   wrong the moment the app IS the screen. Widening the 430px breakpoint in
+   base.css to catch a 440px Pro Max would have changed the suite's viewport at
+   the same time, which is the wrong lever.
+
+   LAST in CSS_ORDER, and that is load-bearing: it overrides selectors declared
+   in later files than base.css, and at equal specificity the override has to
+   come after them or it silently loses the cascade.
+
+   Two things change here, and nowhere else — see the rules themselves for why.
+   The short version of the first, because it was got wrong once: the installed
+   app draws under the system's own bars, so the frame has to be inset by them
+   rather than every bar inside it being patched one at a time. The first attempt
+   patched three bars and left the home nav, six CTA footers and every bottom
+   sheet sitting under the gesture bar.
+
+   env() resolves to 0 in headless Chrome and display-mode is `browser` over
+   file://, so none of this is visible to tests/geomtest.py or to the build's
+   pre-render. That is why the suites stay green — and it means they cannot
+   check any of it. This block is verified on a device, not by the tests, which
+   is precisely how the clipping shipped.
+   ═══════════════════════════════════════════════════════════════════════════ */
+@media (display-mode:standalone){
+
+  /* 1 — THE FRAME IS THE SAFE AREA, and this one rule is the whole fix.
+     viewport-fit=cover plus black-translucent means the web view covers the
+     entire screen, INCLUDING the strips the system draws its status bar and
+     gesture bar over. So 100dvh is bigger than what you can actually see, and
+     everything anchored to bottom:0 — the home nav, every CTA footer, every
+     bottom sheet — was sitting underneath the gesture bar.
+
+     Padding on .phone fixes all of it at once, because an absolutely positioned
+     child resolves inset:0 against its containing block's PADDING box, not its
+     border box. Every .screen is inset:0, so every screen and every bar inside
+     one is inset by exactly the system's own insets, with no per-bar arithmetic.
+     box-sizing is border-box globally, so the 100dvh total is unchanged and the
+     content area shrinks by the insets instead.
+
+     This replaces the three per-bar env() corrections that used to live here.
+     They only ever patched .rntabbar, .qbar and .minitask__card — the six CTA
+     footers, the home nav and every sheet were never touched, which is exactly
+     the list of things that came back clipped. */
+  body{
+    background:var(--canvas-primary);display:block;
+    /* No document left to scroll, so no chrome can drag the frame with it. */
+    position:fixed;inset:0;
+  }
+  .phone{
+    width:100vw;
+    height:100dvh;
+    border-radius:0;
+    padding-top:env(safe-area-inset-top);
+    padding-bottom:env(safe-area-inset-bottom);
+  }
+
+  /* 2 — the real status bar. It is above the frame's content box now rather than
+     over it, so the painted 9:41 goes and the offset it reserved goes with it.
+     --header-h has the 44 baked into a literal 116, so it has to follow. */
+  :root{ --status-h:0px; --header-h:72px }
+  #scrMarkIssues{--status-h:0px}
+  .statusbar{display:none}
+}

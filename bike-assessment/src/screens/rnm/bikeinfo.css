@@ -1,0 +1,521 @@
+/* ═══ RnM — Bike info, Figma 2695:32811 ═══
+   The overlay behind the vitals strip's arrow. Split out by region like the rest
+   of this screen. See src/MAP.md.
+
+   Every number here is the frame's, converted from its absolute coordinates to
+   flow spacing. The arithmetic, once, so the rest can just be read:
+
+     header ends 116   →  16 padding puts the identity tile at 132
+     identity 60 tall  →  ends 192, +24 = the first divider at 216
+     stats  68+16+68   →  240 to 392, +24 = the second divider at 416
+     location 212      →  440 to 652, +24 = the third divider at 676
+     parts 6 x 76-16   →  700 to 1140
+
+   One deviation, and it is content not layout: the frame writes the bike as
+   654321, and this flow's bike is 543210 everywhere else — the dashboard that
+   opens this screen, the app bar on the issues list, the token. Copying the
+   frame's placeholder would have put two different bikes in one journey, so the
+   number follows the flow. Everything visual is the frame's. */
+
+  #scrRnm .bi{ padding: var(--s4) 0 var(--s6); }
+
+  /* The flow's 342 divider on the 24 inset. hr, so it needs its own reset.
+     23 below, not 24: Figma's Divider is a ZERO-height node with a half-pixel
+     stroke straddling its y, so the frame's next band starts 24 after the line's
+     position. A real 1px line in flow takes a pixel of that, and with three
+     dividers the error compounds — the parts list measured 703 against the
+     frame's 700 before this. The pixel comes off the gap below, which keeps every
+     downstream y on the frame's number. */
+  #scrRnm .bi__rule{
+    height: 1px;
+    margin: var(--s6) var(--s6) calc(var(--s6) - 1px);
+    border: 0;
+    background: var(--border-primary);
+  }
+
+  /* ---- Identity ---------------------------------------------------------- */
+  /* Bottom-aligned, not centred. The frame puts the number's box at 152 and the
+     model's at 176 against a tile spanning 132-192 — so the text block is flush
+     with the tile's foot and the 20px of slack is all above it. Centring it
+     would read as 2px of drift against the frame everywhere else matches. */
+  #scrRnm .bi__id{
+    display: flex;
+    align-items: flex-end;
+    gap: var(--s4);
+    padding: 0 var(--s6);
+  }
+  #scrRnm .bi__art{
+    flex: 0 0 auto;
+    position: relative;
+    width: 60px;
+    height: 60px;
+    border-radius: var(--s2);
+    background: var(--surface-secondary);
+  }
+  /* 37.541x40 at (11,10) inside the tile — the frame's own numbers, kept as
+     fractions because the artwork is a vector and the .541 is real. */
+  #scrRnm .bi__art img{
+    position: absolute;
+    left: 11px;
+    top: 10px;
+    display: block;
+    width: 37.541px;
+    height: 40px;
+  }
+  #scrRnm .bi__idtext{ display: flex; flex-direction: column; gap: var(--s1); }
+  #scrRnm .bi__num{
+    font-weight: 700;
+    font-size: 16px;
+    line-height: 20px;
+    color: var(--content-primary);
+  }
+  #scrRnm .bi__model{
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 16px;
+    color: var(--content-secondary);
+  }
+
+  /* ---- Readings — 2729:22356 --------------------------------------------- */
+  /* The three states are ONE card now, split by hairlines, rather than three
+     tiles. The frame draws it 341 wide against the 342 every other band on this
+     screen uses; it is 342 here, because a one-pixel-narrower card in a stack of
+     full-width ones reads as a mistake and the frame's own arithmetic is what is
+     inconsistent.
+
+     space-between with fixed 64px cells, which is how shared/vcard.css solves the
+     same problem: it puts the outer cells hard against the 20px padding and
+     centres the middle one, landing all three on the frame's 76 / 195 / 314. Even
+     thirds would drift the outer two by 5px. */
+  #scrRnm .bi__band{
+    position: relative;
+    margin: 0 var(--s6) var(--s4);
+    height: 68px;
+    box-sizing: border-box;
+    padding: 0 20px;
+    border-radius: var(--s2);
+    background: var(--surface-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  #scrRnm .bi__cell{
+    width: 64px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 0;
+  }
+  /* 36 tall and centred, so the rules stop short of the card's own rounding
+     rather than running edge to edge. Absolute, because as flex items they would
+     take a share of the space-between distribution and drag the cells off the
+     frame's centres. 111 and 230 are the frame's 135 and 254 less the 24 inset. */
+  #scrRnm .bi__bandrule{
+    position: absolute;
+    top: var(--s4);
+    width: 1px;
+    height: 36px;
+    background: var(--border-primary);
+  }
+  #scrRnm .bi__bandrule--a{ left: 111px; }
+  #scrRnm .bi__bandrule--b{ left: 230px; }
+
+  /* The three measurements stay separate tiles: 16 + 16 value + 4 + 16 label + 16.
+     1fr rather than the frame's fixed 103 — installed, the frame is 100vw, and on
+     a 375px phone three 103s plus two 16s overflow the 327 available. */
+  #scrRnm .bi__stats{
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--s4);
+    padding: 0 var(--s6);
+  }
+  #scrRnm .bi__stat{
+    height: 68px;
+    box-sizing: border-box;
+    padding: var(--s4) 0;
+    border-radius: var(--s2);
+    background: var(--surface-secondary);
+    /* A stroke on the outside. border-box, so the 68 and the 1fr columns are
+       unchanged — the line comes out of the padding rather than growing the tile.
+
+       This block is shared with the Bike info OVERLAY, which draws the same
+       three tiles from the same rule, so both get it. That is the point of it
+       being one component: two readings cards on one bike that disagreed about
+       whether a tile has an edge would be worse than either answer. */
+    border: 1px solid var(--border-primary);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    gap: var(--s1);
+    min-width: 0;
+  }
+  #scrRnm .bi__stati{ display: block; width: 20px; height: 20px; }
+  #scrRnm .bi__statl{
+    font-weight: 500;
+    font-size: 12px;
+    line-height: 16px;
+    color: var(--content-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+  }
+  /* One string at one weight now — "7,245 kms", not a bold number with a small
+     unit riding its baseline. Label/Small on primary. */
+  #scrRnm .bi__statv{
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 16px;
+    color: var(--content-primary);
+    white-space: nowrap;
+  }
+
+  /* ---- Last seen -------------------------------------------------------- */
+  /* 342x212: a 160 image band, then a 20 line of text with 16 above and below.
+     overflow:hidden so the band takes the card's radius at the top and squares
+     off where the footer begins, without a second radius to keep in sync. */
+  #scrRnm .bi__loc{
+    margin: 0 var(--s6);
+    box-sizing: border-box;
+    height: 212px;
+    border: 1px solid var(--border-primary);
+    border-radius: var(--s2);
+    background: var(--surface-inverse);
+    overflow: hidden;
+  }
+  /* Out over the border on three sides, so the band is the frame's full 342 at
+     the card's own top edge rather than 340 inset by the 1px stroke. That also
+     puts the footer text at y616 instead of 617. */
+  #scrRnm .bi__map{
+    position: relative;
+    height: 160px;
+    margin: -1px -1px 0;
+    background: var(--surface-secondary);
+    overflow: hidden;
+  }
+  /* slice is the SVG spelling of object-fit:cover — the drawing is already
+     342x160 so nothing is cropped today, and this keeps that true if the band
+     ever changes ratio. */
+  #scrRnm .bi__mapsvg{
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+  /* Centred on the point, not on the pin's box: a teardrop marks the place with
+     its tip, so the translate takes the full height rather than half of it. */
+  #scrRnm .bi__mappin{
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 32px;
+    height: 44px;
+    transform: translate(-50%, -100%);
+    /* The tip should sit on the centre, so nudge back down by the shadow the
+       artwork carries under it. */
+    margin-top: 4px;
+    pointer-events: none;
+  }
+  /* Baseline, not centre: the frame sets the name's box at 616 and the timestamp's
+     at 620, which is two line-heights sharing one baseline. */
+  #scrRnm .bi__locfoot{
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--s4);
+    /* 15, not 16: box-sizing is border-box, so the card's 1px stroke is already
+       inside the box and a flat 16 measured 41 from the frame edge against the
+       frame's 40. The same correction the vitals card and the part-exchange card
+       needed. */
+    padding: var(--s4) calc(var(--s4) - 1px) 0;
+  }
+  #scrRnm .bi__locname{
+    font-weight: 500;
+    font-size: 16px;
+    line-height: 20px;
+    color: var(--content-primary);
+  }
+  #scrRnm .bi__locwhen{
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 16px;
+    color: var(--content-secondary);
+    white-space: nowrap;
+  }
+
+  /* ---- Components ------------------------------------------------------- */
+  #scrRnm .bi__parts{
+    display: flex;
+    flex-direction: column;
+    gap: var(--s4);
+    padding: 0 var(--s6);
+  }
+  /* A 60px tile and its text, and on two of the six a chevron. The two that lead
+     somewhere are buttons and the rest are not — so the element itself says
+     whether there is anything to press, rather than a class doing it. */
+  #scrRnm .bi__part{
+    display: flex;
+    align-items: flex-start;
+    gap: var(--s4);
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    text-align: left;
+  }
+  #scrRnm .bi__part--go{ cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  #scrRnm .bi__part--go:active{ opacity: .6; }
+  #scrRnm .bi__partart{
+    flex: 0 0 auto;
+    width: 60px;
+    height: 60px;
+    border-radius: var(--s2);
+    background: var(--surface-secondary);
+  }
+  /* 6 from the top, not centred — the frame's offsets are 6 above and 10 below.
+     Flagged: the tiles are empty in the frame too; the component artwork was
+     never placed, so there is nothing to inline for them yet. */
+  #scrRnm .bi__parttext{
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--s2);
+    padding-top: 6px;
+  }
+  #scrRnm .bi__partname{
+    font-weight: 500;
+    font-size: 16px;
+    line-height: 20px;
+    color: var(--content-primary);
+  }
+  #scrRnm .bi__partsn{
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 16px;
+    color: var(--content-tertiary);
+    font-variant-numeric: normal;
+  }
+  /* Centred on the 60 tile: 20 above, 20 icon, 20 below. The frame's own
+     arrow_right export is unusable — its path is plotted at y -36 to -43 against
+     a 0 0 20 20 viewBox, so it renders as nothing, in Figma too. This is the
+     chevron the ⋮ rows and the part-exchange journey already use. */
+  #scrRnm .bi__partgo{
+    flex: 0 0 auto;
+    display: block;
+    width: 20px;
+    height: 20px;
+    margin-top: 20px;
+  }
+
+  /* ---- Component detail -------------------------------------------------- */
+  /* A spec sheet for one component, reached from a chevron on the parts list.
+     No frame for this one — it follows the screen it opens from: same app bar,
+     same 24 inset, same 342 divider between groups. */
+  /* The bar carries two lines. A serial is what tells two identical units apart,
+     and a mechanic reading these numbers usually has both in front of them, so
+     dropping it from the heading would make the page ambiguous exactly when it
+     matters. */
+  #scrRnm .cmpttl{
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 2px;
+    max-width: none;
+  }
+  #scrRnm .cmpttl__sn{
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 16px;
+    color: var(--content-tertiary);
+    white-space: nowrap;
+  }
+
+  #scrRnm .cmp{ padding: var(--s2) 0 var(--s6); }
+  /* Label left, reading right — the reading is what is being looked up, so it
+     takes the edge the eye returns to. Baseline-aligned rather than centred,
+     because a label that wraps to two lines should keep its first line level
+     with the number rather than drifting half a line below it. */
+  #scrRnm .cmprow{
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--s4);
+    padding: var(--s2) var(--s6);
+  }
+  #scrRnm .cmprow dt{
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 20px;
+    color: var(--content-secondary);
+    min-width: 0;
+  }
+  /* tabular-nums here, unlike the tab counts: these ARE a column of figures read
+     down the page, which is the one case the feature exists for. */
+  #scrRnm .cmprow dd{
+    margin: 0;
+    flex: 0 0 auto;
+    max-width: 55%;
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 20px;
+    color: var(--content-primary);
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  /* Groups, not a 21-row wall. The blank lines in the source data are real —
+     they separate what the pack is doing now from what it holds from how it was
+     built — so they are drawn rather than collapsed. */
+  #scrRnm .cmp__rule{
+    height: 1px;
+    margin: var(--s4) var(--s6);
+    border: 0;
+    background: var(--border-primary);
+  }
+  #scrRnm .cmp dl{ margin: 0; }
+
+  /* ---- Refresh ----------------------------------------------------------- */
+  /* Icon and age together, because neither is much use alone: the arrow says the
+     reading can be renewed, the label says whether it needs to be. Sits in the
+     app bar's trailing slot on Bike info and on both component pages. */
+  #scrRnm .refresh{
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: var(--s2);
+    padding: 6px var(--s4) 6px 12px;
+    /* Outlined: it is the only thing in the bar that DOES something rather than
+       reporting something, and a bare icon-and-label read as a caption. The pill
+       is the flow's own — same 100px radius and border/primary hairline as the
+       chips. */
+    border: 1px solid var(--border-primary);
+    border-radius: 100px;
+    background: none;
+    font: inherit;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    color: var(--content-secondary);
+  }
+  #scrRnm .refresh:active{ background: var(--surface-secondary); }
+  #scrRnm .refresh__ico{ display: block; width: 20px; height: 20px; }
+  #scrRnm .refresh__ago{
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 16px;
+    color: var(--content-tertiary);
+    white-space: nowrap;
+  }
+  /* One turn, on the tap. The readings come back instantly in a prototype, so a
+     spinner that outlived the answer would be theatre — this is just long enough
+     to register that the press did something. */
+  @keyframes rn-spin{ to{ transform: rotate(360deg); } }
+  #scrRnm .refresh.is-spinning .refresh__ico{
+    animation: rn-spin 600ms var(--ease-out);
+  }
+
+  /* ══ THE BIKE INFO TAB ═══════════════════════════════════════════════════
+     Not the overlay above — that is #screenVitals, reached from the ⋮ on a
+     repair. This is the assessment's second tab, and it shares the overlay's
+     .bi__stats block deliberately: three readings in three tiles is already a
+     component here, and the tab asks the same shape of question with different
+     numbers. Everything else is its own.
+
+     The other two panels are bottom-anchored (justify-content:flex-end in
+     tabbar.css) because their content is a short stack that should sit above
+     the bar. This one is a record that runs past the bottom of the frame, so it
+     is top-anchored and scrolls, and it paints its own ground: the panels are
+     transparent over the hero's gradient, which is right behind four rows and
+     wrong behind a page of text.
+     ═══════════════════════════════════════════════════════════════════════ */
+  #scrRnm .rntabpanel--info{
+    justify-content: flex-start;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    pointer-events: auto;
+    background: var(--canvas-primary);
+    /* Clear of the app bar above; the panel is inset:0 on the whole screen. */
+    padding-top: calc(var(--header-h) + var(--s6));
+  }
+  #scrRnm .rntabpanel--info::-webkit-scrollbar{ display: none; }
+
+  /* 24 above it, and the panel head's own 24 below — see .rnpanel__head. The
+     26px left inset is the frame's, shared with the Tasks panel's heading, so
+     the two tabs' headings sit on one line. */
+  /* Readings at the top, history on the FLOOR, and the slack between the two —
+     not all of it under the last row. The list is the longer-lived half of this
+     tab, and every other panel on this dashboard stacks up from the bottom.
+
+     margin-top:auto on the heading rather than space-between on the panel: with
+     three children, space-between would also have opened a gap between this
+     heading and the list it names. The auto margin collapses to nothing the
+     moment the content is taller than the panel, so padding carries the minimum
+     24 for the scrolling case.
+
+     The 8 below: the head's own 24 would land on top of the first row's 16 and
+     put 40px between a heading and its list. 8 + 16 = the 24 the rest of the app
+     puts under a heading — the same arithmetic .listhead does by carrying no
+     bottom padding at all. */
+  #scrRnm .bi__rhhead{
+    margin-top: auto;
+    padding-top: var(--s6);
+    margin-bottom: var(--s2);
+  }
+
+  /* ---- Repair history ----------------------------------------------------
+     A 76px pitch, the same as the dashboard's rows, so the two tabs read as one
+     app: 16 + 44 of text + 16, with the divider drawn on the bottom edge where
+     it costs no height. Text-only rows — no tile. The frames draw no art for a
+     repair and inventing one would be inventing a design decision, and a date
+     is not a thing that has a picture. */
+  #scrRnm .rhlist{ display: flex; flex-direction: column; }
+  #scrRnm .rh__row{
+    position: relative;
+    width: 100%;
+    box-sizing: border-box;
+    padding: var(--s4) var(--s6);
+    display: flex;
+    align-items: center;
+    gap: var(--s4);
+    border: 0;
+    background: none;
+    text-align: left;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #scrRnm .rh__row:active{ background: var(--surface-secondary); }
+  #scrRnm .rh__row::after{
+    content: "";
+    position: absolute;
+    left: var(--s6); right: var(--s6); bottom: 0;
+    height: 1px;
+    background: var(--border-primary);
+  }
+  /* The last row's divider would be a line with nothing under it. */
+  #scrRnm .rh__row:last-child::after{ display: none; }
+  #scrRnm .rh__text{
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  #scrRnm .rh__when{
+    font-weight: 500;
+    font-size: 16px;
+    line-height: 24px;
+    color: var(--content-primary);
+  }
+  #scrRnm .rh__kms{
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 20px;
+    color: var(--content-secondary);
+    font-variant-numeric: tabular-nums;
+  }
+  #scrRnm .rh__go{
+    flex: 0 0 auto;
+    display: block;
+    width: 24px;
+    height: 24px;
+  }

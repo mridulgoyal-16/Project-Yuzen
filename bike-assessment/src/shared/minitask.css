@@ -1,0 +1,114 @@
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   MINIMISED TASK — Figma 2191:24126
+   A task the mechanic stepped away from, parked on the listing it came from.
+
+   A full-bleed band at the foot of the screen: 390x84 on canvas, text inset 24,
+   a bare 24px expand icon inset 24, and a 6px progress bar riding the top edge
+   edge-to-edge. 6px is --progress-h, the same strip the job page wears, so the
+   same number wears the same form in both places.
+
+   This replaced a floating 342x80 dark pill (Figma 2191:25878), and the reason is
+   the progress bar, not the container. Inside a pill the bar has to be inset,
+   because a 40px radius swallows the first and last ~12% of the track — so its
+   scale is a lie by 16% of the dock's width, and the low percentages that matter
+   most (a barely-started task is the one you forget) are the ones it reads worst.
+   On a boundary, edge to edge, 8% looks like 8% and the bar needs no contrast of
+   its own. The band costs the pill's "your work, liftable" read and it costs the
+   Filters / Sort bar its place; both were judged worth it. The four treatments
+   that lost are recorded in ../../dockcmp.html.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.minitask{padding:0}
+.minitask[hidden]{display:none}
+
+/* One tap target, bar included: the bar is painted inside the button rather than
+   stacked above it, so there is no seam and no second hit area.
+   90 = 6 bar + 84 band. Figma's group measures 89 because the bar overlaps the
+   band's border/primary hairline by 1px — and since the bar is opaque and full
+   width, that hairline is never visible. So it is not drawn here: the bar IS the
+   band's top edge. */
+/* Inverted: dark band, light text. Both listings are white end to end — chips,
+   rows, FAB — so a white card at the foot of one was a band you had to look for.
+   Dark, it is the one thing on the screen that is not the list, which is what it
+   is: your own work, waiting, not another bike to pick up. */
+.minitask__card{
+  position:relative;
+  width:100%;height:90px;border:0;cursor:pointer;
+  background:var(--surface-primary);
+  /* 16 above the first line, 24 below the second. The source is asymmetric. */
+  padding:calc(var(--progress-h) + var(--s4)) var(--s6) var(--s6);
+  display:flex;align-items:center;gap:var(--s4);
+  text-align:left;
+}
+/* No shadow and no radius any more, so pressed state is a fill, not a lift — and
+   on a dark band the fill has to go lighter rather than darker. */
+.minitask__card:active{background:var(--surface-primary-pressed)}
+
+/* Progress. A snapshot taken when the task was parked, not a live figure — see
+   minitask.js for why it cannot be recomputed on render.
+
+   Same bar in every way that was asked for — 6px, full bleed, riding the top
+   edge, --progress-h like the job page's — but the two tokens are swapped with
+   the band. They have to be. The fill was surface/primary, which is the #222 the
+   band now is: leave it and the filled part of the track disappears into the card
+   directly beneath it while the EMPTY part stays bright white. A 25% task would
+   read as 75% done, which is the one thing this bar exists not to do (see the
+   note above on why it left the pill). Light fill on a dim track keeps the read
+   the right way round. */
+.minitask__bar{
+  position:absolute;left:0;right:0;top:0;height:var(--progress-h);
+  background:var(--content-secondary);pointer-events:none;
+}
+.minitask__bar i{display:block;height:100%;width:var(--pct);background:var(--content-inverse)}
+
+.minitask__text{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:var(--s2)}
+.minitask__line1{
+  color:var(--content-inverse);font-size:16px;font-weight:700;line-height:20px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+/* The model is dimmer than the number it follows — the number is what a mechanic
+   matches against the bike in front of them.
+
+   content/disabled, not content/tertiary, for both dim lines. Tertiary is #919191
+   and was picked to sit against white; on #222 it lands at about 4.2:1, which is
+   under the bar for 14px text. Disabled is lighter, so inverting the band moves
+   it UP the scale to ~6.4:1 while keeping it clearly the quieter of the two. */
+.minitask__line1 .model{color:var(--content-disabled);font-weight:500}
+/* Label/Small, 14/16 — the pill used 16/20. */
+.minitask__line2{
+  color:var(--content-disabled);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+/* A bare glyph, not a 40px translucent circle: there is no surface to tint. */
+.minitask__expand{
+  width:24px;height:24px;flex:0 0 auto;color:var(--content-inverse);
+}
+.minitask__expand svg{display:block;width:24px;height:24px}
+
+
+/* ── Confirm dialog ─────────────────────────────────────────────────────────
+   A centred modal, not a bottom sheet: the sheet is for choosing among actions,
+   and this is a question with a consequence. Same scrim as the sheet so the two
+   read as one system.
+   ─────────────────────────────────────────────────────────────────────────── */
+.dialog{
+  position:absolute;left:var(--s6);right:var(--s6);top:50%;
+  transform:translateY(-50%) scale(.96);
+  background:var(--surface-inverse);border-radius:var(--s4);
+  padding:var(--s6);z-index:31;
+  display:flex;flex-direction:column;gap:var(--s2);
+  opacity:0;pointer-events:none;
+  transition:opacity .2s var(--ease-out),transform .2s var(--ease-out);
+}
+.dialog.is-open{opacity:1;transform:translateY(-50%) scale(1);pointer-events:auto}
+.dialog__title{color:var(--content-primary);font-size:20px;font-weight:700;line-height:28px}
+.dialog__body{color:var(--content-secondary)}
+.dialog__body strong{font-weight:700;color:var(--content-primary)}
+.dialog__actions{margin-top:var(--s4);display:flex;flex-direction:column;gap:var(--s2)}
+/* The destructive action stays primary because it is what the mechanic asked for
+   by tapping another bike; Cancel is the way back, not the recommendation. */
+.dialog__actions .btn-secondary{
+  width:100%;height:64px;border:0;cursor:pointer;border-radius:100px;
+  background:var(--surface-secondary);color:var(--content-primary);
+  display:flex;align-items:center;justify-content:center;
+}

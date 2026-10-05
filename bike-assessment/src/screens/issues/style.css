@@ -1,0 +1,841 @@
+
+/* ========================================================================
+   ISSUES — ported from mechanic-rnm-flow/
+   Scoped under #scrIssues as well as prefixed: prefixing keeps her declarations off
+   this app's elements, scoping keeps this app's off hers.
+   ======================================================================== */
+/* The host's status bar is a transparent 44px overlay at the top of the frame, so
+   the app bar has to start below it. Her --header-h already counts that 44 (44 + 72
+   + 1 divider), which is why the scroll region below lands correctly once the bar
+   itself is in the right place. */
+#scrIssues .appbar{position:absolute;left:0;top:var(--status-h);width:100%;z-index:20}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Issues — Figma 1993:30331
+   The screen furniture above this line is lifted from mechanic-checks so the
+   two screens stitch without drift. Everything below is this screen.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── App bar: trailing three-dots ─────────────────────────────────────────── */
+/* The design centres "Issues • 5" with nothing on the right. Per the brief the
+   header matches the other screens instead, so the title stays left-aligned
+   after the back arrow and the overflow button takes the right edge. */
+#scrIssues .appbar__row{justify-content:space-between}
+#scrIssues .appbar__lead{display:flex;align-items:center;flex:1 1 auto;min-width:0}
+/* The shared bar caps the title at 204px, which fitted "543210 / Issues 0/5".
+   Naming the section makes it 234px, so it was arriving ellipsized. Take the row's
+   spare width instead of a fixed cap — the same override the complaint screen
+   already uses — and keep the ellipsis as the backstop for a long bike id. */
+#scrIssues .appbar__title{max-width:none;width:auto;flex:1 1 auto;min-width:0}
+#scrIssues .appbar__title p{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#scrIssues .trailing-action{height:48px;display:flex;align-items:center;flex:0 0 auto}
+
+/* The tab strip that stood here is gone — the RnM dashboard's Open tasks rows
+   are the section switch now. Its 56px went with it rather than being left as
+   dead air: the list starts directly under the progress bar, which is what the
+   header is for. */
+#scrIssues .iq-scroll{top:calc(var(--header-h) + var(--progress-h))}
+
+/* ── Page title ───────────────────────────────────────────────────────────── */
+/* 64px, matching Mark faults' .listhead so the two screens in this flow hand off
+   to their app bars identically. Explicit height, because the threshold that
+   collapses the bar is measured from it. */
+#scrIssues .iq-head{
+  height:64px;box-sizing:border-box;
+  padding:0 var(--s6) var(--s4);
+  display:flex;align-items:flex-end;
+}
+#scrIssues .iq-head[hidden]{display:none}
+#scrIssues .iq-head h2{white-space:nowrap}
+/* The tally rides the title rather than taking its own line — it qualifies the
+   heading, it is not a second one. Tertiary, the same token the bar's suffix
+   uses, so the number reads the same in both places. */
+#scrIssues .iq-head__count{
+  color:var(--content-tertiary);
+  font-variant-numeric:tabular-nums;
+}
+
+/* ── List ─────────────────────────────────────────────────────────────────── */
+/* The frame sets the first row 8px below the header. Padding goes on the list so
+   it scrolls with the content rather than holding a permanent gap under the app
+   bar. (The shell's header is 117px — 44 + 72 + its own 1px divider — where the
+   frame counts 116, so content lands 1px lower here than in Figma.) */
+#scrIssues .iq-list{padding-top:var(--s2)}
+
+/* ── Rows ─────────────────────────────────────────────────────────────────── */
+#scrIssues .issue{
+  display:flex;align-items:center;gap:var(--s4);
+  width:342px;margin:0 auto;padding:var(--s6) 0;
+  /* Divider on the row boundary via an inset shadow, so it cannot add height
+     the way a border-bottom would. */
+  box-shadow:inset 0 -1px 0 var(--border-primary);
+}
+/* A diagnostic row has one line and nothing to the left of it, so it does not need
+   the 96px a part row takes to hold a 64px thumbnail. */
+#scrIssues .issue--plain{
+  padding:var(--s4) 0;min-height:56px;
+  display:flex;align-items:center;justify-content:space-between;gap:var(--s4);
+}
+/* Its own wrapper rather than .issue__main, which is 56px tall with its two lines
+   pushed to the ends — that height exists to match a part row's 64px thumbnail,
+   and there is no thumbnail here. This one is only as tall as its lines. */
+#scrIssues .issue__plainMain{
+  flex:1 1 auto;min-width:0;
+  display:flex;flex-direction:column;gap:4px;
+}
+#scrIssues .issue--plain .issue__name{min-width:0}
+/* "Resolved", under the fault. Deliberately NOT .issue__reasons: the strike-through
+   rule keys off that class, and striking the word Resolved would say the opposite
+   of what it means. Same secondary grey the reasons line uses. */
+#scrIssues .issue__status{color:var(--content-secondary)}
+
+/* The list's own last hairline is drawn by the design, so every row keeps it. */
+
+#scrIssues .issue__thumb{
+  flex:0 0 auto;width:56px;height:56px;
+  border-radius:9.333px;background:var(--surface-secondary);
+  overflow:hidden;
+}
+#scrIssues .issue__thumb img{width:100%;height:100%;object-fit:cover;display:block}
+/* A row that brought its own render is painted rather than <img>-ed, so the crop
+   can match the checklist's — see issueThumb(). Fills the tile; the crop itself
+   is inline, because it is data. */
+#scrIssues .issue__crop,
+#scrIssues .sheet-dtl__thumb > div{width:100%;height:100%;display:block}
+
+#scrIssues .issue__main{
+  flex:1 1 auto;min-width:0;height:56px;
+  display:flex;flex-direction:column;justify-content:space-between;
+}
+#scrIssues .issue__head{
+  /* No gap token here on purpose. The arrow's ink sits ~10px inside its own 24px
+     box, so the frame's nominal 8px gap renders as ~18px of white and the arrow
+     reads as detached from the title. The negative margin pulls the box back so
+     the *ink* sits ~8px off the text — deliberately tighter than the frame. */
+  display:flex;align-items:center;gap:0;
+  border:0;background:none;padding:0;font:inherit;color:inherit;
+  cursor:pointer;text-align:left;-webkit-tap-highlight-color:transparent;
+  transition:opacity 120ms ease;
+}
+#scrIssues .issue__head:active{opacity:.55}
+#scrIssues .issue__name{color:var(--content-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#scrIssues .issue__head svg{
+  width:24px;height:24px;flex:0 0 auto;display:block;
+  fill:var(--content-primary);margin-left:-2px;
+}
+
+/* Reasons, dot-separated. Wrapping is allowed: three reasons already fill the
+   206px the design gives this line, and a fourth would otherwise be clipped. */
+#scrIssues .issue__reasons{
+  display:flex;align-items:center;gap:var(--s2);flex-wrap:wrap;
+  color:var(--content-secondary);
+}
+/* The separators are Surface/Disabled (#dddddd), markedly lighter than the
+   reasons themselves — measured off the frame at 221 against the text's 113.
+   Matching them to the text made the line read as a wall. */
+#scrIssues .issue__dot{
+  width:5px;height:5px;border-radius:50%;
+  background:var(--surface-disabled);flex:0 0 auto;
+}
+
+/* ── Title count ──────────────────────────────────────────────────────────── */
+
+
+/* ── Tick ─────────────────────────────────────────────────────────────────── */
+/* A word, not a glyph. The tick had to be learned — a circled check on a row that
+   already carries a struck-through name is a second symbol for the same idea, and
+   it was the only control on this screen with no label. Same 48px height, so the
+   row rhythm is untouched. */
+/* A state, not a control — how the issue closed is chosen in the sheet. Same
+   40px column the Resolve button occupied so the rows keep their rhythm, with the
+   glyph centred in it. */
+#scrIssues .issue__mark{
+  flex:0 0 auto;display:flex;align-items:center;justify-content:center;
+  width:40px;height:40px;
+}
+#scrIssues .issue__mark svg{display:block;width:24px;height:24px}
+
+#scrIssues .issue__tick{
+  flex:0 0 auto;height:48px;
+  display:flex;align-items:center;justify-content:center;
+  padding:0 var(--s4);border-radius:100px;
+  background:var(--surface-inverse);
+  border:1px solid var(--border-primary);
+  font:inherit;font-size:14px;font-weight:700;line-height:20px;
+  color:var(--content-primary);white-space:nowrap;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+  transition:background-color 160ms ease,border-color 160ms ease,
+             color 160ms ease,transform 120ms ease;
+}
+#scrIssues .issue__tick:active{transform:scale(.94)}
+/* Resolved: solid positive, white label. The old state was a grey pill with a
+   green glyph inside it, which read as "slightly different" rather than as done —
+   at a glance down a list of five rows you could not tell which were closed. Green
+   is the whole signal now: filled, not outlined, because an outline on a row this
+   busy competes with the row's own hairline. */
+/* Resolved is a STATE, not an action, so it stops being a word. The pill collapses
+   to a 48px circle carrying a check — same height, so the row does not shift, and
+   the width it gives back goes to the part name. Solid positive with a white
+   glyph: green is the whole signal, and a filled mark reads as done where an
+   outlined one reads as available.
+
+   The label still says Resolve while it is pressable, which is the honest way
+   round — the button names what it will do, and once it is done the check names
+   what happened. */
+#scrIssues .issue__tick[aria-pressed="true"]{
+  width:48px;padding:0;
+  background:var(--surface-positive);
+  border-color:var(--surface-positive);
+}
+#scrIssues .issue__tick[aria-pressed="true"] svg{
+  width:24px;height:24px;display:block;fill:var(--content-inverse);
+}
+/* Confirmed clear by the last check. Same circle, same check, no green and no
+   press: green says "someone resolved this and can unresolve it", grey says the
+   bike stopped reporting it and there is nothing left to decide. It is the
+   disabled treatment used everywhere else — surface/disabled behind
+   content/disabled — so it reads as inert rather than as a fourth colour. */
+#scrIssues .issue__tick[disabled]{
+  background:var(--surface-disabled);
+  border-color:var(--surface-disabled);
+  cursor:default;
+}
+#scrIssues .issue__tick[disabled]:active{transform:none}
+#scrIssues .issue__tick[disabled] svg{fill:var(--content-disabled)}
+
+/* A resolved row steps back without going grey — greying the text read as
+   "failed" rather than "done" when it was tried. */
+#scrIssues .issue.iq-is-done .issue__thumb{opacity:.45}
+/* The rule is content/primary, not the tertiary the text around it uses — a grey
+   line over grey text was barely legible as a strike at all. */
+/* The strike goes on the ISSUES, not on the part. A mechanical row names a part
+   and lists what is wrong with it underneath; the part is not resolved, the faults
+   are — so the reasons line carries the strike and the part name stays clean.
+   An electrical row has no reasons line: the fault text IS the issue, so there the
+   strike stays on the name.
+
+   The rule is content/primary, not the tertiary the text around it uses — a grey
+   line over grey text was barely legible as a strike at all. */
+/* Struck through only when the issue was actually solved. A struck-out fault
+   reads as "not a fault any more", and No spare has not made that true — the row
+   closes, the red cross says how, and the words stay legible. */
+#scrIssues .issue.iq-is-struck .issue__reasons{
+  color:var(--content-tertiary);
+  text-decoration:line-through;text-decoration-color:var(--content-primary);
+}
+#scrIssues .issue--plain.iq-is-done .issue__name{
+  text-decoration:line-through;text-decoration-color:var(--content-primary);
+}
+
+/* ── Footer button ────────────────────────────────────────────────────────── */
+/* Full-width dark pill, 342x64, per the frame — unlike mechanic-checks, whose
+   footer pairs a text button with a smaller primary. */
+/* The sibling's footer pads 24px right but only 16px left, for its
+   text-button-left / primary-right pair. A single full-width button needs
+   symmetric 24px so it lands on the frame's margins. */
+#scrIssues .footer__content--single{
+  display:flex;flex-direction:column;align-items:center;gap:var(--s4);
+  justify-content:center;padding:0 var(--s6);
+}
+#scrIssues .btn-block{
+  width:342px;height:64px;
+  display:flex;align-items:center;justify-content:center;gap:var(--s2);
+  border:0;border-radius:100px;
+  background:var(--surface-primary);color:var(--content-inverse);
+  font:inherit;font-weight:700;font-size:16px;line-height:20px;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+  transition:transform 120ms ease,opacity 160ms ease;
+}
+#scrIssues .btn-block:active{transform:scale(.98)}
+/* Secondary: same block, no fill. Re-running the checks is not the way off this
+   screen — it is a thing you do while you are on it — so it should not carry the
+   weight of the primary action the way Mark Issues does. */
+#scrIssues .btn-block--secondary{
+  background:var(--surface-secondary);color:var(--content-primary);
+}
+#scrIssues .btn-block:disabled{opacity:.4;cursor:default;transform:none}
+#scrIssues .btn-block svg{width:24px;height:24px;display:block;fill:currentColor}
+
+/* ── Toast ────────────────────────────────────────────────────────────────── */
+/* Sits above the footer so it never covers Mark Issues, and is inert to pointers
+   so it cannot swallow a tap aimed at a row underneath. */
+#scrIssues .iq-toast{
+  position:absolute;left:50%;bottom:calc(var(--footer-h) + var(--s4));
+  transform:translate(-50%,8px);
+  background:var(--surface-primary);color:var(--content-inverse);
+  font-weight:500;font-size:14px;line-height:20px;
+  padding:10px 16px;border-radius:100px;white-space:nowrap;
+  opacity:0;pointer-events:none;z-index:25;
+  transition:opacity .22s var(--ease-out),transform .22s var(--ease-out);
+}
+#scrIssues .iq-toast.iq-is-shown{opacity:1;transform:translate(-50%,0)}
+
+#scrIssues .iq-empty{
+  padding:64px var(--s6);text-align:center;
+  color:var(--content-tertiary);font-size:14px;line-height:20px;
+}
+
+/* ── Issue detail sheet — Figma 1993:30576 ────────────────────────────────── */
+/* Opened by tapping an issue. Shares the scrim with the options sheet's CSS but
+   not its element, so the two can never be half-open at once by accident. */
+#scrIssues .sheet-dtl{
+  position:absolute;left:0;right:0;bottom:0;
+  background:var(--surface-inverse);
+  border-radius:var(--s9) var(--s9) 0 0;
+  display:flex;flex-direction:column;
+  transform:translateY(100%);
+  transition:transform .3s var(--ease-out);
+  z-index:31;
+}
+#scrIssues .sheet-dtl.iq-is-open{transform:translateY(0)}
+#scrIssues .sheet-dtl--dragging{transition:none}
+
+/* ── Leaving in two moves ─────────────────────────────────────────────────────
+   The sheet is bottom-anchored, so taking height off the TOP walks its top edge
+   down the screen and leaves everything below exactly where it is. That is the
+   whole trick: the white half folds away, the part journey does not move, and
+   for a beat the only thing on screen is the section that just changed. Then the
+   sheet — by now just that band — slides out the way it came in.
+
+   Sliding the white down instead would have run it behind the journey and left a
+   tall empty white card above; folding it is the same gesture with nothing left
+   over. The heights are written by script.js just before the class lands, because
+   `height` only transitions from a definite value and these are content-sized. */
+#scrIssues .sheet-dtl__header,
+#scrIssues .sheet-dtl__body{
+  overflow:hidden;
+  transition:height 340ms cubic-bezier(.22,1,.36,1),
+             padding-top 340ms cubic-bezier(.22,1,.36,1),
+             padding-bottom 340ms cubic-bezier(.22,1,.36,1),
+             opacity 220ms ease;
+}
+/* Height is driven inline by script.js — it has to be, since the measurement it
+   animates from is inline and nothing in a stylesheet outranks that. */
+#scrIssues .sheet-dtl.iq-is-exiting .sheet-dtl__header,
+#scrIssues .sheet-dtl.iq-is-exiting .sheet-dtl__body{
+  padding-top:0;padding-bottom:0;opacity:0;
+}
+
+/* The frame gives this sheet a titled header instead of a grabber, so the header
+   itself is the drag handle — the gesture survives without drawing a second
+   affordance the design does not have. */
+/* The frame's header is a single 68px line. It carries a second line here — who
+   made the call — so the height is content-driven instead, with the frame's 24px
+   above and the same below. */
+#scrIssues .sheet-dtl__header{
+  padding:var(--s6);
+  display:flex;flex-direction:column;align-items:center;gap:var(--s1);
+  border-radius:var(--s9) var(--s9) 0 0;
+  /* The rule is 342 wide on the 24px inset, not full bleed — it separates the
+     part from what you do about it, and both of those sit on that inset. Drawn as
+     a positioned ::after so it stays off the header's height. */
+  position:relative;
+  touch-action:none;cursor:grab;
+  color:var(--content-secondary);text-align:center;
+}
+/* Attribution, not a heading — a step down in size and colour from the part name
+   so the two never compete. */
+/* The same two lines as the row that opened it: the name in content/primary at
+   Label/Medium, and under it the same size in content/secondary — which is the
+   list's reasons line. It used to run a step down on both counts, the name
+   inheriting the header's secondary and the attribution sitting at 12px, so the
+   same part read as two different weights depending on where you met it. */
+#scrIssues .sheet-dtl__ident{color:var(--content-primary)}
+/* No gap between the folds: exactly one is open, so a gap would be spacing
+   against nothing. The body's own padding puts whichever is showing 24 below the
+   header rule. (A gap here used to apply around the collapsed region too, which
+   pushed the live one 24px down.) */
+#scrIssues .sheet-dtl__body{
+  display:flex;flex-direction:column;
+  padding:var(--s6);
+}
+/* One wrapping run in a fixed order — every reason, then Missing last. Chips hold
+   their place as they are picked; moving them between a selected and an available
+   run made the whole block reflow under the thumb on every tap. */
+/* ── Detail sheet: the two states ─────────────────────────────────────────────
+   Default is Your action alone; the pencil expands Mark issues above it. */
+
+/* 48px circle on the header's far edge. surface/secondary rather than a bare
+   glyph, so it reads as a control on a row that is otherwise all text. */
+#scrIssues .sheet-dtl__edit{
+  flex:0 0 auto;margin-left:auto;
+  width:48px;height:48px;border:0;border-radius:60px;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--surface-secondary);
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+  transition:background-color 180ms ease,transform 120ms ease;
+}
+#scrIssues .sheet-dtl__edit svg{width:24px;height:24px;display:block;fill:var(--content-primary)}
+#scrIssues .sheet-dtl__edit:active{transform:scale(.94)}
+#scrIssues .sheet-dtl__edit.is-on{background:var(--surface-primary)}
+#scrIssues .sheet-dtl__edit.is-on svg{fill:var(--content-inverse)}
+
+/* The reasons, under the part's name. Tertiary — it is what the name refers to,
+   not a second heading. */
+#scrIssues .sheet-dtl__reasons{
+  font-weight:500;font-size:16px;line-height:20px;
+  color:var(--content-tertiary);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+
+/* One fold, three users: Mark issues, Your action, and the Delete footer. Only
+   one of the first two is ever open, so the sheet swaps between modes rather than
+   growing. grid-template-rows 0fr → 1fr animates to each region's OWN height, so
+   a part with four reasons and one with a single row both open correctly and no
+   height is written down. The inner element must own the overflow to clip. */
+#scrIssues .sheet-dtl__fold{
+  display:grid;grid-template-rows:0fr;
+  transition:grid-template-rows 320ms cubic-bezier(.22,1,.36,1),
+             opacity 200ms ease;
+  opacity:0;
+}
+#scrIssues .sheet-dtl__fold.is-open{grid-template-rows:1fr;opacity:1}
+#scrIssues .sheet-dtl__fold > div{overflow:hidden;min-height:0}
+
+
+/* Headings/Small500 — 20/500/28 on content/primary. It has been 14/700 secondary
+   and then 16/500 primary; the frame settles it at heading size, which is right:
+   these name the two halves of the sheet rather than captioning a control. */
+#scrIssues .sheet-dtl__label{
+  margin:0 0 var(--s4);
+  font-weight:500;font-size:20px;line-height:28px;
+  color:var(--content-primary);
+}
+#scrIssues .sheet-dtl__run{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+#scrIssues .rchip[disabled]{opacity:.4;cursor:default}
+
+#scrIssues .rchip{
+  height:48px;min-width:48px;border-radius:100px;
+  display:flex;align-items:center;justify-content:center;gap:var(--s2);
+  font:inherit;font-size:16px;font-weight:500;line-height:20px;
+  cursor:pointer;white-space:nowrap;-webkit-tap-highlight-color:transparent;
+  padding:14px var(--s4);
+  background:var(--surface-inverse);
+  border:1px solid var(--border-primary);
+  color:var(--content-primary);
+  transition:background-color .15s ease,box-shadow .15s ease,color .15s ease,
+             border-color .15s ease,transform 120ms ease;
+}
+#scrIssues .rchip:active{transform:scale(.96)}
+/* Selected: surface/secondary with a dark ring. The ring is an inset shadow rather
+   than a 1.5px border so selecting never changes the chip's size — a border would
+   add half a pixel on every edge and nudge the whole row.
+
+   No padding-right override any more. It used to drop to 12 to give the cancel
+   glyph its optical space, and when the glyph was removed that 4px stayed behind —
+   so a selected chip was 4px narrower than the same chip unselected, and the row
+   shuffled every time one was picked. */
+#scrIssues .rchip--on{
+  background:var(--surface-secondary);
+  border-color:transparent;box-shadow:inset 0 0 0 1.5px var(--border-selected);
+}
+/* Disabled: ruled out by what is already picked, and genuinely not tappable. */
+#scrIssues .rchip:disabled{
+  background:var(--surface-secondary);
+  border-color:var(--border-primary);box-shadow:none;
+  color:var(--content-disabled);
+  cursor:default;transform:none;
+}
+#scrIssues .rchip svg{width:24px;height:24px;display:block;flex:0 0 auto;fill:var(--content-primary)}
+
+/* Divider runs the full 390 in the frame, unlike the 24px-inset hairlines
+   elsewhere — this one separates the sheet's actions from its content. */
+#scrIssues .sheet-dtl__footer{
+  display:flex;flex-direction:column;align-items:center;gap:var(--s4);
+  padding:var(--s6) var(--s9) var(--s9);
+  box-shadow:inset 0 1px 0 var(--border-primary);
+}
+#scrIssues .btn-sheet{
+  width:100%;height:64px;
+  display:flex;align-items:center;justify-content:center;
+  border:0;border-radius:100px;
+  font:inherit;font-weight:700;font-size:16px;line-height:20px;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+  transition:transform 120ms ease,opacity 160ms ease;
+}
+#scrIssues .btn-sheet:active{transform:scale(.98)}
+/* Disabled takes surface/disabled with a disabled label, the same treatment the
+   sibling's primary uses — a dimmed dark pill reads as a loading state instead. */
+#scrIssues .btn-sheet--primary{background:var(--surface-disabled);color:var(--content-disabled)}
+#scrIssues .btn-sheet--primary:not(:disabled){background:var(--surface-primary);color:var(--content-inverse)}
+#scrIssues .btn-sheet:disabled{cursor:default;transform:none}
+#scrIssues .btn-sheet--ghost{background:var(--surface-secondary);color:var(--content-primary)}
+/* Ghost carries no colour change of its own when disabled, so without this it
+   would read as live. It only bites if every reason has been cleared. */
+#scrIssues .btn-sheet--ghost:disabled{color:var(--content-disabled)}
+
+/* ── Furniture her shell supplied ────────────────────────────────────────────
+   These came from mechanic-checks' shell, which the port did not carry: only the
+   CSS below her screen's own banner came across. Without them .scroll has a top
+   but no position, so the region sat at the frame's top edge behind the header.
+   Scoped and prefixed to match the ported markup. */
+#scrIssues .iq-scroll{
+  position:absolute;left:0;right:0;
+  /* top comes from her own rule above — it counts the tab strip. */
+  bottom:var(--footer-h);
+  transition:bottom .26s cubic-bezier(.22,1,.36,1);
+  overflow-y:auto;overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:none;
+}
+#scrIssues .iq-footer{
+  position:absolute;left:0;bottom:0;width:100%;
+  background:var(--surface-inverse);
+  padding:var(--s6) 0 var(--s9);
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-end;
+  z-index:16;
+  /* Hairline along the top edge, so the footer reads as its own surface once the
+     list scrolls behind it. Drawn as an inset shadow rather than a border so it
+     costs no height and --footer-h stays 124. */
+  box-shadow:inset 0 1px 0 var(--border-primary);
+  transition:transform .26s cubic-bezier(.22,1,.36,1);
+}
+/* An assessment reads this record rather than closing it — no Resolve buttons,
+   no open/closed marks, and no bar counting how many are shut. The band's height
+   is given back to the list. */
+#scrIssues.iq-no-progress .progress{display:none}
+#scrIssues.iq-no-progress .iq-tabs{top:var(--header-h)}
+#scrIssues.iq-no-progress.has-tabs .iq-scroll{top:calc(var(--header-h) + 56px)}
+#scrIssues.iq-no-progress .iq-action{top:calc(var(--header-h) + 56px)}
+#scrIssues.iq-no-progress.has-tabs.has-action .iq-scroll{top:calc(var(--header-h) + 56px + 96px)}
+#scrIssues .progress{
+  position:absolute;left:0;top:var(--header-h);
+  width:100%;height:var(--progress-h);
+  background:var(--border-primary);
+  z-index:15;
+}
+#scrIssues .progress__fill{
+  height:100%;background:var(--surface-primary);width:0;
+  transition:width .3s cubic-bezier(.22,.61,.36,1);
+}
+#scrIssues .scrim{
+  position:absolute;inset:0;background:rgba(0,0,0,.4);
+  opacity:0;pointer-events:none;transition:opacity .26s ease;z-index:30;
+}
+
+/* ── Sheet header: the part, shown ────────────────────────────────────────────
+   A 64px photograph beside the name, rather than a centred caption. The row you
+   tapped is a thumbnail and a name; the sheet that opens from it should be
+   recognisably the same thing, not a text heading you have to re-read. */
+#scrIssues .sheet-dtl__header{
+  flex-direction:row;align-items:center;gap:var(--s4);
+  text-align:left;
+}
+#scrIssues .sheet-dtl__header::after{
+  content:"";position:absolute;left:var(--s6);right:var(--s6);bottom:0;
+  height:1px;background:var(--border-primary);
+}
+#scrIssues .sheet-dtl__thumb{
+  flex:0 0 auto;width:64px;height:64px;border-radius:12px;overflow:hidden;
+  background:var(--surface-secondary);
+}
+#scrIssues .sheet-dtl__thumb img{width:100%;height:100%;object-fit:cover;display:block}
+#scrIssues .sheet-dtl__ident{display:flex;flex-direction:column;gap:2px;min-width:0}
+
+/* ── Delete ───────────────────────────────────────────────────────────────────
+   Red and carrying a dustbin, because it throws the issue away rather than
+   closing it — the one action here that cannot be undone by tapping again.
+   Ghost-on-secondary made it look like the quieter of two equals. */
+#scrIssues .btn-sheet--danger{
+  background:var(--surface-secondary);color:var(--content-negative);
+  gap:var(--s2);
+}
+#scrIssues .btn-sheet--danger svg{width:24px;height:24px;display:block;fill:var(--content-negative)}
+
+/* ── Scrim ────────────────────────────────────────────────────────────────────
+   The sheet had a scrim element from the start but no rule for it, so nothing
+   ever dimmed behind it. */
+#scrIssues .scrim{
+  position:absolute;inset:0;background:rgba(0,0,0,.4);
+  opacity:0;pointer-events:none;
+  transition:opacity .26s ease;z-index:30;
+}
+#scrIssues .scrim.iq-is-open{opacity:1;pointer-events:auto}
+
+/* The shell's footer-hidden rule, which the port did not bring across — without
+   it the footer sat there disabled instead of dropping away. */
+#scrIssues .iq-footer.is-hidden{transform:translateY(100%)}
+
+/* When the footer drops away the list takes its 124px back. The shell had this
+   rule and the port did not carry it, which left a band of white across the bottom
+   of every tab whenever the footer was hidden — which on Mark Issues is most of the
+   time, since the footer only appears once something has changed. */
+#scrIssues .iq-scroll.footer-hidden{bottom:0}
+
+/* ── Two buttons in the footer ────────────────────────────────────────────────
+   --footer-h is 24 + 64 + 36 and assumes one button. Done arrives BESIDE the
+   section CTA rather than replacing it — adding an issue is still a thing you can
+   do on a finished bike — so the footer grows by a button and a gap.
+
+   The list inset and the toast offset both have to agree with the footer's real
+   height. Rather than adding a second rule for each and hoping they stay in step,
+   this redefines the variable they already read on the screen itself: every rule
+   that says var(--footer-h) follows, including .footer-hidden{bottom:0}, which
+   still overrides it while the footer is away. */
+#scrIssues.iq-footer-tall{--footer-h:204px}   /* 24 + 64 + 16 + 64 + 36 */
+
+/* The shared toast is a child of #phone, not of this screen, so the override
+   above cannot reach it — its bottom:150px cleared a 124px footer and landed on
+   top of Done. Lifted only while THIS screen is the one on frame and standing
+   tall, which is what the :has() says; every other screen keeps the 150. */
+#phone:has(#scrIssues.iq-footer-tall.is-active) .toast{bottom:230px}
+
+/* ── The check's progress, in the button ──────────────────────────────────── */
+#scrIssues .btn-block{position:relative;overflow:hidden}
+#scrIssues .btn-block__label{position:relative;z-index:1}
+#scrIssues .btn-block__fill{
+  position:absolute;left:0;top:0;bottom:0;width:0;
+  background:var(--surface-disabled);pointer-events:none;
+}
+#scrIssues .btn-block.is-running{background:var(--surface-secondary);color:var(--content-primary)}
+
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Part journey — Figma 2691:32475 (shut) and 2687:32227 (open)
+   Shut, it is a summary card: where each part is now. Open, it is how each got
+   there. Every measurement below is the frame's.
+   ══════════════════════════════════════════════════════════════════════════ */
+#scrIssues .pjrn{
+  position:relative;overflow:hidden;
+  background:var(--surface-secondary);
+  padding:var(--s6) var(--s6) 36px;
+  touch-action:pan-y;user-select:none;
+}
+/* 342 on the 24px inset, along the section's top edge. */
+#scrIssues .pjrn::before{
+  content:"";position:absolute;left:var(--s6);right:var(--s6);top:0;
+  height:1px;background:var(--border-primary);z-index:1;
+}
+
+/* The wash sits at the BOTTOM of the section, 68 tall, and each layer carries its
+   own --wash so one side settling never tints the other.
+
+   188.72deg is the frame's 8.72 turned to run downward — and turning it moved
+   the horizontal end as well. CSS angles run clockwise from "to top", so 8.72
+   gathers at the top RIGHT and 188.72 at the bottom LEFT. That is already the
+   old column's corner, so it is the NEW layer that mirrors now; the mirror stayed
+   on `old` when the gradient was flipped and lit the wrong side of a settled
+   section for it. */
+#scrIssues .pjrn__wash{
+  position:absolute;left:0;right:0;bottom:0;height:68px;pointer-events:none;
+  --wash:var(--border-primary);
+  background-image:linear-gradient(188.72deg,
+    rgba(255,255,255,0) 39.78%, var(--wash) 81.92%);
+}
+#scrIssues .pjrn__wash--new{transform:scaleX(-1)}
+/* Settling is the one moment this section reports, and it gets a slow one: 720ms
+   is long enough to read as arriving rather than as a repaint. Only the fade is
+   slow — the text under it flips in a third of that, so the words land first and
+   the colour catches up. */
+/* No transition at rest: opening the sheet on an already-settled issue must show
+   the colour as a fact, not replay its arrival. The fade is armed only for the
+   moment the action is taken. */
+#scrIssues .pjrn__glow{opacity:0;--wash:var(--color-purple100)}
+#scrIssues .pjrn.is-settling .pjrn__glow{
+  transition:opacity 720ms cubic-bezier(.33,1,.68,1);
+}
+
+/* No heading and no chevron. "Part Exchange" over a pair of columns already
+   labelled Old part / New part named the section for a second time, and the
+   chevron offered a fold on a section that opens showing everything. The column
+   names lead now, on the section's own 24 — no margin of their own to add to it.
+   Swiping still folds it; see the drag handler in script.js. */
+#scrIssues .pjrn__labs{
+  position:relative;z-index:1;
+  display:flex;justify-content:space-between;
+  font-weight:500;font-size:14px;line-height:16px;
+  color:var(--content-tertiary);
+}
+
+/* The two journeys, in the same columns the names caption. 8 under the names,
+   which is the gap the frame draws between a label and the line it labels — the
+   24 that stood here was the gap between SECTIONS, used in the wrong place. */
+#scrIssues .pjrn__cols{
+  position:relative;z-index:1;
+  display:flex;align-items:flex-start;justify-content:space-between;
+  gap:var(--s4);
+  margin-top:var(--s2);
+}
+#scrIssues .pjrn__col{display:flex;flex-direction:column;gap:var(--s4);min-width:0}
+#scrIssues .pjrn__col--new{align-items:flex-end;text-align:right}
+
+/* Shut, a column shows its last line and nothing else. Last line, not first:
+   the columns read oldest-to-newest, so what survives the fold is where the part
+   is NOW. A side with no steps yet falls through to its lead line, which is the
+   only child there is — hence :last-child rather than a class, and no second
+   code path to keep in agreement with this one. */
+#scrIssues .pjrn:not(.is-open) .pjrn__col > *{display:none}
+#scrIssues .pjrn:not(.is-open) .pjrn__col > *:last-child{display:flex}
+
+/* No marks. The dashed rings and ticks that stood on each row said the same
+   thing twice: the wash at the foot of the section already reports whether a
+   side has settled, and per-row glyphs on top of it turned one signal into a
+   dozen. Position in the list is what carries the history now. */
+#scrIssues .pjrn__step{
+  display:flex;align-items:center;
+}
+#scrIssues .pjrn__label{
+  font-weight:500;font-size:16px;line-height:20px;
+  color:var(--content-primary);white-space:nowrap;
+}
+/* Only the line whose text actually changed flips. Running it on both columns
+   would say both parts moved when usually only one did. */
+@keyframes pjrn-flip{
+  0%  {opacity:1;transform:translateY(0)}
+  45% {opacity:0;transform:translateY(-6px)}
+  46% {opacity:0;transform:translateY(6px)}
+  100%{opacity:1;transform:translateY(0)}
+}
+#scrIssues .pjrn__step--flip .pjrn__label,
+#scrIssues .pjrn__lead--flip{
+  animation:pjrn-flip 340ms cubic-bezier(.33,1,.68,1) both;
+}
+/* A line with no step of its own: going to stores is what PRODUCES the new part,
+   not something that happens to it. */
+#scrIssues .pjrn__lead{
+  margin:0;padding:0;border:0;background:none;font:inherit;
+  font-weight:500;font-size:16px;line-height:20px;
+  color:var(--content-primary);white-space:nowrap;
+  text-decoration:underline;text-underline-position:from-font;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+/* Spent: the trip to stores has happened, so it is history rather than an offer. */
+#scrIssues .pjrn__lead[disabled]{
+  text-decoration:none;color:var(--content-tertiary);cursor:default;
+}
+/* Stores' answer, not the mechanic's option — no underline, nothing to press. */
+#scrIssues .pjrn__lead--none{
+  text-decoration:none;color:var(--content-tertiary);cursor:default;
+}
+/* A step that is also the way to complete itself. */
+#scrIssues .pjrn__step--go{
+  border:0;background:none;font:inherit;padding:0;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+}
+#scrIssues .pjrn__step--go .pjrn__label{
+  text-decoration:underline;text-underline-position:from-font;
+}
+#scrIssues .pjrn__step--go:active{opacity:.6}
+
+/* ── The assessment's detail sheet ───────────────────────────────────────────
+   The two rows the QCA does not need. Hidden rather than removed from the
+   markup, because the repair still wants both and this is one sheet serving two
+   flows — .is-assessment is set by prepareIssuesFor().
+
+   The pencil     reveals the Mark issues fold, which is the only thing on this
+                  sheet in an assessment and is already open. A control that
+                  toggles between one state and itself.
+   The sub-line   restates the chips 60px below it. It was worth having under a
+                  collapsed sheet, where the chips were not on screen.
+   ─────────────────────────────────────────────────────────────────────────── */
+#scrIssues.is-assessment .sheet-dtl__edit,
+#scrIssues.is-assessment .sheet-dtl__reasons{ display: none }
+
+/* ── Mechanical / Electrical — the assessment's two tabs ─────────────────────
+   A 48px band under the progress bar. The screen is one record with two
+   sections; a repair reaches each from its own dashboard row, and an assessment
+   has one row for both, so the split lives here instead — see #rowFaults.
+
+   Absolutely positioned like the rest of this screen's chrome, and the scroller
+   below is pushed down by exactly this height when the band is up: a strip that
+   overlaid the list would hide the first fault on it. */
+#scrIssues .iq-tabs{
+  position:absolute;left:0;right:0;
+  top:calc(var(--header-h) + var(--progress-h));
+  height:56px;z-index:14;
+  display:flex;
+  background:var(--surface-inverse);
+  box-shadow:inset 0 -1px 0 var(--border-primary);
+}
+#scrIssues .iq-tabs[hidden]{display:none}
+#scrIssues .iq-tab{
+  flex:1 1 0;min-width:0;height:56px;
+  gap:var(--s2);
+  border:0;background:none;cursor:pointer;padding:0;
+  -webkit-tap-highlight-color:transparent;
+  color:var(--content-tertiary);
+  display:flex;align-items:center;justify-content:center;
+  /* The marker is drawn on the tab rather than as a sliding element: two tabs of
+     equal width have nowhere interesting to slide, and a 2px line that is simply
+     there or not cannot end up between them. */
+  box-shadow:inset 0 -2px 0 transparent;
+  transition:color .16s var(--ease-out),box-shadow .16s var(--ease-out);
+}
+/* The count is the quiet half of the label — one weight down in the tertiary
+   grey, on both tabs, so the marker is the only thing saying which is open. */
+#scrIssues .iq-tab__n{color:var(--content-tertiary);font-variant-numeric:tabular-nums}
+#scrIssues .iq-tab.is-on{
+  color:var(--content-primary);
+  box-shadow:inset 0 -2px 0 var(--surface-primary);
+}
+/* The list starts under the band when it is up. */
+#scrIssues.has-tabs .iq-scroll{top:calc(var(--header-h) + var(--progress-h) + 56px)}
+
+/* The section's action, under its tab. 16 above and 16 below the 64px button —
+   the band is 96 and the list starts beneath it. Absolute like the rest of this
+   screen's chrome, so it cannot scroll away from the tab it belongs to. */
+#scrIssues .iq-action{
+  position:absolute;left:0;right:0;
+  top:calc(var(--header-h) + var(--progress-h) + 56px);
+  height:96px;box-sizing:border-box;z-index:13;
+  padding:var(--s4) var(--s6);
+  display:flex;align-items:center;justify-content:center;
+  background:var(--surface-inverse);
+}
+#scrIssues .iq-action[hidden]{display:none}
+#scrIssues .iq-action .btn-block{width:100%}
+#scrIssues.has-tabs.has-action .iq-scroll{
+  top:calc(var(--header-h) + var(--progress-h) + 56px + 96px);
+}
+
+/* ── "Faults reviewed" — Figma 2913:32124 ────────────────────────────────────
+   The footer becomes a row on the assessment: the QCA's own confirmation on the
+   left, the step CTA on the right, and the CTA is disabled until the box is
+   ticked. It replaced a banner strip over the button, which could only REPORT a
+   step as finished — this screen is the one place the app cannot tell. */
+#scrIssues.has-confirm .footer__content{
+  /* align-self, and it is the whole reason the two were sitting in the middle of
+     the footer instead of at its edges: .iq-footer is a flex COLUMN with
+     align-items:center, so this row shrank to the width of its contents and
+     space-between had nothing to space. Stretched, the 24px padding is the
+     inset and the two go to the ends. */
+  align-self:stretch;width:100%;box-sizing:border-box;
+  flex-direction:row;justify-content:space-between;align-items:center;
+  gap:var(--s4);padding:0 var(--s6);
+}
+/* The button stops being a 342px block and hugs its label, so the two fit the
+   row. Its own 36px of padding is the frame's. */
+#scrIssues.has-confirm #iqDoneBtn{width:auto;flex:0 0 auto;padding:0 36px}
+/* Disabled is the design system's pair, not an opacity — a greyed-out black pill
+   at 40% is a different grey from --surface-disabled and reads as a rendering
+   accident beside the tokens around it. */
+#scrIssues.has-confirm #iqDoneBtn:disabled{
+  opacity:1;background:var(--surface-disabled);color:var(--content-disabled);
+  cursor:default;
+}
+.iq-confirm{
+  flex:0 1 auto;min-width:0;max-width:205px;
+  display:flex;align-items:center;gap:var(--s2);
+  border:0;background:none;padding:0;cursor:pointer;text-align:left;
+  -webkit-tap-highlight-color:transparent;
+}
+.iq-confirm[hidden]{display:none}
+.iq-confirm__t{color:var(--content-secondary)}
+/* The same square the checklist picker uses — one checkbox in the app, so a tick
+   means the same thing wherever it appears. Drawn in CSS here rather than as an
+   icon because it has only two states and no glyph of its own until it is on. */
+.iq-confirm__box{
+  flex:0 0 auto;width:24px;height:24px;border-radius:6px;
+  border:1.5px solid var(--content-disabled);
+  background:var(--surface-inverse);
+  display:flex;align-items:center;justify-content:center;
+}
+.iq-confirm[aria-checked="true"] .iq-confirm__box{
+  border-color:var(--surface-primary);background:var(--surface-primary);
+}
+.iq-confirm[aria-checked="true"] .iq-confirm__box::after{
+  content:"";width:12px;height:7px;margin-top:-3px;
+  border-left:2px solid var(--content-inverse);
+  border-bottom:2px solid var(--content-inverse);
+  transform:rotate(-45deg);
+}

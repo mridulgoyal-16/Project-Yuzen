@@ -1,0 +1,497 @@
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Yuzen — Bike Assessment flow
+   Two screens, one file:
+     1  Assessment   swipe each part Good / Faulty          (Barun Sethi)
+     2  Mark faults  detail every part marked faulty        (Sagar Malik)
+
+   Built from Figma HHciUbgAzmterprGPdJJbW
+     Screen 1 · 2024:33715 / 33875 / 34767, swipe progressions 33964…35420
+     Screen 2 · 2009:15704, frames "Mark faluts 1" … "Mark faults 4"
+
+   The "Mark issue" bottom sheet from the original Assessment prototype is
+   deliberately gone: reasons are no longer collected on screen 1. A left
+   swipe now marks the part faulty and moves straight on.
+   ───────────────────────────────────────────────────────────────────────── */
+
+@font-face{font-family:Satoshi;src:url(assets/fonts/Satoshi-Medium.otf) format("opentype");font-weight:500;font-style:normal;font-display:block}
+@font-face{font-family:Satoshi;src:url(assets/fonts/Satoshi-Bold.otf) format("opentype");font-weight:700;font-style:normal;font-display:block}
+@font-face{font-family:Satoshi;src:url(assets/fonts/Satoshi-Black.otf) format("opentype");font-weight:900;font-style:normal;font-display:block}
+
+:root{
+  /* Content */
+  --content-primary:#222222;
+  --content-secondary:#717171;
+  --content-tertiary:#919191;
+  --content-disabled:#b0b0b0;
+  --content-inverse:#ffffff;
+  --content-positive:#00654f;
+  --content-negative:#c13515;
+  /* IN PROGRESS. Not in the Yulu set, which has positive and negative and
+     nothing between them — this is a local addition, promoted to a token after
+     being written by hand in three places: the shift blocks, the mechanic
+     status ring and the on-going state mark. Whatever the real one turns out
+     to be, it is now one line to change. */
+  --content-warning:#d97a00;
+  /* Surface */
+  --surface-primary:#222222;
+  /* Pressed state for a dark surface. The dark buttons elsewhere press by scale,
+     which a full-bleed band cannot do without tearing away from the frame edge —
+     so the parked-task card needs a fill, and a fill on #222 has to go lighter. */
+  --surface-primary-pressed:#333333;
+  --surface-secondary:#f7f7f7;
+  --surface-disabled:#dddddd;
+  --surface-inverse:#ffffff;
+  --surface-positive:#00654f;
+  --surface-negative:#c13515;
+  /* Border */
+  --border-primary:#e8e8e8;
+  --border-secondary:#b0b0b0;
+  --border-selected:#222222;
+  --border-positive:#00654f;
+  /* Canvas */
+  --canvas-primary:#ffffff;
+  /* Palette — only the start screen's gradient reaches for a raw colour */
+  --color-purple100:#e3e5fc;
+  --color-white:#ffffff;
+  --shadow-1:0 4px 16px rgba(0,0,0,.08);
+  /* Swipe reveal tints — each semantic content colour at 10% over white */
+  --reveal-positive:#e5f0ed;
+  --reveal-negative:#f8eae7;
+  /* Spacers */
+  --s1:4px; --s2:8px; --s4:16px; --s6:24px; --s9:36px; --s12:48px; --s16:64px;
+  /* Part renders — declared once, referenced by markup and renderer alike */
+  --img-mcu:url(assets/part_mcu.png);
+  --img-piglight:url(assets/part_pigtail_light.png);
+  --img-throttle:url(assets/part_throttle.png);
+  --img-fwheel:url(assets/part_front_wheel.png);
+  --img-tyre:url(assets/part_tyre.png);
+  /* Customer photos (screen 2 carousel) + the sample capture */
+  --img-cust1:url(assets/customer_1.jpg);
+  --img-cust2:url(assets/customer_2.jpg);
+  --img-cust3:url(assets/customer_3.jpg);
+  --img-cust4:url(assets/customer_4.jpg);
+  --img-captured:url(assets/captured.jpg);
+  --img-bike:url(assets/bike_hero.jpg);
+  /* tile1-3 went with the old workbench shortcuts. The build inlines every asset
+     reference it finds whether or not anything uses it, so leaving three
+     unreferenced declarations here would have shipped three dead images.
+
+     Note the regex scans comments too — writing the reference form out in prose
+     here is what broke the build the first time. */
+  /* Frame */
+  --frame-w:390px;
+  --frame-h:844px;
+  --status-h:44px;
+  --header-h:116px;   /* 44 status + 72 app bar; no divider — see assess/style.css */
+  --footer-h:124px;   /* 24 pt + 64 content + 36 pb */
+  --progress-h:6px;
+  --jb-bar-h:72px;    /* job page's floating bar; the progress strip docks under it */
+  --tkbar-h:104px;
+  --carousel-h:248px;
+  /* Motion */
+  --ease-out:cubic-bezier(.22,.61,.36,1);
+}
+
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+button,input,select,textarea{font:inherit;color:inherit;letter-spacing:inherit}
+/* The document itself must never scroll. Every screen has its own scroller and
+   every bar is absolute inside .phone, so nothing in the frame moves when content
+   moves — but on a phone the DOCUMENT was scrolling underneath all of it, sliding
+   the whole frame and taking the app bars and the bottom nav with it.
+
+   Why it only showed up on a device: height:100% resolves against the LAYOUT
+   viewport, which on a mobile browser is the tall one measured with the toolbar
+   hidden, while what you can see is the shorter visual viewport. The body was
+   therefore taller than the screen by exactly the toolbar's height, and that
+   difference is scrollable. A desktop pane whose height equals the frame has no
+   difference to expose, which is why every check here passed.
+
+   overflow:hidden removes it; .phone stays on 100dvh, which tracks the visual
+   viewport rather than the layout one. overscroll-behavior kills the rubber-band
+   and pull-to-refresh, which in an installed app is a gesture that can only
+   confuse. */
+html,body{height:100%;overflow:hidden;overscroll-behavior:none}
+/* The family goes on html, not just body. Anything that ends up parented outside
+   body — and the root itself — was inheriting the UA default, which is Times. */
+html{font-family:Satoshi,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+body{
+  font-family:Satoshi,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font-weight:500;
+  background:#f0f0f0;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--content-primary);
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ── Type styles (design-system named styles only) ───────────────────────── */
+.t-label-xs    {font-size:12px;font-weight:500;line-height:16px;letter-spacing:0}
+.t-label-sm    {font-size:14px;font-weight:500;line-height:16px;letter-spacing:0}
+.t-body-sm     {font-size:14px;font-weight:500;line-height:20px;letter-spacing:0}
+.t-label-md    {font-size:16px;font-weight:500;line-height:20px;letter-spacing:0}
+.t-body-md     {font-size:16px;font-weight:500;line-height:24px;letter-spacing:0}
+.t-label-md700 {font-size:16px;font-weight:700;line-height:20px;letter-spacing:0}
+.t-heading-lg  {font-size:32px;font-weight:700;line-height:40px;letter-spacing:0}
+/* Page titles. 20/24 is NOT a named style in the Yulu library — the scale jumps
+   16/20 to 32/40 with nothing between. Flagged in the README; if it stays, it
+   wants adding to the library rather than living here. */
+.t-title-page  {font-size:20px;font-weight:700;line-height:24px;letter-spacing:0}
+/* Start-screen title. No named style in Figma — a raw Satoshi Black 56/56. */
+.t-display     {font-size:56px;font-weight:900;line-height:56px;letter-spacing:0}
+
+/* One navigation with no slide — see goToInstant. The screens still change
+   data-pos and is-active; only the movement between them is taken away. */
+.phone.no-screen-anim .screen{transition:none}
+
+/* ── Device frame ────────────────────────────────────────────────────────── */
+.phone{
+  position:relative;
+  width:var(--frame-w);
+  /* 844 is the design's frame, but it is a ceiling rather than a fixed height:
+     on any viewport shorter than that the frame would overflow and the page
+     would scroll it, taking every screen's bottom bar below the fold with no way
+     to reach it. Landscape phones, small laptop windows and the browser preview
+     all land there. The @media below already handled narrow viewports; short and
+     WIDE ones — 560x640, say — never matched it and were the ones breaking.
+
+     dvh, not vh: on mobile Safari and Chrome vh is the tallest the viewport ever
+     gets, so the last ~60px of the frame sits under the address bar until you
+     scroll. dvh tracks the bar and the footer stays put. */
+  height:min(var(--frame-h), 100dvh);
+  background:var(--canvas-primary);
+  border-radius:var(--s4);
+  /* clip, not hidden. `hidden` still makes this a scroll container, so a single
+     scrollIntoView() anywhere inside can scroll the whole frame and shift every
+     screen — which is exactly what the ported token queue did on load. `clip`
+     creates no scroll container, so the frame cannot move. */
+  overflow:clip;
+  flex:0 0 auto;
+}
+@media (max-width:430px){
+  body{background:var(--canvas-primary);display:block}
+  .phone{width:100vw;height:100dvh;border-radius:0}
+}
+
+/* ── Screen router ───────────────────────────────────────────────────────── */
+/* Both screens stay mounted so screen 2 keeps its scroll position and the
+   details already entered survive a trip back to the checklist. */
+/* ── Screen transition ───────────────────────────────────────────────────────
+   ONE thing moves. Going into a flow, the new screen slides in from the right
+   over a page that does not move at all; coming back, that same screen slides
+   off to the right and reveals the page underneath, still exactly where it was.
+   The page behind is a place you left, not a thing that got pushed — moving or
+   fading it says the opposite, and made the app feel like it was sliding around
+   under the mechanic rather than stacking up in front of them.
+
+   It falls out of three z-layers rather than any per-screen logic:
+     behind  z0  parked at rest, uncovered by whatever leaves
+     active  z1  the page in hand
+     ahead   z2  parked off-frame right; on the way out it slides over the top
+
+   Both directions use the same two rules — forward, the arriving screen goes
+   ahead → active; back, the leaving screen goes active → ahead. Nothing else in
+   the app has to know which way it is going.
+   ─────────────────────────────────────────────────────────────────────────── */
+.screen{
+  position:absolute;inset:0;
+  background:var(--canvas-primary);
+  visibility:hidden;pointer-events:none;
+  /* No opacity in the transition. A fade IS movement to the eye, and the page
+     underneath is meant to look untouched. It is hidden only after the slide has
+     finished covering it — see the visibility delay. */
+  transition:transform .34s var(--ease-out),visibility 0s linear .34s;
+}
+.screen.is-active{
+  visibility:visible;pointer-events:auto;transform:none;z-index:1;
+  transition:transform .34s var(--ease-out),visibility 0s;
+}
+/* Behind: stays put. Its transform is never touched, so there is nothing for the
+   browser to animate and nothing for the eye to follow. */
+.screen[data-pos="left"]{transform:none;z-index:0}
+/* Ahead: off-frame to the right, and above everything — which is what lets a
+   screen leaving slide over the one it is uncovering. */
+.screen[data-pos="right"]{transform:translateX(100%);z-index:2}
+
+/* ── Status bar (shared chrome, never changes between screens) ───────────── */
+/* Transparent, not white: the start screen's gradient runs under it. Screens 1
+   and 2 paint their own white canvas, so it reads identically there. */
+.statusbar{
+  position:absolute;left:0;top:0;width:100%;height:var(--status-h);
+  background:transparent;z-index:41;pointer-events:none;
+}
+.statusbar .time{
+  position:absolute;left:21px;top:12px;width:54px;height:21px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:15px;font-weight:700;letter-spacing:-.2px;
+}
+.statusbar .icons{position:absolute;right:14px;top:16px;display:flex;gap:4px;align-items:center}
+
+/* ── App bar ─────────────────────────────────────────────────────────────── */
+.appbar{
+  background:var(--surface-inverse);
+  border-bottom:1px solid var(--border-primary);
+  z-index:20;
+}
+/* Screen 1 keeps the original absolutely-positioned skeleton, so its verified
+   96 / 392 list rhythm and scroll geometry are untouched. */
+.appbar--fixed{position:absolute;left:0;top:var(--status-h);width:100%}
+.appbar__row{
+  height:72px;display:flex;align-items:center;justify-content:space-between;width:100%;
+  padding:var(--s2) var(--s6) var(--s2) 4px;
+  background:#fff;
+}
+.appbar__lhs{display:flex;align-items:center;min-width:0;flex:1 1 auto}
+.leading-action{height:48px;display:flex;align-items:flex-start;justify-content:flex-end;overflow:hidden}
+.icon-btn{display:flex;align-items:center;padding:12px;border:0;background:none;cursor:pointer}
+.icon-btn svg{display:block;width:24px;height:24px}
+.appbar__title{max-width:204px;display:flex;align-items:flex-start}
+.appbar__title p{white-space:nowrap;word-break:break-word}
+.appbar__title .muted{color:var(--content-tertiary)}
+/* Screen 1's title grows rather than swaps: at the top of the list the app bar
+   carries only the bike number, and the rest of the breadcrumb arrives as the
+   large heading scrolls up past it. The number never leaves. */
+.appbar__titles{flex:1 1 auto;min-width:0;display:flex;align-items:center}
+.appbar__titles p{
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;
+}
+/* Collapsed to zero WIDTH, not just to zero opacity. The title line is
+   `nowrap` + `text-overflow:ellipsis`, so a suffix hidden with opacity alone
+   still occupies its full width — enough to overflow the line and truncate the
+   bike number behind an ellipsis, with a gap after it where the invisible text
+   sat. Collapsed by max-width rather than display, so it animates; 200px clears
+   the longer
+   of the two suffixes ("/ Assessment Checklist").
+
+   The separating space is an &nbsp; INSIDE this span, not a plain space before
+   it. Inside so it collapses with the rest; non-breaking because a leading
+   ordinary space is stripped at the start of an inline-block, which ran the
+   slash straight into the bike number. */
+/* vertical-align:top, because an inline-block with overflow:hidden takes its
+   baseline from its bottom margin edge rather than its text. That pushed the
+   line box to 24px and lifted the whole breadcrumb 2px above where the same
+   line sits on Bike photos, which has no suffix. Top-aligning two boxes of
+   equal line-height puts the text back on one line. */
+.appbar__suffix{
+  display:inline-block;vertical-align:top;
+  color:var(--content-tertiary);overflow:hidden;
+  max-width:0;opacity:0;transform:translateX(-6px);
+  transition:max-width .24s var(--ease-out),opacity .24s var(--ease-out),
+             transform .24s var(--ease-out);
+}
+.appbar.is-collapsed .appbar__suffix{max-width:200px;opacity:1;transform:none}
+.appbar__more{flex:0 0 auto;margin-right:-12px}
+/* The .pill-btn component stood here — an icon-plus-label action for the right
+   of an app bar, which shed its label when the page title moved up beside it.
+   Its only instance was Mark faults' Customer photos toggle, and with that gone
+   the component had no callers: kept, it would be a shared control nothing
+   shares. The collapse trick it demonstrated survives on .appbar__suffix above.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+
+/* ── Install offer ────────────────────────────────────────────────────────── */
+/* Shown only when Chrome reports the app installable — so never on iOS, never
+   once installed, and never over file://. See shared/install.js.
+
+   Same dark pill as the toast, 24 off the floor, sitting where Chrome's own
+   mini-infobar would have appeared; install.js calls preventDefault() on the
+   event so this replaces that bar rather than stacking with it. One below the
+   toast in z-order: if something manages to toast while this is up, the toast
+   is the more urgent of the two.
+
+   The [hidden] rule is not redundant — display:flex would otherwise beat the
+   attribute's UA display:none and the chip would show before Chrome has offered
+   anything. Same guard as .qbar[hidden]. */
+.pwa-install{
+  position:absolute;left:50%;bottom:var(--s6);transform:translateX(-50%);
+  z-index:59;
+  display:flex;align-items:center;gap:var(--s2);
+  max-width:calc(100% - var(--s6) * 2);
+  padding:var(--s2) var(--s2) var(--s2) var(--s4);
+  background:var(--surface-primary);color:var(--content-inverse);
+  border-radius:100px;box-shadow:var(--shadow-1);
+}
+.pwa-install[hidden]{display:none}
+.pwa-install__text{
+  font-weight:500;font-size:14px;line-height:20px;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis;
+}
+.pwa-install__go{
+  flex:0 0 auto;border:0;cursor:pointer;
+  padding:6px var(--s4);border-radius:100px;
+  background:var(--content-inverse);color:var(--content-primary);
+  font-weight:700;font-size:14px;line-height:20px;
+}
+.pwa-install__go:active{opacity:.7}
+.pwa-install__no{
+  flex:0 0 auto;width:32px;height:32px;border:0;cursor:pointer;
+  background:none;color:var(--content-inverse);
+  display:flex;align-items:center;justify-content:center;
+}
+.pwa-install__no svg{display:block;width:20px;height:20px}
+
+/* ── The step banner — Figma 2913:32071 ──────────────────────────────────────
+   A 36px strip saying the step in front of you is finished, immediately above
+   the CTA that names the next one. Shared, because four screens carry it and a
+   confirmation that looked different on each would read as four different
+   claims. See shared/stepbanner.js.
+
+   Absolutely positioned on the footer's TOP EDGE rather than placed inside it:
+   the four footers have four different paddings and one of them slides in on a
+   transform, and riding the edge means the strip is full-bleed and travels with
+   whichever footer it belongs to without any of them being restructured. Their
+   own top hairline is the line under it, so it draws none of its own. */
+.stepbanner{
+  position:absolute;left:0;right:0;bottom:100%;
+  height:36px;box-sizing:border-box;
+  padding:0 var(--s6);
+  display:flex;align-items:center;justify-content:space-between;gap:var(--s4);
+  background:var(--surface-secondary);
+  color:var(--content-secondary);
+}
+.stepbanner[hidden]{display:none}
+/* 20, not the 24 the icon is drawn at — the strip is 36 tall and a 24px disc in
+   it reads as a button. */
+.stepbanner__tick{flex:0 0 auto;width:20px;height:20px;display:block}
+.stepbanner__tick svg{display:block;width:20px;height:20px}
+
+/* ── Step tabs ───────────────────────────────────────────────────────────────
+   Assessment / Penalties, on both of the screens they switch between. Same
+   56px band and 2px marker as the fault record's own strip; that one is scoped
+   to #scrIssues because it predates this and swaps a panel rather than a
+   screen — worth folding together next time either is touched.
+
+   The marker is drawn ON the tab rather than as a sliding element: two tabs of
+   equal width have nowhere interesting to slide, and a line that is simply
+   there or not cannot end up between them. */
+.steptabs{
+  /* position, so the z-index below actually applies: in flow on Mark penalties
+     the strip is a plain flex item, and the photo carousel underneath it is
+     position:relative — which painted its top edge over the tab marker. */
+  position:relative;
+  flex:0 0 auto;height:56px;display:flex;
+  background:var(--surface-inverse);
+  box-shadow:inset 0 -1px 0 var(--border-primary);
+  z-index:14;
+}
+.steptab{
+  flex:1 1 0;min-width:0;height:56px;gap:var(--s2);
+  border:0;background:none;cursor:pointer;padding:0;
+  -webkit-tap-highlight-color:transparent;
+  color:var(--content-tertiary);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:inset 0 -2px 0 transparent;
+  transition:color .16s var(--ease-out),box-shadow .16s var(--ease-out);
+}
+.steptab.is-on{
+  color:var(--content-primary);
+  box-shadow:inset 0 -2px 0 var(--surface-primary);
+}
+/* Nothing on the other side yet. Dimmer than the inactive tab beside it, so the
+   difference between "not open" and "not available" is visible without reading
+   the count. */
+.steptab[aria-disabled="true"]{color:var(--content-disabled);cursor:default}
+.steptab[aria-disabled="true"] .steptab__n{color:var(--content-disabled)}
+/* The quiet half of the label, on both tabs, so the marker is the only thing
+   saying which one is open. */
+.steptab__n{color:var(--content-tertiary);font-variant-numeric:tabular-nums}
+
+/* ── THE SECONDARY BUTTON ────────────────────────────────────────────────────
+   A LINE, not a fill. It was a grey block — the primary with the ink taken out
+   — which read as a disabled primary rather than as a second, lesser action.
+   A stroke says "you may" where a fill says "you should", and that is the whole
+   difference between the two.
+
+   Same block, same 100px radius and 22/36 padding as .btn-primary, so the two
+   line up exactly when they are stacked. Shared, because three screens draw it:
+   the checklist picker's Update, the park dialog's Cancel, and the assessment
+   dashboard's step button.
+
+   1.5px, not 1: at 64px tall a hairline reads as a disabled edge rather than as
+   a deliberate outline. The half pixel is the same one the selected filter chip
+   carries, for the same reason.
+   ─────────────────────────────────────────────────────────────────────────── */
+.btn-secondary{
+  display:flex;align-items:center;justify-content:center;
+  padding:22px 36px;border-radius:100px;cursor:pointer;
+  background:none;
+  border:1.5px solid var(--content-primary);
+  color:var(--content-primary);
+  font-family:inherit;
+}
+.btn-secondary:active{background:var(--surface-secondary)}
+
+/* ── TWO FIGURES THAT CLOSE A PAGE OUT ───────────────────────────────────────
+   A footer band carrying a pair of readings instead of a button, in two equal
+   halves with each figure centred in its own. Not a left-aligned pair with a
+   gap: the two are the same KIND of thing — one number each — and a pair
+   sharing the width says so, where a run says the first is the subject and the
+   second is a footnote.
+
+   Shared: the finished-task record uses it (when it was done, how long it
+   took) and so does the allocation page when it is watching rather than
+   allocating (how long it waited, how long has gone into it).
+   ─────────────────────────────────────────────────────────────────────────── */
+.metrics{
+  flex:1 1 auto;
+  display:grid;grid-template-columns:1fr 1fr;align-items:center;
+  min-height:64px;
+}
+.metrics[hidden]{display:none}
+/* ONE figure, centred, with room on the right for the chevron that opens the
+   rest. The empty first column would have left it off-centre, so the grid
+   collapses to a single track and the chevron floats over the end of it. */
+.metrics--one{grid-template-columns:1fr;position:relative}
+.metrics__go{
+  position:absolute;right:0;top:50%;transform:translateY(-50%);
+  width:24px;height:24px;padding:0;border:0;background:none;cursor:pointer;
+  color:var(--content-primary);
+  display:flex;align-items:center;justify-content:center;
+}
+.metrics__go[hidden]{display:none}
+.metrics__go svg{display:block;width:24px;height:24px}
+.metric{display:flex;flex-direction:column;align-items:center;gap:var(--s1);text-align:center}
+.metricv{color:var(--content-primary)}
+.metricl{color:var(--content-tertiary)}
+/* Tabular figures on the one that ticks, so the seconds do not shove the
+   minutes about — at a repaint a second, a column that jitters is the first
+   thing the eye finds on the page. */
+.metricv--live{font-variant-numeric:tabular-nums}
+
+/* ── A BIKE'S STATE, AS A MARK ───────────────────────────────────────────────
+   Play for a bike being worked on, a flag for one that is finished, nothing at
+   all for pending. Shared: the Allocated board's rows and the allocation page's
+   banner both say the state, and one is not allowed to draw it differently.
+
+   Sized to the 14px line it sits on rather than to a 24px icon box — it is
+   punctuation for the word beside it, not a control. The colours are the two
+   the shift blocks use, so a bike that is one amber block in a head is an amber
+   play mark in the list.
+   ─────────────────────────────────────────────────────────────────────────── */
+.qstate{flex:0 0 auto;width:14px;height:14px;display:block}
+.qstate svg{display:block;width:100%;height:100%}
+.qstate--live{color:var(--content-warning)}
+.qstate--done{color:var(--content-positive)}
+
+/* ── A MECHANIC'S SHIFT, AS BLOCKS ───────────────────────────────────────────
+   One slot per bike they could take today: finished, in hand, queued, and the
+   pale ones still free. Shared, because two screens draw the same four people
+   — the Allocated board's accordion heads and the allocation sheet's picker —
+   and a person described two ways is two people.
+
+   flex:1 with a 3px gap rather than a fixed width apiece: the row has about
+   250px between a face and a chevron, and eighteen fixed blocks would either
+   overflow a narrow frame or leave a ragged tail on a wide one. They divide
+   what there is. See allocBlocks in shared/fleets.js.
+   ─────────────────────────────────────────────────────────────────────────── */
+.mblocks{display:flex;align-items:center;gap:3px;width:100%}
+.mblocks__b{
+  flex:1 1 0;min-width:0;height:8px;border-radius:2px;
+  background:var(--surface-disabled);
+}
+.mblocks__b--done{background:var(--content-positive)}
+.mblocks__b--live{background:var(--content-warning)}
+.mblocks__b--pending{background:var(--content-disabled)}
+/* An empty slot is a lighter grey than a waiting bike, not a white gap: the
+   gaps between blocks are already white, and an invisible slot would make the
+   row look shorter for a mechanic with room rather than emptier. */
+.mblocks__b--free{background:var(--border-primary)}

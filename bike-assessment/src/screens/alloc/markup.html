@@ -1,0 +1,200 @@
+  <!-- ══════════════════════════════════════════════════════════════════════
+       ALLOCATE A BIKE — the Sr. Mechanic's task detail page
+       ══════════════════════════════════════════════════════════════════════
+       A NEW screen, not the shared task-detail template. The template is built
+       around a numbered step list walked by one CTA; allocating is a single
+       decision taken against what the QCA found, and reshaping the template to
+       hold that would have changed a page four other task kinds depend on. It
+       is also the rule from the Repairable bikes block: nothing tapped inside
+       one profile's board may open another profile's flow.
+
+       THE CONTENT BELOW IS A FIRST DRAFT FOR SAGAR TO EDIT. Each block is one
+       titled section so a section can be renamed, reordered or deleted without
+       disturbing its neighbours. What is real and what is invented is marked on
+       each one, because that is the part worth knowing before editing:
+
+         real     — bike id, model, and (for a bike a QCA actually transferred)
+                    the faults and penalties off its assessment record
+         invented — the mechanics and their workloads
+
+       The 27 synthetic bikes in ALLOC carry no assessment record at all, so the
+       assessment blocks fall back to a stated placeholder rather than an empty
+       space pretending to be a finding. See loadAllocation().
+       ══════════════════════════════════════════════════════════════════════ -->
+  <section class="screen screen--alloc" id="scrAlloc" data-pos="right" aria-label="Allocate bike">
+
+    <header class="appbar">
+      <div class="appbar__row">
+        <div class="appbar__lhs">
+          <div class="leading-action">
+            <button class="icon-btn" id="allocBack" aria-label="Back">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M10.4538 12L14.5269 16.0731C14.6654 16.2116 14.7362 16.3856 14.7394 16.5952C14.7426 16.8048 14.6718 16.982 14.5269 17.1269C14.382 17.2718 14.2064 17.3442 14 17.3442C13.7936 17.3442 13.618 17.2718 13.4731 17.1269L8.97888 12.6327C8.88528 12.5391 8.81925 12.4404 8.7808 12.3365C8.74233 12.2327 8.7231 12.1205 8.7231 12C8.7231 11.8795 8.74233 11.7673 8.7808 11.6635C8.81925 11.5596 8.88528 11.4609 8.97888 11.3673L13.4731 6.8731C13.6116 6.73463 13.7856 6.6638 13.9952 6.6606C14.2048 6.65738 14.382 6.72822 14.5269 6.8731C14.6718 7.01797 14.7442 7.1936 14.7442 7.4C14.7442 7.6064 14.6718 7.78203 14.5269 7.9269L10.4538 12Z" fill="#222222"/></svg>
+            </button>
+          </div>
+          <div class="appbar__titles">
+            <p class="t-label-md"><span id="allocCrumb">543210</span><span class="appbar__suffix" aria-hidden="true">&nbsp;/ Allocate bike</span></p>
+          </div>
+        </div>
+        <!-- ONLY ON A BIKE BEING WORKED ON. Allocating, there is nothing to add
+             a fault to yet; waiting, nobody has looked at it since the QCA did;
+             finished, the work is over. It carries data-opt-more, so the shared
+             options sheet binds it like every other ⋮ in the app — see
+             SHEET_FOR.alloc in shared/sheet-config.js for what is in it. -->
+        <button class="icon-btn appbar__more" id="allocMore" data-opt-more hidden
+                aria-label="More options" aria-haspopup="dialog" aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 20C11.45 20 10.9792 19.8042 10.5875 19.4125C10.1958 19.0208 10 18.55 10 18C10 17.45 10.1958 16.9792 10.5875 16.5875C10.9792 16.1958 11.45 16 12 16C12.55 16 13.0208 16.1958 13.4125 16.5875C13.8042 16.9792 14 17.45 14 18C14 18.55 13.8042 19.0208 13.4125 19.4125C13.0208 19.8042 12.55 20 12 20ZM12 14C11.45 14 10.9792 13.8042 10.5875 13.4125C10.1958 13.0208 10 12.55 10 12C10 11.45 10.1958 10.9792 10.5875 10.5875C10.9792 10.1958 11.45 10 12 10C12.55 10 13.0208 10.1958 13.4125 10.5875C13.8042 10.9792 14 11.45 14 12C14 12.55 13.8042 13.0208 13.4125 13.4125C13.0208 13.8042 12.55 14 12 14ZM12 8C11.45 8 10.9792 7.80417 10.5875 7.4125C10.1958 7.02083 10 6.55 10 6C10 5.45 10.1958 4.97917 10.5875 4.5875C10.9792 4.19583 11.45 4 12 4C12.55 4 13.0208 4.19583 13.4125 4.5875C13.8042 4.97917 14 5.45 14 6C14 6.55 13.8042 7.02083 13.4125 7.4125C13.0208 7.80417 12.55 8 12 8Z" fill="currentColor"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- 1 · WHICH BIKE — the row, repeated. Model and pack reading on the first
+         line, the number on the second: the same two lines the list item
+         carried, so the page you land on is visibly the thing you tapped. It
+         said the model alone over "number · odometer", which was two different
+         sentences about the same bike a scroll apart.
+
+         In a banner rather than as loose text at the top of the scroller. It is
+         the one block on the page that is not a list, and on the grey it reads
+         as the subject the lists below are about.
+
+         CHROME, not content: it sits outside the scroller, between the app bar
+         and the list, so it holds while the faults move under it. Scrolling down
+         collapses the app bar above it and the banner takes the top of the frame
+         — the bike you are deciding about is the one thing that should never
+         leave the screen. Scrolling up brings the bar back. See alScroll below.
+
+         THE ODOMETER IS GONE. It came up here when the readings tiles went, and
+         went again when the banner became a quotation of the row rather than a
+         summary — a figure in one and not the other is what stops the two
+         matching. It was invented anyway; the app has no per-bike reading. -->
+    <div class="al-head">
+      <!-- The mechanic's face, on the banner they now head. Only there: when
+           the page is a decision the banner is about the BIKE, and a person's
+           picture over a bike's name would be the wrong subject. -->
+      <span class="al-head__f" id="allocFace" aria-hidden="true" hidden></span>
+      <div class="al-head__t">
+        <h2 class="t-title-page" id="allocTitle">Dex NV &bull; 543210</h2>
+        <p class="t-label-md al-sub" id="allocSub">3 mech. &middot; 3 elect. faults</p>
+      </div>
+    </div>
+
+    <main class="alscroll" id="allocScroll">
+
+      <!-- 3 · WHAT IS WRONG WITH IT — two lists, because they are two kinds of
+           thing and the fault record already draws them as two.
+
+           MECHANICAL is what a QCA judged by hand: the part, a picture of it, and
+           the reasons they picked. Real, off the record they filed.
+
+           ELECTRICAL is what the bike reported about itself — a line of text, no
+           picture and no reasons, because there is no part to photograph and
+           nobody chose anything. One diagnostic set for the app; see
+           issuesElectrical() in screens/issues.
+
+           Both rows are the fault record's own .issue markup rather than a second
+           look for the same thing — the styles are re-declared under #scrAlloc,
+           not shared, so this page cannot pull that screen's out from under it. -->
+      <!-- The dashboard's own row art, small. Two of the three exist already —
+           the assessment's Mechanical faults row and its Active checklist row —
+           so the same picture means the same thing on both screens. There is no
+           electrical one anywhere in the repo, so that heading gets a drawn bolt
+           on the same tile: three headings that did not match as a set would
+           read as one of them being a different kind of section.
+
+           EACH ONE IS AN ACCORDION, shut on arrival. The page is a decision —
+           who gets this bike — and the three lists are the evidence for it; open
+           they were a scroll, shut they are a summary you can read at a glance
+           and open the one you doubt. The sub-line is what the section holds,
+           run together on one line and clipped: enough to know whether it is
+           worth opening. -->
+      <button class="al-acc" type="button" data-alloc-acc="mech" aria-expanded="false">
+        <img class="al-acc__i" src="assets/rnm/issues.png" alt="">
+        <span class="al-acc__t">
+          <span class="al-acc__title t-label-md700">Mechanical faults<span class="al-sec__n" id="allocMechN"></span></span>
+          <span class="al-acc__sub t-label-sm" id="allocMechSub"></span>
+        </span>
+        <span class="al-acc__go" aria-hidden="true"></span>
+      </button>
+      <div class="al-faults" id="allocFaults" hidden></div>
+
+      <button class="al-acc" type="button" data-alloc-acc="elec" aria-expanded="false">
+        <span class="al-acc__i al-acc__i--bolt" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M13 2 4.5 13.5H11l-1 8.5 9-12h-6.6L13 2Z" fill="currentColor"/></svg></span>
+        <span class="al-acc__t">
+          <span class="al-acc__title t-label-md700">Electrical faults<span class="al-sec__n" id="allocElecN"></span></span>
+          <span class="al-acc__sub t-label-sm" id="allocElecSub"></span>
+        </span>
+        <span class="al-acc__go" aria-hidden="true"></span>
+      </button>
+      <div class="al-faults" id="allocElec" hidden></div>
+
+      <!-- 4 · WHICH LISTS THE BIKE IS RUNNING. Not a fault — a scope. Two bikes
+           with the same three faults are different jobs if one is also down for
+           a monsoon check, so the Sr. Mechanic is choosing against the work, not
+           only against the damage. Read from the checklist picker's own saved
+           set; see clSaved in screens/checklists. -->
+      <button class="al-acc" type="button" data-alloc-acc="cl" aria-expanded="false">
+        <img class="al-acc__i" src="assets/rnm/checks.png" alt="">
+        <span class="al-acc__t">
+          <span class="al-acc__title t-label-md700">Active checklists<span class="al-sec__n" id="allocClN"></span></span>
+          <span class="al-acc__sub t-label-sm" id="allocClSub"></span>
+        </span>
+        <span class="al-acc__go" aria-hidden="true"></span>
+      </button>
+      <div class="al-faults" id="allocCl" hidden></div>
+
+      <!-- REMOVED: "Note for the mechanic" and "Estimated time". Both were
+           invented placeholders in the first draft and Sagar cut them. The note
+           was an inert text box; the estimate was a figure nothing in the app
+           computes. Their CSS went with them — .al-note and .al-est in this
+           screen's style.css. -->
+    </main>
+
+    <!-- ONE button, two jobs. Closed it says Allocate and opens the picker;
+         open it says Assign and notify and waits for a name. The footer is NOT
+         inside the sheet — it stays on the frame's floor and the sheet sits on
+         top of it, so the button does not move when the sheet arrives. That is
+         what the lift in style.css is for: the scrim covers the page, and the
+         footer has to come up through it to stay live. -->
+    <!-- The footer is the button when there is a decision to take, and the two
+         figures when there is not — the same .metrics band the finished-task
+         record carries. How long the bike waited before anyone started it, and
+         how much has gone into it since: 0 while it is still waiting, a clock
+         with seconds while somebody is on it, and the final figure once it is
+         done. Both are the questions a Sr. Mechanic watching a board has. -->
+    <div class="alfoot">
+      <button class="btn-primary t-label-md700" id="allocGo"><span>Allocate</span></button>
+      <!-- FINISHED shows one figure, not two. "Pending since" is a fact about
+           the wait before the work, and once the work is over it is history
+           that nobody scanning a board needs — it and the rest of the clock
+           move behind the chevron, to screens/alloctime. Waiting and on-going
+           keep both, because there the wait is the live half. -->
+      <div class="metrics" id="allocMetrics" hidden>
+        <span class="metric" id="allocWaitedM">
+          <span class="metricv t-label-md700" id="allocWaited">—</span>
+          <span class="metricl t-label-sm">Pending since</span>
+        </span>
+        <span class="metric">
+          <span class="metricv t-label-md700" id="allocSpent">—</span>
+          <span class="metricl t-label-sm">Time spent</span>
+        </span>
+        <button class="metrics__go" id="allocTimes" type="button" hidden
+                aria-label="All time details"></button>
+      </div>
+    </div>
+
+    <!-- WHO TO GIVE IT TO — invented. Four names with invented open-job counts
+         and invented skills; the block most likely to be wrong, because the real
+         list is whoever is on shift and the app has no roster.
+
+         It was a section on the page and is a sheet now, so the page reads as
+         what is wrong with the bike and the sheet is the decision taken about
+         it. Scrim-to-close only — no drag-to-dismiss: the shared sheet's dragger
+         is bound to the options sheet and wiring it here is more than this needs. -->
+    <div class="scrim" id="allocScrim"></div>
+    <section class="sheet alsheet" id="allocSheet" role="dialog" aria-modal="true"
+             aria-labelledby="allocSheetT">
+      <div class="sheet__grabzone"><div class="sheet__grab"></div></div>
+      <p class="t-label-md700 alsheet__t" id="allocSheetT">Allocate to</p>
+      <div class="al-who" id="allocWho" role="radiogroup" aria-labelledby="allocSheetT"></div>
+    </section>
+  </section>

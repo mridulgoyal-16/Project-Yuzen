@@ -1,0 +1,18 @@
+{
+  "id": "./",
+  "name": "Yuzen · Bike Assessment",
+  "short_name": "Yuzen",
+  "description": "Yulu partner app prototype — the flow a mechanic works through at the bike, and the one a captain runs a service token through.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
+  "prefer_related_applications": false,
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

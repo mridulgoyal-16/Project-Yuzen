@@ -1,0 +1,116 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   ACTIVE CHECKLISTS
+   Flex column rather than the absolute skeleton screens/assess uses, because
+   the Update footer has to push the list rather than float over it — the same
+   arrangement as screens/faults, and for the same reason.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.screen--checklists{display:flex;flex-direction:column;padding-top:var(--status-h)}
+.screen--checklists .appbar{flex:0 0 auto}
+
+.clscroll{
+  flex:1 1 auto;overflow-y:auto;overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;scrollbar-width:none;
+}
+.clscroll::-webkit-scrollbar{display:none}
+/* The shared .listhead is a flex ROW — a title with something on the far side of
+   it — and here the second line goes underneath instead. It keeps no bottom
+   padding: the first row's own 24px is the gap, the same as everywhere else. */
+.screen--checklists .listhead{
+  flex-direction:column;align-items:flex-start;gap:var(--s2);
+}
+.screen--checklists .clsub{color:var(--content-secondary)}
+
+/* A row is text and a checkbox, and the whole thing is the button — see
+   paintChecklists. No chevron: the tap toggles, it does not travel. Which
+   checklist is running is decided on this page; what is IN one is the carousel,
+   opened from the dashboard's own button.
+   24 + 48 + 24 = 96, the same rhythm as the parts list. */
+.cl-item{
+  position:relative;background:var(--surface-inverse);
+  /* border-box with the 96 stated outright, not content-box around a 48px row.
+     A content-box element told width:100% is 100% PLUS its padding — 438 inside
+     a 390 scroller, which pushed the checkbox 48px past the right edge of the
+     phone where it simply could not be seen. It only survived one screenshot
+     because the row was a plain <div> then and took its width from the flow. */
+  padding:var(--s6);min-height:96px;box-sizing:border-box;
+  display:flex;align-items:center;justify-content:space-between;gap:var(--s4);
+  width:100%;border:0;text-align:left;font-family:inherit;cursor:pointer;
+}
+/* The press state the parts list uses, for the same reason: at this size the
+   only feedback that a 390px-wide target was hit is the target itself. */
+.cl-item:not([aria-disabled="true"]):active{background:var(--surface-secondary)}
+/* Locked — the bike arrived with this checklist assigned. Ticked, and the tick
+   is drawn in the disabled grey rather than the primary black: the row is a
+   statement about the bike, not a control. Its NAME stays at full strength,
+   because the checklist is running and greying it out would say the opposite. */
+.cl-item[aria-disabled="true"]{cursor:default}
+.cl-item[aria-disabled="true"] .cl-check rect{fill:var(--content-disabled)}
+/* Drawn on the bottom edge so it costs no height, inset 24 to match the parts
+   list — see the note on Divider in README: a 1px flow element accumulates. */
+.cl-item::after{
+  content:"";position:absolute;left:var(--s6);right:var(--s6);bottom:0;
+  height:1px;background:var(--border-primary);
+}
+.cl-item__text{display:flex;flex-direction:column;gap:var(--s2);min-width:0}
+.cl-item__name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cl-item__sub{color:var(--content-secondary)}
+
+/* The mark, not a control — the row around it takes the tap. Kept at 48px so
+   the icon sits on the same vertical rhythm as the trailing slot on every other
+   list in the app, and pulled half its own overhang back so the 24px glyph lands
+   24px from the screen edge. Written off the scale: there is no 12px token, and
+   inventing one here would be the first. */
+.cl-check{
+  flex:0 0 auto;width:48px;height:48px;margin-right:calc(var(--s6) * -0.5);
+  display:flex;align-items:center;justify-content:center;
+}
+.cl-check svg{display:block}
+
+/* Sits in flow and claims its 124px, so the list shrinks instead of hiding a
+   row behind it. Always there now: it carries this flow's step CTA, which is
+   not conditional on anything — it used to hold Update alone and slid up only
+   when there was something to save. */
+.clfoot{
+  /* For the step banner, which rides this element's top edge. */
+  position:relative;
+  flex:0 0 auto;background:var(--surface-inverse);
+  box-shadow:inset 0 1px 0 var(--border-primary);
+  padding:var(--s6) var(--s6) var(--s9);
+  display:flex;flex-direction:column;
+  z-index:16;
+}
+/* STACKED, both full width, primary on top — the same arrangement as the fault
+   record's footer, so the way forward is in the same place on every screen in
+   this flow. Side by side the two had to share 342px, which left the primary
+   115px of text box for a label that wants 140, and "Assessment done" wrapped
+   onto two lines while Update sat in white space. */
+.clfoot .btn-primary,
+.clfoot .btn-secondary{width:100%}
+.clfoot .btn-primary span{white-space:nowrap}
+
+/* Update GROWS into the footer rather than appearing in it, and the primary is
+   footer grows downward by exactly its height — .clfoot is flex:0 0 auto in a
+   column, so the list above gives up the space in the same movement rather than
+   the footer overlapping it.
+
+   minmax(0,·) rather than a bare 0fr: an fr track keeps a min-content floor,
+   which would leave the button's own height visible when collapsed. Same
+   mechanism as .fdetails on Mark penalties, and the reason Update is wrapped in
+   a row of its own instead of being toggled with `hidden`, which cannot animate. */
+.clfoot__slot{
+  display:grid;
+  grid-template-rows:minmax(0,0fr);
+  transition:grid-template-rows .28s var(--ease-out);
+}
+.clfoot.is-editing .clfoot__slot{grid-template-rows:minmax(0,1fr)}
+.clfoot__slot > div{overflow:hidden}
+/* The 16 between the two — the fault record's footer gap — carried by the
+   collapsing row so it goes away with the button rather than leaving a gap
+   under the primary. */
+.clfoot__slot .btn-secondary{margin-top:var(--s4)}
+
+
+/* .btn-secondary lives in shared/base.css now — three screens draw it, and it
+   is a STROKE rather than the grey fill it was here. Update is not the way OFF
+   this page, it is a thing you do while you are on it, so it should not carry
+   the primary's weight even while the primary is the disabled one. */

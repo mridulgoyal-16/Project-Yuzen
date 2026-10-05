@@ -1,0 +1,58 @@
+/* ── Sort sheet ──────────────────────────────────────────────────────────────
+   The listing's ordering control, beside the filter sheet and deliberately
+   shaped like it: same 24px head, same Reset pill, same slide-up off .sheet.
+   A mechanic who has opened one should not have to learn the other.
+
+   WHERE IT DIFFERS, and why. The filter sheet offers CHIPS, because a filter is
+   many-of-many — several can be on at once and each is its own small target. An
+   order is one-of-many and it carries a DIRECTION, so an option here is a
+   full-width row: the label leads, the arrow sits at the far edge, and the row
+   has room to say which way it is pointing. Chips could not hold the arrow
+   without growing a second control inside each one.
+   ─────────────────────────────────────────────────────────────────────────── */
+.srtsheet{
+  padding-bottom:var(--s6);
+  /* The whole sheet is the drag handle — see the foot of sortsheet.js. Without
+     this the browser claims the vertical gesture before a pointermove lands. */
+  touch-action:none;
+  max-height:calc(100% - 44px);
+}
+.srtsheet__head{
+  flex:0 0 auto;
+  display:flex;align-items:flex-start;justify-content:space-between;gap:var(--s4);
+  padding:var(--s6) var(--s6) 0;
+}
+.srtsheet__title{color:var(--content-primary)}
+/* The filter sheet's Reset, to the pixel — same two states, same reason: the
+   fill carries the enabled/disabled weight so the control keeps its shape. */
+.srtsheet__reset{
+  flex:0 0 auto;
+  display:flex;align-items:center;gap:var(--s2);
+  height:48px;padding:0 var(--s4);
+  border:0;border-radius:40px;cursor:pointer;
+  background:var(--surface-secondary);color:var(--content-primary);
+  font:inherit;
+}
+.srtsheet__reset svg{display:block;width:20px;height:20px;order:1}
+.srtsheet__reset[disabled]{
+  background:var(--surface-disabled);color:var(--content-disabled);cursor:default;
+}
+.srtsheet__body{
+  /* The body keeps its own vertical gesture; the drag only takes over once it
+     is at the top. Two options today, but a kind may declare more. */
+  touch-action:pan-y;
+  flex:1 1 auto;min-height:0;overflow-y:auto;
+  padding:var(--s6) var(--s6) 0;
+  display:flex;flex-direction:column;gap:var(--s2);
+}
+/* NO STYLES OF ITS OWN FOR THE CONTENTS. Figma 2982:1287 draws this sheet with
+   the library's Chips/Large and Headings/Small — the same two the filter sheet
+   already uses — so the groups here are .flgroup / .flgroup__h / .flgroup__chips
+   and the chips are .qchip, all from shared/filtersheet.css. A second set of
+   classes that happened to look the same is how the two sheets would drift.
+
+   WHAT WENT: .srtopt, a 56px full-width row with an arrow at its far edge, and
+   the rotating arrow glyph with it. The frame states the direction in words —
+   High to low / Low to high — which needs no glyph and no rotation, and says
+   which way "up" means on a battery percentage, which an arrow never did.
+   ─────────────────────────────────────────────────────────────────────────── */

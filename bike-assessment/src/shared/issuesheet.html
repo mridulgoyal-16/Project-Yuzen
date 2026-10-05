@@ -1,0 +1,34 @@
+  <!-- ══════════════════════════════════════════════════════════════════════
+       Fault sheet — the mechanic's checklist pattern, lifted
+
+       Marking a part faulty asks WHAT is wrong before it will take the verdict.
+       Ported from Barun's servicing checklist (screens/checks), where it already
+       worked, and put in shared chrome rather than copied into the assessment
+       screen — see the note in issuesheet.js.
+
+       Empty by design. The part, its reasons and what happens on confirm are all
+       handed in by whichever checklist opened it.
+       ══════════════════════════════════════════════════════════════════════ -->
+    <div class="scrim" id="isScrim"></div>
+    <section class="sheet issheet" id="isSheet" role="dialog" aria-modal="true"
+             aria-labelledby="isName">
+      <div class="sheet__grabzone" id="isGrab"><div class="sheet__grab"></div></div>
+      <!-- Which part this is about. The sheet is reached by pressing Faulty on a
+           card that is about to fly off screen, so without the name and the
+           thumbnail here there would be nothing left saying what you are
+           answering for. -->
+      <div class="issheet__part">
+        <div class="issheet__thumb" id="isThumb"></div>
+        <p class="t-label-md issheet__name" id="isName"></p>
+      </div>
+      <div class="issheet__divider"></div>
+      <div class="issheet__issues">
+        <p class="t-label-md">Issues</p>
+        <div class="issheet__chips" id="isChips"></div>
+      </div>
+      <div class="issheet__foot">
+        <!-- Disabled until at least one issue is picked: "faulty" with nothing
+             said about it is not a state either checklist holds. -->
+        <button class="btn-primary t-label-md700" id="isConfirm" type="button" disabled>Add issues</button>
+      </div>
+    </section>

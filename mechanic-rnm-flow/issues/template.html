@@ -1,0 +1,1050 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Yuzen · Issues</title>
+<style>
+__SHELL_CSS__
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Issues — Figma 1993:30331
+   The screen furniture above this line is lifted from mechanic-checks so the
+   two screens stitch without drift. Everything below is this screen.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── App bar: trailing three-dots ─────────────────────────────────────────── */
+/* The design centres "Issues • 5" with nothing on the right. Per the brief the
+   header matches the other screens instead, so the title stays left-aligned
+   after the back arrow and the overflow button takes the right edge. */
+.appbar__row{justify-content:space-between}
+.appbar__lead{display:flex;align-items:center;flex:1 1 auto;min-width:0}
+.appbar__title p{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.trailing-action{height:48px;display:flex;align-items:center;flex:0 0 auto}
+
+/* ── Section tabs: Electrical / Mechanical ────────────────────────────────────
+   Tabs, not chips. Lifted from ../mark-issues so the two screens in this flow use
+   one tab component: a 55px strip over a 1px border, the label in
+   content/secondary until selected, and a 2px underline that slides between them.
+   Pinned under the progress bar, so the section you are in never scrolls away.
+
+   The counts are this screen's own addition to that component — mark-issues has
+   no counts because a zone's size is not interesting, where "how many are filed
+   under Mechanical" is exactly what you want before you switch. Secondary colour,
+   so the label still reads first. */
+:root{ --tabs-h:56px; }
+.tabs-wrap{
+  position:absolute;left:0;top:calc(var(--header-h) + var(--progress-h));
+  width:100%;
+  background:var(--surface-inverse);z-index:6;
+  border-bottom:1px solid var(--border-primary);
+}
+.tabs{
+  display:flex;align-items:center;height:55px;position:relative;
+  overflow-x:auto;overflow-y:hidden;
+  scrollbar-width:none;scroll-behavior:smooth;
+  -webkit-overflow-scrolling:touch;
+}
+.tabs::-webkit-scrollbar{display:none}
+.tab{
+  flex-shrink:0;height:55px;padding:16px;
+  display:inline-flex;align-items:center;gap:var(--s2);
+  border:0;background:none;font-family:inherit;cursor:pointer;
+  font-size:16px;font-weight:500;line-height:24px;
+  color:var(--content-secondary);white-space:nowrap;
+  -webkit-tap-highlight-color:transparent;
+  transition:color 180ms ease;
+}
+/* First tab is inset 24px from the frame edge, per the design. */
+.tab:first-of-type{padding-left:var(--s6)}
+.tab.is-active{color:var(--content-primary)}
+.tab__n{color:var(--content-secondary)}
+.tabs-underline{
+  position:absolute;bottom:0;left:0;height:2px;width:0;
+  border-radius:1px;background:var(--content-primary);
+  transition:transform 220ms cubic-bezier(.4,0,.2,1),
+             width     220ms cubic-bezier(.4,0,.2,1);
+}
+
+.scroll{top:calc(var(--header-h) + var(--progress-h) + var(--tabs-h))}
+
+/* ── List ─────────────────────────────────────────────────────────────────── */
+/* The frame sets the first row 8px below the header. Padding goes on the list so
+   it scrolls with the content rather than holding a permanent gap under the app
+   bar. (The shell's header is 117px — 44 + 72 + its own 1px divider — where the
+   frame counts 116, so content lands 1px lower here than in Figma.) */
+.list{padding-top:var(--s2)}
+
+/* ── Rows ─────────────────────────────────────────────────────────────────── */
+.issue{
+  display:flex;align-items:center;gap:var(--s4);
+  width:342px;margin:0 auto;padding:var(--s6) 0;
+  /* Divider on the row boundary via an inset shadow, so it cannot add height
+     the way a border-bottom would. */
+  box-shadow:inset 0 -1px 0 var(--border-primary);
+}
+/* A diagnostic row has one line and nothing to the left of it, so it does not need
+   the 96px a part row takes to hold a 64px thumbnail. */
+.issue--plain{padding:var(--s4) 0;min-height:56px}
+
+/* The list's own last hairline is drawn by the design, so every row keeps it. */
+
+.issue__thumb{
+  flex:0 0 auto;width:56px;height:56px;
+  border-radius:9.333px;background:var(--surface-secondary);
+  overflow:hidden;
+}
+.issue__thumb img{width:100%;height:100%;object-fit:cover;display:block}
+
+.issue__main{
+  flex:1 1 auto;min-width:0;height:56px;
+  display:flex;flex-direction:column;justify-content:space-between;
+}
+.issue__head{
+  /* No gap token here on purpose. The arrow's ink sits ~10px inside its own 24px
+     box, so the frame's nominal 8px gap renders as ~18px of white and the arrow
+     reads as detached from the title. The negative margin pulls the box back so
+     the *ink* sits ~8px off the text — deliberately tighter than the frame. */
+  display:flex;align-items:center;gap:0;
+  border:0;background:none;padding:0;font:inherit;color:inherit;
+  cursor:pointer;text-align:left;-webkit-tap-highlight-color:transparent;
+  transition:opacity 120ms ease;
+}
+.issue__head:active{opacity:.55}
+.issue__name{color:var(--content-primary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.issue__head svg{
+  width:24px;height:24px;flex:0 0 auto;display:block;
+  fill:var(--content-primary);margin-left:-2px;
+}
+
+/* Reasons, dot-separated. Wrapping is allowed: three reasons already fill the
+   206px the design gives this line, and a fourth would otherwise be clipped. */
+.issue__reasons{
+  display:flex;align-items:center;gap:var(--s2);flex-wrap:wrap;
+  color:var(--content-secondary);
+}
+/* The separators are Surface/Disabled (#dddddd), markedly lighter than the
+   reasons themselves — measured off the frame at 221 against the text's 113.
+   Matching them to the text made the line read as a wall. */
+.issue__dot{
+  width:5px;height:5px;border-radius:50%;
+  background:var(--surface-disabled);flex:0 0 auto;
+}
+
+/* ── Tick ─────────────────────────────────────────────────────────────────── */
+.issue__tick{
+  flex:0 0 auto;min-width:48px;height:48px;
+  display:flex;align-items:center;justify-content:center;
+  padding:12px 11px;border-radius:100px;
+  background:var(--surface-inverse);
+  border:1px solid var(--border-primary);
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+  transition:background-color 160ms ease,border-color 160ms ease,transform 120ms ease;
+}
+.issue__tick svg{width:24px;height:24px;display:block;fill:var(--content-primary);transition:fill 160ms ease}
+.issue__tick:active{transform:scale(.9)}
+/* Resolved: a light surface with a green tick, rather than a dark fill. The
+   border goes too — the surface itself is the shape now, and keeping a hairline
+   around a filled pill reads as an outline drawn over a solid. */
+.issue__tick[aria-pressed="true"]{
+  background:var(--surface-secondary);
+  border-color:transparent;
+}
+.issue__tick[aria-pressed="true"] svg{fill:var(--content-positive)}
+
+/* A resolved row steps back without going grey — greying the text read as
+   "failed" rather than "done" when it was tried. */
+.issue.is-done .issue__thumb{opacity:.45}
+/* The rule is content/primary, not the tertiary the text around it uses — a grey
+   line over grey text was barely legible as a strike at all. */
+.issue.is-done .issue__name{text-decoration:line-through;text-decoration-color:var(--content-primary)}
+.issue.is-done .issue__reasons{color:var(--content-tertiary)}
+
+/* ── Electrical checks loader ─────────────────────────────────────────────── */
+/* Loader bar that appears above the CTA during electrical checks. Shows progress
+   from 0% to 100% over 3-5 seconds. */
+.check-loader{
+  padding:var(--s6) var(--s6) var(--s4);
+  display:none;
+}
+.check-loader.is-active{display:block}
+.check-loader__bar{
+  height:8px;border-radius:4px;
+  background:var(--surface-secondary);overflow:hidden;
+}
+.check-loader__fill{
+  height:100%;background:var(--content-primary);
+  width:0%;border-radius:4px;
+  transition:width linear;
+}
+.check-loader__label{
+  margin-top:var(--s2);
+  font-size:14px;font-weight:500;line-height:20px;
+  color:var(--content-secondary);text-align:right;
+}
+
+/* ── Footer button ────────────────────────────────────────────────────────── */
+/* Full-width dark pill, 342x64, per the frame — unlike mechanic-checks, whose
+   footer pairs a text button with a smaller primary. */
+/* The sibling's footer pads 24px right but only 16px left, for its
+   text-button-left / primary-right pair. A single full-width button needs
+   symmetric 24px so it lands on the frame's margins. */
+.footer__content--single{justify-content:center;padding:0 var(--s6)}
+.btn-block{
+  width:342px;height:64px;
+  display:flex;align-items:center;justify-content:center;gap:var(--s2);
+  border:0;border-radius:100px;
+  background:var(--surface-primary);color:var(--content-inverse);
+  font:inherit;font-weight:700;font-size:16px;line-height:20px;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+  transition:transform 120ms ease,opacity 160ms ease;
+}
+.btn-block:active{transform:scale(.98)}
+/* Secondary: same block, no fill. Re-running the checks is not the way off this
+   screen — it is a thing you do while you are on it — so it should not carry the
+   weight of the primary action the way Mark Issues does. */
+.btn-block--secondary{
+  background:var(--surface-secondary);color:var(--content-primary);
+}
+.btn-block:disabled{opacity:.4;cursor:default;transform:none}
+.btn-block svg{width:24px;height:24px;display:block;fill:currentColor}
+
+/* ── Toast ────────────────────────────────────────────────────────────────── */
+/* Sits above the footer so it never covers Mark Issues, and is inert to pointers
+   so it cannot swallow a tap aimed at a row underneath. */
+.toast{
+  position:absolute;left:50%;bottom:calc(var(--footer-h) + var(--s4));
+  transform:translate(-50%,8px);
+  background:var(--surface-primary);color:var(--content-inverse);
+  font-weight:500;font-size:14px;line-height:20px;
+  padding:10px 16px;border-radius:100px;white-space:nowrap;
+  opacity:0;pointer-events:none;z-index:25;
+  transition:opacity .22s var(--ease-out),transform .22s var(--ease-out);
+}
+.toast.is-shown{opacity:1;transform:translate(-50%,0)}
+
+.empty{
+  padding:64px var(--s6);text-align:center;
+  color:var(--content-tertiary);font-size:14px;line-height:20px;
+}
+
+/* ── Issue detail sheet — Figma 1993:30576 ────────────────────────────────── */
+/* Opened by tapping an issue. Shares the scrim with the options sheet's CSS but
+   not its element, so the two can never be half-open at once by accident. */
+.sheet-dtl{
+  position:absolute;left:0;right:0;bottom:0;
+  background:var(--surface-inverse);
+  border-radius:var(--s9) var(--s9) 0 0;
+  display:flex;flex-direction:column;
+  transform:translateY(100%);
+  transition:transform .3s var(--ease-out);
+  z-index:31;
+}
+.sheet-dtl.is-open{transform:translateY(0)}
+.sheet-dtl--dragging{transition:none}
+
+/* The frame gives this sheet a titled header instead of a grabber, so the header
+   itself is the drag handle — the gesture survives without drawing a second
+   affordance the design does not have. */
+/* The frame's header is a single 68px line. It carries a second line here — who
+   made the call — so the height is content-driven instead, with the frame's 24px
+   above and the same below. */
+.sheet-dtl__header{
+  padding:var(--s6);
+  display:flex;flex-direction:column;align-items:center;gap:var(--s1);
+  border-radius:var(--s9) var(--s9) 0 0;
+  /* 0.5px in the frame; an inset shadow keeps it off the height. */
+  box-shadow:inset 0 -0.5px 0 var(--border-primary);
+  touch-action:none;cursor:grab;
+  color:var(--content-secondary);text-align:center;
+}
+/* Attribution, not a heading — a step down in size and colour from the part name
+   so the two never compete. */
+.sheet-dtl__by{
+  font-size:12px;font-weight:500;line-height:16px;
+  color:var(--content-tertiary);
+}
+.sheet-dtl__body{
+  display:flex;flex-direction:column;gap:var(--s6);
+  padding:var(--s6);
+}
+/* One wrapping run in a fixed order — every reason, then Missing last. Chips hold
+   their place as they are picked; moving them between a selected and an available
+   run made the whole block reflow under the thumb on every tap. */
+.sheet-dtl__run{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+
+.rchip{
+  height:48px;min-width:48px;border-radius:100px;
+  display:flex;align-items:center;justify-content:center;gap:var(--s2);
+  font:inherit;font-size:16px;font-weight:500;line-height:20px;
+  cursor:pointer;white-space:nowrap;-webkit-tap-highlight-color:transparent;
+  padding:14px var(--s4);
+  background:var(--surface-inverse);
+  border:1px solid var(--border-primary);
+  color:var(--content-primary);
+  transition:background-color .15s ease,box-shadow .15s ease,color .15s ease,
+             border-color .15s ease,transform 120ms ease;
+}
+.rchip:active{transform:scale(.96)}
+/* Selected: surface/secondary with a dark ring and the cancel glyph. The ring is
+   an inset shadow rather than a 1.5px border so selecting never shifts layout. */
+/* 12px on the glyph side, per the frame — the × carries its own optical space. */
+.rchip--on{
+  background:var(--surface-secondary);
+  border-color:transparent;box-shadow:inset 0 0 0 1.5px var(--border-selected);
+  padding-right:12px;
+}
+/* Disabled: ruled out by what is already picked, and genuinely not tappable. */
+.rchip:disabled{
+  background:var(--surface-secondary);
+  border-color:var(--border-primary);box-shadow:none;
+  color:var(--content-disabled);
+  cursor:default;transform:none;
+}
+.rchip svg{width:24px;height:24px;display:block;flex:0 0 auto;fill:var(--content-primary)}
+
+/* Divider runs the full 390 in the frame, unlike the 24px-inset hairlines
+   elsewhere — this one separates the sheet's actions from its content. */
+.sheet-dtl__footer{
+  display:flex;flex-direction:column;align-items:center;gap:var(--s4);
+  padding:var(--s6) var(--s9) var(--s9);
+  box-shadow:inset 0 1px 0 var(--border-primary);
+}
+.btn-sheet{
+  width:100%;height:64px;
+  display:flex;align-items:center;justify-content:center;
+  border:0;border-radius:100px;
+  font:inherit;font-weight:700;font-size:16px;line-height:20px;
+  cursor:pointer;-webkit-tap-highlight-color:transparent;
+  transition:transform 120ms ease,opacity 160ms ease;
+}
+.btn-sheet:active{transform:scale(.98)}
+/* Disabled takes surface/disabled with a disabled label, the same treatment the
+   sibling's primary uses — a dimmed dark pill reads as a loading state instead. */
+.btn-sheet--primary{background:var(--surface-disabled);color:var(--content-disabled)}
+.btn-sheet--primary:not(:disabled){background:var(--surface-primary);color:var(--content-inverse)}
+.btn-sheet:disabled{cursor:default;transform:none}
+.btn-sheet--ghost{background:var(--surface-secondary);color:var(--content-primary)}
+</style>
+</head>
+<body>
+<div class="phone">
+
+  <header class="appbar">
+    <div class="statusbar">
+      <div class="time">9:41</div>
+      <div class="icons">
+        <svg width="20" height="14" viewBox="0 0 20 14" fill="none" aria-hidden="true">
+          <rect x="2" y="7.5" width="2.5" height="4.5" rx=".6" fill="#222"/>
+          <rect x="6.5" y="5.5" width="2.5" height="6.5" rx=".6" fill="#222"/>
+          <rect x="11" y="3.5" width="2.5" height="8.5" rx=".6" fill="#222"/>
+          <rect x="15.5" y="2" width="2.5" height="10" rx=".6" fill="#222"/>
+        </svg>
+        <svg width="16" height="14" viewBox="0 0 16 14" fill="none" aria-hidden="true">
+          <path d="M8 3.1c2.3 0 4.4.85 6 2.26l1-1.2A11 11 0 0 0 8 1.5 11 11 0 0 0 1 4.16l1 1.2A9.2 9.2 0 0 1 8 3.1Z" fill="#222"/>
+          <path d="M8 6.6c1.36 0 2.6.5 3.55 1.32l1-1.2A6.9 6.9 0 0 0 8 5a6.9 6.9 0 0 0-4.55 1.72l1 1.2A5.4 5.4 0 0 1 8 6.6Z" fill="#222"/>
+          <path d="M8 9.9c.68 0 1.3.26 1.77.68L8 12.6 6.23 10.6c.47-.43 1.09-.69 1.77-.69Z" fill="#222"/>
+        </svg>
+        <svg width="25" height="14" viewBox="0 0 25 14" fill="none" aria-hidden="true">
+          <rect x=".5" y="1.5" width="22" height="11" rx="3" stroke="#222" stroke-opacity=".35"/>
+          <rect x="2" y="3" width="19" height="8" rx="1.5" fill="#222"/>
+          <path d="M24 5.5v3a1.6 1.6 0 0 0 0-3Z" fill="#222" fill-opacity=".4"/>
+        </svg>
+      </div>
+    </div>
+
+    <div class="appbar__row">
+      <div class="appbar__lead">
+        <div class="leading-action">
+          <button class="icon-btn" id="backBtn" aria-label="Back">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M10.4538 12L14.5269 16.0731C14.6654 16.2116 14.7362 16.3856 14.7394 16.5952C14.7426 16.8048 14.6718 16.982 14.5269 17.1269C14.382 17.2718 14.2064 17.3442 14 17.3442C13.7936 17.3442 13.618 17.2718 13.4731 17.1269L8.97888 12.6327C8.88528 12.5391 8.81925 12.4404 8.7808 12.3365C8.74233 12.2327 8.7231 12.1205 8.7231 12C8.7231 11.8795 8.74233 11.7673 8.7808 11.6635C8.81925 11.5596 8.88528 11.4609 8.97888 11.3673L13.4731 6.8731C13.6116 6.73463 13.7856 6.6638 13.9952 6.6606C14.2048 6.65738 14.382 6.72822 14.5269 6.8731C14.6718 7.01797 14.7442 7.1936 14.7442 7.4C14.7442 7.6064 14.6718 7.78203 14.5269 7.9269L10.4538 12Z" fill="#222222"/></svg>
+          </button>
+        </div>
+        <div class="appbar__title">
+          <p class="t-label-md">543210<span class="muted"> / Issues</span></p>
+        </div>
+      </div>
+      <div class="trailing-action">
+        <!-- Overflow. Three 2px dots drawn inline rather than exported: the frame
+             has no such button, so there is no node to pull, and this glyph is
+             unambiguous enough that drawing it cannot be wrong. -->
+        <button class="icon-btn" id="moreBtn" aria-label="More options"
+                aria-haspopup="dialog" aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <circle cx="12" cy="5" r="1.9" fill="#222"/>
+            <circle cx="12" cy="12" r="1.9" fill="#222"/>
+            <circle cx="12" cy="19" r="1.9" fill="#222"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="scroll" id="scroll">
+    <div class="list" id="list"></div>
+  </main>
+
+  <div class="progress"><div class="progress__fill" id="progressFill"></div></div>
+
+  <div class="tabs-wrap">
+    <div class="tabs" id="tabs" role="tablist" aria-label="Issue type">
+      <!-- The underline stays the last child; tabs are inserted before it. -->
+      <div class="tabs-underline" id="tabsUnderline"></div>
+    </div>
+  </div>
+
+  <!-- ── Options sheet, opened from the three dots ────────────────────────
+       Structure and styling are shared with mechanic-checks: build.py lifts the
+       CSS straight out of it, so the two sheets cannot drift apart. -->
+  <div class="scrim" id="optScrim"></div>
+  <section class="sheet-opt" id="optSheet" role="dialog" aria-modal="true" aria-label="More options">
+    <div class="sheet-opt__grabzone" id="optGrab"><div class="sheet-opt__grab"></div></div>
+    <div class="sheet-opt__list">
+      <button class="sheet-opt__item" data-opt="finish">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="__TICK_PATH__"/></svg>
+        <span class="t-label-md">Finish with open issues</span>
+      </button>
+      <button class="sheet-opt__item" data-opt="commands">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="__BOLT_PATH__"/></svg>
+        <span class="t-label-md">Bike commands</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- ── Issue detail sheet — Figma 1993:30576 ───────────────────────────── -->
+  <div class="scrim" id="dtlScrim"></div>
+  <section class="sheet-dtl" id="dtlSheet" role="dialog" aria-modal="true"
+           aria-labelledby="dtlName">
+    <div class="sheet-dtl__header" id="dtlGrab">
+      <p class="t-label-md" id="dtlName"></p>
+      <p class="sheet-dtl__by" id="dtlBy"></p>
+    </div>
+    <div class="sheet-dtl__body">
+      <div class="sheet-dtl__run" id="dtlChips"></div>
+    </div>
+    <div class="sheet-dtl__footer">
+      <button class="btn-sheet btn-sheet--primary" id="dtlResolve">Resolve</button>
+      <button class="btn-sheet btn-sheet--ghost" id="dtlRemove">Remove</button>
+    </div>
+  </section>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <footer class="footer" id="footer">
+    <div class="footer__content footer__content--single">
+      <!-- Electrical checks loader — shows during 3-5 second check -->
+      <div class="check-loader" id="checkLoader">
+        <div class="check-loader__bar">
+          <div class="check-loader__fill" id="checkLoaderFill"></div>
+        </div>
+        <div class="check-loader__label" id="checkLoaderLabel">0%</div>
+      </div>
+      <!-- Label and action both follow the section — see setSection(). -->
+      <button class="btn-block" id="markBtn"></button>
+    </div>
+  </footer>
+</div>
+
+<script>
+"use strict";
+
+/* ══════════════════════════════════════════════════════════════════════════
+   STITCHING CONTRACT — this screen's whole outbound surface.
+   Replace the function bodies to wire it into the flow; change nothing else.
+   ══════════════════════════════════════════════════════════════════════════ */
+window.Yuzen = {
+  onBack()                          { console.log("[Yuzen] onBack"); },
+  /* 'finish' | 'commands' — the two options-sheet items. Replaces onMore: the
+     three-dots opens a sheet locally now, so the tap itself is not an event
+     anyone downstream needs. */
+  onMenu(which)                     { console.log("[Yuzen] onMenu", which); },
+  /* 'Electrical' | 'Mechanical' — which section is being looked at. */
+  onSection(type)                   { console.log("[Yuzen] onSection", type); },
+  /* The Electrical section's footer action: the bike diagnosed these, so the way
+     to clear them is to have it check again. */
+  onRerunChecks(type)               { console.log("[Yuzen] onRerunChecks", type); },
+  onOpenIssue({id, part, reasons})  { console.log("[Yuzen] onOpenIssue", {id, part, reasons}); },
+  onResolveIssue({id, part, done})  { console.log("[Yuzen] onResolveIssue", {id, part, done}); },
+  /* Remove, from the detail sheet — the issue was logged in error, which is a
+     different event from resolving it. */
+  onRemoveIssue({id, part})         { console.log("[Yuzen] onRemoveIssue", {id, part}); },
+  /* STITCHED: Mark Issues opens the marking screen. A hook body is the whole
+     stitch — nothing else in this file knows the other screen exists. */
+  onMarkIssues({open, resolved})    {
+    console.log("[Yuzen] onMarkIssues", {open, resolved});
+    /* Carry the section across. Each screen is its own document, so nothing
+       survives the hop unless it goes in the URL — and coming back to Electrical
+       after leaving from Mechanical loses the mechanic's place. */
+    location.href = "../mark-issues/prototype.html?from=" + encodeURIComponent(S.section);
+  },
+};
+
+/* Two, not five. The three electrical rows carry no photo, so pigtail, mcu and
+   throttle went with them — the built file is smaller for it. */
+const PHOTOS = {
+  wheel:    "__PHOTO_WHEEL__",
+  tyre:     "__PHOTO_TYRE__",
+};
+const ARROW = "__ARROW_PATH__";
+const TICK  = "__TICK_PATH__";
+
+/* Five issues, one per available part photo. The design draws four identical
+   "Pigtail connector" rows against a header count of 5; the parts and reasons
+   here are varied so rows are tellable apart, and the first keeps the three
+   reasons the frame shows. */
+/* `reasons` is what was reported and is what the row shows; `catalogue` is every
+   reason this part can carry, so the detail sheet can offer the ones that were
+   not picked. "Missing" is appended to every catalogue rather than listed. */
+/* Two kinds of thing on one screen, and they are not the same shape.
+
+   A MECHANICAL issue is a part someone judged by hand: it has a photo, the
+   reasons they picked, and a tick, because a person decides when it is fixed.
+
+   An ELECTRICAL issue is a fault the bike reported about itself. There is no part
+   to photograph, no reason list to show, and — the important one — no tick. A
+   mechanic cannot declare a diagnostic clear by tapping it; they fix the thing and
+   re-run the checks, and the bike says whether it is clear. So the row is a line
+   of text and nothing else, and the footer carries the only way to close it. */
+const ISSUES = [
+  {fault:"Ping not received",        type:"Electrical"},
+  {fault:"Motor controller unit lag", type:"Electrical"},
+  {fault:"IoT voltage low",          type:"Electrical"},
+  {part:"Front wheel", photo:"wheel", by:"John Doe",  type:"Mechanical",
+   reasons:["Damage"],              catalogue:["Damage","Bent","Wobble"]},
+  {part:"Rear tyre",   photo:"tyre",  by:"Ramesh K.", type:"Mechanical",
+   reasons:["Worn out","Cuts"],     catalogue:["Worn out","Cuts","Puncture"]},
+].map((o, i) => ({id:"i" + i, done:false, ...o}));
+
+const MISSING = "Missing";
+
+/* Two sections, each with its own closing action: an electrical fault is
+   diagnosed by the bike, so the way to clear it is to run the checks again;
+   a mechanical one is judged by hand, so the way on is to mark it. */
+const SECTIONS = [
+  {type:"Electrical", cta:"Re-run electrical checks"},
+  {type:"Mechanical", cta:"Mark Issues"},
+];
+/* Electrical unless we are being handed back a section — see onMarkIssues, and
+   mark-issues' onBack, which returns the one it was given. An unknown value falls
+   through to Electrical rather than showing an empty list. */
+const SECTION_PARAM = new URLSearchParams(location.search).get("section");
+const S = {section: SECTION_PARAM === "Mechanical" ? "Mechanical" : "Electrical"};
+
+const listEl  = document.getElementById("list");
+const fillEl  = document.getElementById("progressFill");
+const markBtn = document.getElementById("markBtn");
+const checkLoader = document.getElementById("checkLoader");
+const checkLoaderFill = document.getElementById("checkLoaderFill");
+const checkLoaderLabel = document.getElementById("checkLoaderLabel");
+const tabsEl      = document.getElementById("tabs");
+const underlineEl = document.getElementById("tabsUnderline");
+const footerEl = document.getElementById("footer");
+const scrollEl = document.getElementById("scroll");
+
+const inSection = () => ISSUES.filter(i => i.type === S.section);
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Footer reveal — the same rule as mechanic-checks, and the same trap.
+
+   Direction, not offset: any downward scroll hides the footer, any upward one
+   brings it back, mid-list, with an 8px threshold against jitter. Hiding also
+   releases the list's bottom inset so the rows gain the space.
+
+   That inset release is what makes this delicate. Growing the list makes the
+   browser clamp scrollTop near the bottom, which arrives as an upward scroll and
+   flips the state straight back — so deltas are absorbed while the transition
+   runs. The absorb window is a timer, not transitionend: transitionend never
+   fires when the value is already at its target, which would strand the flag.
+   ══════════════════════════════════════════════════════════════════════════ */
+const FOOTER_THRESHOLD = 8;
+const FOOTER_ANIM_MS   = 260;
+let fLastY = 0, fAccum = 0, footerShown = true, fBanding = false, fTimer = 0;
+
+function showFooter(visible){
+  if (visible === footerShown) return;
+  footerShown = visible;
+  footerEl.classList.toggle("is-hidden", !visible);
+  scrollEl.classList.toggle("footer-hidden", !visible);
+
+  fBanding = true;
+  fAccum = 0;
+  clearTimeout(fTimer);
+  fTimer = setTimeout(() => { fBanding = false; fLastY = scrollEl.scrollTop; },
+                      FOOTER_ANIM_MS + 40);
+}
+
+scrollEl.addEventListener("scroll", () => {
+  const y = scrollEl.scrollTop;
+  const delta = y - fLastY;
+  fLastY = y;
+  if (delta === 0 || fBanding) return;
+
+  if ((delta > 0) !== (fAccum > 0)) fAccum = 0;      /* direction flipped */
+  fAccum += delta;
+
+  if (fAccum > FOOTER_THRESHOLD)       { showFooter(false); fAccum = 0; }
+  else if (fAccum < -FOOTER_THRESHOLD) { showFooter(true);  fAccum = 0; }
+
+  if (y <= 0) showFooter(true);                      /* always up at the top */
+}, {passive:true});
+
+const esc = s => String(s).replace(/[&<>"']/g,
+  c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+function tap(){ if (navigator.vibrate) navigator.vibrate(10); }
+
+const toastEl = document.getElementById("toast");
+let toastTimer = 0;
+function toast(msg){
+  toastEl.textContent = msg;
+  toastEl.classList.add("is-shown");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toastEl.classList.remove("is-shown"), 1600);
+}
+
+function reasonsHTML(list){
+  return list.map(r => `<span>${esc(r)}</span>`)
+             .join('<span class="issue__dot" aria-hidden="true"></span>');
+}
+
+function rowHTML(it){
+  /* An electrical fault is a line of text: no thumbnail, no reasons, no tick, and
+     nothing to open — there is no detail behind it that this screen holds. */
+  if (it.type === "Electrical"){
+    return `<div class="issue issue--plain${it.done ? " is-done" : ""}" data-id="${it.id}">
+        <span class="t-label-md issue__name">${esc(it.fault)}</span>
+      </div>`;
+  }
+  /* A mechanical one opens its sheet from anywhere on the row, not just the name —
+     the whole row is the target, with the tick carved out of it below. */
+  return `<div class="issue${it.done ? " is-done" : ""}" data-id="${it.id}"
+               data-open="${it.id}" role="button" tabindex="0"
+               aria-label="Open ${esc(it.part)}">
+      <div class="issue__thumb"><img src="${PHOTOS[it.photo]}" alt=""></div>
+      <div class="issue__main">
+        <span class="issue__head">
+          <span class="t-label-md issue__name">${esc(it.part)}</span>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="${ARROW}"/></svg>
+        </span>
+        <div class="t-label-md issue__reasons">${reasonsHTML(it.reasons)}</div>
+      </div>
+      <button class="issue__tick" data-tick="${it.id}"
+              aria-pressed="${it.done}"
+              aria-label="${it.done ? "Reopen" : "Resolve"} ${esc(it.part)}">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="${TICK}"/></svg>
+      </button>
+    </div>`;
+}
+
+/* The chip count is every issue in that section, resolved or not — it says how
+   much is filed under the chip, which is what a filter's count is for. */
+function buildTabs(){
+  SECTIONS.forEach(sec => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "tab";
+    b.setAttribute("role", "tab");
+    b.dataset.section = sec.type;
+    b.innerHTML = esc(sec.type) + ' <span class="tab__n"></span>';
+    tabsEl.insertBefore(b, underlineEl);
+  });
+}
+
+function moveUnderline(){
+  const active = tabsEl.querySelector(".tab.is-active");
+  if (!active) return;
+  underlineEl.style.width = active.offsetWidth + "px";
+  underlineEl.style.transform = `translateX(${active.offsetLeft}px)`;
+}
+
+/* The count is the OPEN issues in that tab, not every issue filed under it. Resolve
+   one and the number drops; reopen it and it comes back. Sagar's call, and the right
+   one: a count you can drive to zero is a piece of work, where a total that never
+   moves is just a label. It also means the two tabs together read as what is left
+   on the bike.
+
+   paintTabs() runs from render(), which runs after every resolve, so the numbers
+   cannot drift from the rows. */
+function paintTabs(){
+  tabsEl.querySelectorAll(".tab").forEach(b => {
+    const on = b.dataset.section === S.section;
+    b.classList.toggle("is-active", on);
+    b.setAttribute("aria-selected", String(on));
+    b.querySelector(".tab__n").textContent =
+      ISSUES.filter(i => i.type === b.dataset.section && !i.done).length;
+  });
+  moveUnderline();
+}
+
+function render(){
+  paintTabs();
+  const rows = inSection();
+  listEl.innerHTML = rows.length
+    ? rows.map(rowHTML).join("")
+    : `<p class="empty">No ${S.section.toLowerCase()} issues reported.</p>`;
+
+  /* The bar tracks the whole bike, not the visible section — it is one job of
+     work however it is filed. */
+  const done = ISSUES.filter(i => i.done).length;
+  fillEl.style.width = (ISSUES.length ? done / ISSUES.length * 100 : 0) + "%";
+
+  const sec = SECTIONS.find(s => s.type === S.section);
+  /* Set button text based on section and whether we've run electrical checks */
+  if (!rerunning) {
+    if (S.section === "Electrical") {
+      /* If all electrical issues are done, show "Re-run", else show "Run" for first time */
+      const hasRun = ISSUES.some(i => i.type === "Electrical" && i.done);
+      markBtn.textContent = hasRun ? "Re-run electrical checks" : "Run electrical checks";
+    } else {
+      markBtn.textContent = sec.cta;
+    }
+  }
+  /* Re-running the checks is something you do while here; Mark Issues is the way
+     off the screen. Only one of those is a primary action. */
+  markBtn.classList.toggle("btn-block--secondary", S.section === "Electrical");
+}
+
+tabsEl.addEventListener("click", e => {
+  const b = e.target.closest("[data-section]");
+  if (!b || b.dataset.section === S.section) return;
+  S.section = b.dataset.section;
+  tap();
+  render();
+  /* A new section starts at the top, and the footer belongs on screen there. */
+  scrollEl.scrollTop = 0;
+  showFooter(true);
+  window.Yuzen.onSection(S.section);
+});
+
+listEl.addEventListener("click", e => {
+  const tick = e.target.closest("[data-tick]");
+  if (tick){
+    const it = ISSUES.find(i => i.id === tick.dataset.tick);
+    it.done = !it.done;
+    tap();
+    render();
+    /* Only on the way to resolved. Reopening is a correction, not a result, and
+       a toast for it would just be noise. */
+    if (it.done) toast("Resolved");
+    window.Yuzen.onResolveIssue({id:it.id, part:it.part, done:it.done});
+    return;
+  }
+  const head = e.target.closest("[data-open]");
+  if (head){
+    const it = ISSUES.find(i => i.id === head.dataset.open);
+    tap();
+    openDetail(it);
+    window.Yuzen.onOpenIssue({id:it.id, part:it.part, reasons:it.reasons});
+  }
+});
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Issue detail sheet — Figma 1993:30576
+
+   Every reason this part can carry, in a fixed order with "Missing" last. A chip
+   has three states:
+
+     enabled    white, hairline border — available to pick
+     selected   surface/secondary, dark ring, cancel glyph — on the record
+     disabled   surface/secondary, grey label — ruled out, not tappable
+
+   A part cannot be both missing and faulty, so the two sides disable each other:
+   mark it Missing and every fault greys out until Missing is cleared; pick any
+   fault and Missing greys out until the last one is cleared. Either side is
+   released by unpicking it — the cancel glyph makes that one tap — so the lock
+   cannot strand anyone.
+
+   Note this is deliberately NOT the rule mechanic-checks uses. That screen
+   switches instead of locking, because its chips have no cancel glyph and
+   clearing a pick means hunting for it. Here the × is on the chip, so the
+   stricter rule costs nothing and states the constraint outright.
+   ══════════════════════════════════════════════════════════════════════════ */
+const dtlScrim = document.getElementById("dtlScrim");
+const dtlSheet = document.getElementById("dtlSheet");
+const dtlName  = document.getElementById("dtlName");
+const dtlBy    = document.getElementById("dtlBy");
+const dtlChips = document.getElementById("dtlChips");
+const dtlResolve = document.getElementById("dtlResolve");
+const dtlRemove  = document.getElementById("dtlRemove");
+const CANCEL = "__CANCEL_PATH__";
+
+/* {id, picked:Set} — edits stay here until Resolve, so backing out leaves the
+   original call standing. */
+let dtl = null;
+
+function paintDetail(){
+  if (!dtl) return;
+  const it = ISSUES.find(i => i.id === dtl.id);
+  const picked = dtl.picked;
+  const all = it.catalogue.concat(MISSING);
+
+  /* A fault is picked, so Missing is out; Missing is picked, so every fault is. */
+  const faulty  = all.some(r => r !== MISSING && picked.has(r));
+  const missing = picked.has(MISSING);
+
+  dtlChips.innerHTML = all.map(r => {
+    const on  = picked.has(r);
+    const off = !on && (r === MISSING ? faulty : missing);
+    return `<button class="rchip${on ? " rchip--on" : ""}" data-reason="${esc(r)}"
+              aria-pressed="${on}"${off ? " disabled" : ""}
+              aria-label="${on ? "Remove" : "Add"} ${esc(r)}">${esc(r)}${on
+        ? `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${CANCEL}"/></svg>`
+        : ""}</button>`;
+  }).join("");
+
+  /* The label is the action, not the state — the same rule the RnM lock follows.
+     Reopening is reachable from here because the sheet is also how an already
+     resolved issue gets looked at again. */
+  dtlResolve.textContent = it.done ? "Reopen" : "Resolve";
+  /* Committing with no reason left on the record would erase why the issue ever
+     existed, so either action needs at least one. Removing the last reason means
+     the issue should not be here at all — that is what Remove is for. */
+  dtlResolve.disabled = picked.size === 0;
+}
+
+function openDetail(it){
+  dtl = {id:it.id, picked:new Set(it.reasons)};
+  dtlName.textContent = it.part;
+  dtlBy.textContent = "Marked by: " + it.by;
+  paintDetail();
+  dtlScrim.classList.add("is-open");
+  dtlSheet.classList.add("is-open");
+}
+
+function closeDetail(){
+  dtl = null;
+  dtlScrim.classList.remove("is-open");
+  dtlSheet.classList.remove("is-open");
+  dtlSheet.style.transform = "";
+}
+
+dtlScrim.addEventListener("click", closeDetail);
+
+dtlSheet.addEventListener("click", e => {
+  if (!dtl) return;
+  const chip = e.target.closest("[data-reason]");
+  if (!chip) return;
+  /* A plain toggle: the exclusive rule is carried by the disabled state, so a
+     chip that would break it never receives the click in the first place. */
+  const r = chip.dataset.reason;
+  dtl.picked.has(r) ? dtl.picked.delete(r) : dtl.picked.add(r);
+  tap();
+  paintDetail();
+});
+
+dtlResolve.addEventListener("click", () => {
+  const it = ISSUES.find(i => i.id === dtl.id);
+  /* Chip edits commit with the action, so the row and the sheet cannot disagree. */
+  it.reasons = it.catalogue.concat(MISSING).filter(r => dtl.picked.has(r));
+  it.done = !it.done;
+  const done = it.done, part = it.part, id = it.id;
+  tap();
+  closeDetail();
+  render();
+  if (done) toast("Resolved");
+  window.Yuzen.onResolveIssue({id, part, done});
+});
+
+dtlRemove.addEventListener("click", () => {
+  const i = ISSUES.findIndex(x => x.id === dtl.id);
+  const it = ISSUES[i];
+  ISSUES.splice(i, 1);
+  tap();
+  closeDetail();
+  render();
+  toast("Removed");
+  window.Yuzen.onRemoveIssue({id:it.id, part:it.part});
+});
+
+/* Drag the header down to dismiss — this sheet has no grabber, so its titled
+   header is the handle. */
+(() => {
+  const zone = document.getElementById("dtlGrab");
+  let d = null;
+  zone.addEventListener("pointerdown", e => {
+    d = {y0:e.clientY, dy:0};
+    zone.setPointerCapture(e.pointerId);
+    dtlSheet.classList.add("sheet-dtl--dragging");
+  });
+  zone.addEventListener("pointermove", e => {
+    if (!d) return;
+    d.dy = Math.max(0, e.clientY - d.y0);
+    dtlSheet.style.transform = `translateY(${d.dy}px)`;
+  });
+  const end = () => {
+    if (!d) return;
+    const far = d.dy > 60; d = null;
+    dtlSheet.classList.remove("sheet-dtl--dragging");
+    dtlSheet.style.transform = "";
+    if (far) closeDetail();
+  };
+  zone.addEventListener("pointerup", end);
+  zone.addEventListener("pointercancel", end);
+})();
+
+document.getElementById("backBtn").addEventListener("click", () => {
+  tap(); window.Yuzen.onBack();
+});
+/* ── Options sheet ────────────────────────────────────────────────────────── */
+const optScrim = document.getElementById("optScrim");
+const optSheet = document.getElementById("optSheet");
+const optMore  = document.getElementById("moreBtn");
+
+function setOptSheet(open){
+  optScrim.classList.toggle("is-open", open);
+  optSheet.classList.toggle("is-open", open);
+  optMore.setAttribute("aria-expanded", String(open));
+}
+optMore.addEventListener("click", () => {
+  tap(); setOptSheet(!optSheet.classList.contains("is-open"));
+});
+optScrim.addEventListener("click", () => setOptSheet(false));
+
+optSheet.addEventListener("click", e => {
+  const opt = e.target.closest("[data-opt]");
+  if (!opt) return;
+  tap();
+  setOptSheet(false);
+  window.Yuzen.onMenu(opt.dataset.opt);
+});
+
+/* Drag the grabber down to dismiss. */
+(() => {
+  const zone = document.getElementById("optGrab");
+  let d = null;
+  zone.addEventListener("pointerdown", e => {
+    d = {y0:e.clientY, dy:0};
+    zone.setPointerCapture(e.pointerId);
+    optSheet.classList.add("sheet-opt--dragging");
+  });
+  zone.addEventListener("pointermove", e => {
+    if (!d) return;
+    d.dy = Math.max(0, e.clientY - d.y0);
+    optSheet.style.transform = `translateY(${d.dy}px)`;
+  });
+  const end = () => {
+    if (!d) return;
+    const far = d.dy > 60; d = null;
+    optSheet.classList.remove("sheet-opt--dragging");
+    optSheet.style.transform = "";
+    if (far) setOptSheet(false);
+  };
+  zone.addEventListener("pointerup", end);
+  zone.addEventListener("pointercancel", end);
+})();
+/* One button, two jobs — which one depends on the section. Only Mechanical leads
+   into the marking screen; Electrical hands back to the bike's own checks. */
+/* The bike re-reads itself and answers. This is the only way an electrical fault
+   clears — there is no tick on those rows — so the button has to actually report a
+   result rather than toast and stop.
+
+   WHICH faults clear is invented: all three do, as though the fix worked. A real
+   run would clear some and leave others, and there is nothing here that knows
+   which. Flagged in the README — it is a data question, not a UI one. */
+let rerunning = false;
+let checkAbort = null;
+
+async function rerunElectrical(){
+  rerunning = true;
+  checkAbort = new AbortController();
+
+  /* Show loader and change button to Cancel */
+  checkLoader.classList.add("is-active");
+  markBtn.textContent = "Cancel";
+  markBtn.disabled = false;
+
+  const CHECK_DURATION = 4000; /* 4 seconds for the progress animation */
+  const startTime = Date.now();
+
+  /* Animate progress from 0 to 100% */
+  const animateProgress = () => {
+    if (checkAbort?.signal.aborted) return;
+
+    const elapsed = Date.now() - startTime;
+    const progress = Math.min(elapsed / CHECK_DURATION, 1);
+    const percentage = Math.round(progress * 100);
+
+    checkLoaderFill.style.width = (progress * 100) + "%";
+    checkLoaderLabel.textContent = percentage + "%";
+
+    if (progress < 1) {
+      requestAnimationFrame(animateProgress);
+    }
+  };
+
+  animateProgress();
+
+  /* Wait for check duration or abort signal */
+  try {
+    await new Promise((resolve, reject) => {
+      checkAbort.signal.addEventListener("abort", () => reject(new Error("aborted")));
+      setTimeout(resolve, CHECK_DURATION);
+    });
+  } catch (e) {
+    if (e.message === "aborted") {
+      /* Check was cancelled */
+      rerunning = false;
+      checkLoader.classList.remove("is-active");
+      checkLoaderFill.style.width = "0%";
+      checkLoaderLabel.textContent = "0%";
+      checkAbort = null;
+      render();
+      return;
+    }
+  }
+
+  /* Check complete — mark electrical issues as done */
+  const cleared = ISSUES.filter(i => i.type === "Electrical" && !i.done);
+  cleared.forEach(i => { i.done = true; });
+
+  rerunning = false;
+  checkAbort = null;
+
+  /* Hide loader and reset button */
+  checkLoader.classList.remove("is-active");
+  checkLoaderFill.style.width = "0%";
+  checkLoaderLabel.textContent = "0%";
+
+  render();
+
+  toast(cleared.length
+    ? cleared.length + " of " + cleared.length + " cleared"
+    : "No electrical faults open");
+  cleared.forEach(i => window.Yuzen.onResolveIssue({id:i.id, fault:i.fault, done:true}));
+}
+
+markBtn.addEventListener("click", () => {
+  tap();
+  if (S.section === "Electrical"){
+    if (rerunning) {
+      /* Cancel the check */
+      checkAbort?.abort();
+      return;
+    }
+    window.Yuzen.onRerunChecks(S.section);
+    rerunElectrical();
+    return;
+  }
+  window.Yuzen.onMarkIssues({
+    /* part on a mechanical row, fault on an electrical one — the two kinds do not
+       share a name field, and mapping i.part over both handed out undefineds. */
+    open:     ISSUES.filter(i => !i.done).map(i => i.part || i.fault),
+    resolved: ISSUES.filter(i =>  i.done).map(i => i.part || i.fault),
+  });
+});
+
+/* Enter and Space on a row, since the row is the target now and a div is not a
+   button however it is labelled. */
+listEl.addEventListener("keydown", e => {
+  if (e.key !== "Enter" && e.key !== " ") return;
+  const row = e.target.closest("[data-open]");
+  if (!row) return;
+  e.preventDefault();
+  row.click();
+});
+
+buildTabs();
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,60 @@
+/* ── Morph ghost ─────────────────────────────────────────────────────────────
+   The block that flies between the task page's title and its parked card. It is
+   never interactive and never part of layout — absolute in the frame, above the
+   screens, below the sheets and the toast.
+   ─────────────────────────────────────────────────────────────────────────── */
+.morph{
+  position:absolute;z-index:25;pointer-events:none;
+  background:var(--surface-inverse);
+  border-radius:12px;
+  box-shadow:var(--shadow-1);
+  overflow:hidden;
+  display:flex;flex-direction:column;justify-content:center;gap:var(--s1);
+  padding:var(--s4) var(--s6);
+  /* Cheap to animate and cheap to composite; the page underneath is mid-slide. */
+  transition:background-color var(--morph-ms) var(--ease-out),
+             border-radius var(--morph-ms) var(--ease-out),
+             left var(--morph-ms) var(--ease-out),
+             top var(--morph-ms) var(--ease-out),
+             width var(--morph-ms) var(--ease-out),
+             height var(--morph-ms) var(--ease-out),
+             padding var(--morph-ms) var(--ease-out),
+             opacity var(--morph-ms) var(--ease-out);
+}
+:root{--morph-ms:340ms}
+
+/* The title's type at rest, the card's type on arrival. The two lines carry the
+   same words either way, so what the eye follows is one block changing size —
+   not one thing disappearing while another appears. */
+.morph__l1{
+  color:var(--content-primary);
+  font-size:20px;font-weight:700;line-height:28px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  transition:color var(--morph-ms) var(--ease-out),
+             font-size var(--morph-ms) var(--ease-out),
+             line-height var(--morph-ms) var(--ease-out);
+}
+.morph__l2{
+  color:var(--content-tertiary);
+  transition:color var(--morph-ms) var(--ease-out);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+/* Arriving, it looks like the card it is landing on: dark fill, inverse text,
+   the card's own padding and corner. Leaving, the same rules run backwards, so
+   the ghost starts as the card and ends as the title. Without this the flight
+   was a white block settling onto a black one, which reads as two things, not
+   one thing moving. */
+.morph--go{
+  background:var(--surface-primary);
+  border-radius:0;
+  padding:calc(var(--progress-h) + var(--s4)) var(--s6) var(--s6);
+}
+.morph--go .morph__l1{
+  color:var(--content-inverse);
+  font-size:16px;font-weight:700;line-height:20px;
+}
+.morph--go .morph__l2{color:var(--content-disabled)}
+
+/* The real card is not shown until the ghost has landed on it — otherwise the
+   same two lines are on screen twice for the length of the flight. */
+.minitask__card.is-arriving{opacity:0}

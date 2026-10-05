@@ -1,0 +1,30 @@
+
+  <!-- ══════════════════════════════════════════════════════════════════════
+       TOKENS — the token queue, ported from Barun's token-task-list
+       Opened from Home's Active tokens card. His header and tab strip, with two
+       changes: a back button, because there is no bottom nav to leave by, and no
+       status bar — the app owns one already.
+       ══════════════════════════════════════════════════════════════════════ -->
+  <section class="screen screen--tokens" id="scrTokens" data-pos="right" aria-label="My tasks — tokens">
+    <header class="header">
+      <div class="tqbar">
+        <div class="leading-action">
+          <button class="icon-btn" id="tkoBack" aria-label="Back to home">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M10.4538 12L14.5269 16.0731C14.6654 16.2116 14.7362 16.3856 14.7394 16.5952C14.7426 16.8048 14.6718 16.982 14.5269 17.1269C14.382 17.2718 14.2064 17.3442 14 17.3442C13.7936 17.3442 13.618 17.2718 13.4731 17.1269L8.97888 12.6327C8.88528 12.5391 8.81925 12.4404 8.7808 12.3365C8.74233 12.2327 8.7231 12.1205 8.7231 12C8.7231 11.8795 8.74233 11.7673 8.7808 11.6635C8.81925 11.5596 8.88528 11.4609 8.97888 11.3673L13.4731 6.8731C13.6116 6.73463 13.7856 6.6638 13.9952 6.6606C14.2048 6.65738 14.382 6.72822 14.5269 6.8731C14.6718 7.01797 14.7442 7.1936 14.7442 7.4C14.7442 7.6064 14.6718 7.78203 14.5269 7.9269L10.4538 12Z" fill="#222222"/></svg>
+          </button>
+        </div>
+        <h1 class="tqbar-title">My tasks</h1>
+        <button class="btn-icon" type="button" aria-label="Search">
+          <img src="assets/tokens/search.svg" alt="">
+        </button>
+      </div>
+
+      <div class="tabs-wrap">
+        <div class="tabs" id="tqTabs">
+          <div class="tabs-underline" id="tqTabsUnderline"></div>
+        </div>
+      </div>
+    </header>
+
+    <main class="tqbody" id="tqBody"></main>
+  </section>

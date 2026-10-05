@@ -1,0 +1,93 @@
+  <!-- ══════════════════════════════════════════════════════════════════════
+       TASK DETAIL — the one template, for every kind of task
+
+       Four kinds run through this markup: Bike Assessment, Repairable bike,
+       Quality Check and a captain's Token. Nothing here names any of them —
+       what each contains is shared/task-kinds.js, and renderJob() fills this in
+       from whichever kind is in hand. The tab strip and the bar badge are the
+       only optional parts; both are hidden unless the kind declares them.
+       ══════════════════════════════════════════════════════════════════════ -->
+  <section class="screen screen--job" id="scrJob" data-pos="right" aria-label="Task details">
+    <div class="jb__scroll" id="jbScroll">
+      <div class="jb__heroWrap">
+        <div class="jb__hero"></div>
+        <p class="jb__no" id="jbNo">Task #5</p>
+        <!-- Art follows the SUB-TASK, not the task: renderJob() points this at
+             the active step's own image, falling back to the kind's. -->
+        <div class="jb__bike" id="jbArt" role="img" aria-label="Vehicle"></div>
+      </div>
+      <div class="jb__title" id="jbTitle">
+        <!-- The Learn pill sat here, right of the title. Removed at Sagar's
+             request from every task detail page — this screen is all three of
+             them (Assessment details, Task details, RnM details). The row is
+             kept rather than flattened: the progress row below still needs the
+             title block, and a row with one child costs nothing. -->
+        <div class="jb__titleRow">
+          <div class="jb__titleText">
+            <span class="h" data-job-title>Bike Assessment</span>
+            <span class="s t-label-sm" data-job-sub>Dex NV • 543210</span>
+          </div>
+        </div>
+      </div>
+      <!-- Only kinds that declare tabs get these. Sticky under the header, so
+           the steps scroll beneath them rather than the strip leaving with the
+           title — see the top offset in style.css. -->
+      <div class="jb__tabsWrap" id="jbTabsWrap" hidden>
+        <div class="jb__tabs" id="jbTabs" role="tablist">
+          <span class="jb__tabsUnderline" id="jbTabsUnderline"></span>
+        </div>
+      </div>
+      <div class="jb__steps" id="jbSteps"></div>
+    </div>
+
+    <header class="jb__bar" id="jbBar">
+      <!-- ✕ while the task is untouched, a downward chevron once it has been
+           started — renderJob() writes whichever applies. See jobStarted(). -->
+      <button id="jbClose" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 13.0537L6.927 18.127C6.7885 18.2653 6.61442 18.3362 6.40475 18.3395C6.19525 18.3427 6.018 18.2718 5.873 18.127C5.72817 17.982 5.65575 17.8063 5.65575 17.6C5.65575 17.3937 5.72817 17.218 5.873 17.073L10.9462 12L5.873 6.927C5.73467 6.7885 5.66383 6.61442 5.6605 6.40475C5.65733 6.19525 5.72817 6.018 5.873 5.873C6.018 5.72817 6.19367 5.65575 6.4 5.65575C6.60633 5.65575 6.782 5.72817 6.927 5.873L12 10.9462L17.073 5.873C17.2115 5.73467 17.3856 5.66383 17.5953 5.6605C17.8048 5.65733 17.982 5.72817 18.127 5.873C18.2718 6.018 18.3443 6.19367 18.3443 6.4C18.3443 6.60633 18.2718 6.782 18.127 6.927L13.0538 12L18.127 17.073C18.2653 17.2115 18.3362 17.3856 18.3395 17.5953C18.3427 17.8048 18.2718 17.982 18.127 18.127C17.982 18.2718 17.8063 18.3443 17.6 18.3443C17.3937 18.3443 17.218 18.2718 17.073 18.127L12 13.0537Z" fill="currentColor"/></svg></button>
+      <div class="jb__barTitle" aria-hidden="true">
+        <span class="h" data-job-title>Bike Assessment</span>
+        <span class="s t-label-sm" data-job-sub>Dex NV • 543210</span>
+      </div>
+      <button id="jbMore" data-opt-more aria-haspopup="dialog" aria-expanded="false" aria-label="More options"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 20C11.45 20 10.9792 19.8042 10.5875 19.4125C10.1958 19.0208 10 18.55 10 18C10 17.45 10.1958 16.9792 10.5875 16.5875C10.9792 16.1958 11.45 16 12 16C12.55 16 13.0208 16.1958 13.4125 16.5875C13.8042 16.9792 14 17.45 14 18C14 18.55 13.8042 19.0208 13.4125 19.4125C13.0208 19.8042 12.55 20 12 20ZM12 14C11.45 14 10.9792 13.8042 10.5875 13.4125C10.1958 13.0208 10 12.55 10 12C10 11.45 10.1958 10.9792 10.5875 10.5875C10.9792 10.1958 11.45 10 12 10C12.55 10 13.0208 10.1958 13.4125 10.5875C13.8042 10.9792 14 11.45 14 12C14 12.55 13.8042 13.0208 13.4125 13.4125C13.0208 13.8042 12.55 14 12 14ZM12 8C11.45 8 10.9792 7.80417 10.5875 7.4125C10.1958 7.02083 10 6.55 10 6C10 5.45 10.1958 4.97917 10.5875 4.5875C10.9792 4.19583 11.45 4 12 4C12.55 4 13.0208 4.19583 13.4125 4.5875C13.8042 4.97917 14 5.45 14 6C14 6.55 13.8042 7.02083 13.4125 7.4125C13.0208 7.80417 12.55 8 12 8Z" fill="currentColor"/></svg></button>
+    </header>
+    <!-- Progress rides the footer's top EDGE — a slim full-bleed bar, not a
+         component inside it. It is the answer to "how much is left", asked while
+         looking at what to do next, so it belongs with the button that does it;
+         but it is a background fact, and a labelled row gave it more weight than
+         it earns. The percentage is on the bar's aria-valuenow, so it is still
+         announced. Every task kind gets this — it is the template. -->
+    <div class="ffooter is-shown">
+      <span class="jb__prog" id="jbProg" role="progressbar"
+            aria-label="Task progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i></i></span>
+      <!-- A SLIDE, not a tap — Figma 2913:32095, in this app's colours and at the
+           CTA's own 318x64. The label stays first in the markup because renderJob
+           writes it with querySelector("span"); the knob is after it and is the
+           only thing added. See the slider in this screen's script. -->
+      <!-- A FINISHED task has no button. It is a record, not a job — see
+           jobReadOnly in this screen's script — so the footer carries the two
+           figures that close it out instead: when it was finished and how long
+           it took. Hidden on every live task. -->
+      <!-- Two equal halves, each figure centred in its own. Not a left-aligned
+           pair with a gap: the two are the same KIND of thing — one number each
+           closing the task out — and a pair sharing the width says so, where a
+           run says the first is the subject and the second is a footnote. -->
+      <div class="metrics" id="jbDone" hidden>
+        <span class="metric">
+          <span class="metricv t-label-md700" id="jbDoneAt">—</span>
+          <span class="metricl t-label-sm">Finished at:</span>
+        </span>
+        <span class="metric">
+          <span class="metricv t-label-md700" id="jbDoneFor">—</span>
+          <span class="metricl t-label-sm">Time spent</span>
+        </span>
+      </div>
+      <button class="btn-primary t-label-md700" id="jbStart">
+        <span>Start task</span>
+        <span class="jb__knob" id="jbKnob" aria-hidden="true">
+          <svg class="jb__knobGo" viewBox="0 0 24 24" fill="none"><path d="M6 5l6 7-6 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".35"/><path d="M13 5l6 7-6 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <svg class="jb__knobOk" viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 7.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </span>
+      </button>
+    </div>
+  </section>
+

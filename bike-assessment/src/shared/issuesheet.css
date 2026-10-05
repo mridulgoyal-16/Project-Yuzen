@@ -1,0 +1,62 @@
+/* ── Fault sheet ─────────────────────────────────────────────────────────────
+   Rides on .sheet for the slide-up, the scrim, the grabber and the 24px top
+   corners, and adds only what this one is: the part it is asking about, a run of
+   issue chips, and a full-width confirm.
+
+   The mechanic's checklist draws the same sheet under #scrChecks-scoped .ck-*
+   rules. Those stay for now — see the note in issuesheet.js — so until that
+   screen is moved over, this file and that block are the same component written
+   twice. Flagged rather than left to be discovered.
+   ─────────────────────────────────────────────────────────────────────────── */
+.issheet{padding-bottom:var(--s6)}
+.issheet__part{
+  flex:0 0 auto;
+  display:flex;align-items:center;gap:var(--s4);
+  padding:0 var(--s6) var(--s6);
+}
+/* Same 48px tile as the row it came from, so the sheet reads as that row
+   continuing rather than as a new object. */
+.issheet__thumb{
+  width:48px;height:48px;flex:0 0 auto;
+  background-color:var(--surface-secondary);
+  background-repeat:no-repeat;
+  border-radius:8.727px;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--content-tertiary);
+}
+.issheet__name{
+  flex:1 1 auto;min-width:0;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  color:var(--content-primary);
+}
+/* Inset 24 like every other rule in the app. */
+.issheet__divider{
+  height:1px;margin:0 var(--s6);background:var(--border-primary);flex:0 0 auto;
+}
+.issheet__issues{
+  flex:1 1 auto;min-height:0;overflow-y:auto;
+  padding:var(--s6);
+  display:flex;flex-direction:column;gap:var(--s6);
+  color:var(--content-primary);
+}
+/* One wrapping run: a part's own reasons and "Missing" share a line and flow
+   together, because Missing is one of the answers and not a category of its own. */
+.issheet__chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.issheet__chip{
+  height:40px;padding:0 var(--s4);
+  border-radius:100px;cursor:pointer;
+  background:var(--surface-inverse);
+  border:1px solid var(--border-primary);
+  color:var(--content-primary);
+  font:inherit;font-weight:500;font-size:16px;line-height:20px;
+  display:inline-flex;align-items:center;white-space:nowrap;
+  transition:background-color .16s var(--ease-out),box-shadow .16s var(--ease-out);
+}
+/* An inset ring rather than a thicker border, so selecting never shifts the
+   layout of a wrapped run — a chip growing by a pixel can reflow the whole set. */
+.issheet__chip.is-selected{
+  background:var(--surface-secondary);
+  box-shadow:inset 0 0 0 1.5px var(--border-selected);
+}
+.issheet__foot{flex:0 0 auto;padding:0 var(--s6)}
+.issheet__foot .btn-primary{width:100%;height:64px;padding:22px 36px}

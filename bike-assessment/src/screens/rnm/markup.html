@@ -1,0 +1,702 @@
+
+  <!-- ====================================================================
+       RnM DASHBOARD — Figma 2470:40192 (default) and 2470:40826 (open tasks up)
+       Barun's RnM home page, ported, then restructured: the tab strip is gone.
+       Commands are inline on the dashboard, open tasks are a bottom sheet the
+       footer raises, and part exchange moved to its own overlay off the ⋮.
+
+       The frame is 390x844 and everything in it lands on a stated line, so this
+       screen is a stack of absolutely-placed blocks rather than a scroller — the
+       page has nothing left to scroll. Positions, top-down:
+         0    hero gradient (476, or 426 with the sheet up)
+         44   app bar
+         216  bike render (210 with the sheet up)
+         420  vitals card (374 with the sheet up)
+         450  open-tasks sheet, when raised
+         488  commands grid
+         714  repair progress
+         720  footer
+
+       His device chrome is gone — the phone frame and the status bar are the
+       host's. Twelve class names collided with this prototype and are renamed:
+       appbar/card/sheet/screen became rnbar/rncard/rnband/rnscreen, and his
+       is-active/is-collapsed/is-on/is-open became is-playing/is-shut/is-lit/
+       is-up. `sheet` and `screen` were the dangerous two: this app uses both
+       for the options sheet and the router.
+       ==================================================================== -->
+  <section class="screen" id="scrRnm" data-pos="right" aria-label="RnM dashboard">
+<!-- Glyph sprite. These are the frame's own exports, restated as symbols that
+       inherit currentColor: the command controls invert on a filled circle, and
+       the lock needs its shackle as a separate node so it can swing rather than
+       cut between two images. -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <defs>
+      <g id="g-power"><path d="M11.4655 11.7845C11.3218 11.641 11.25 11.4628 11.25 11.25V3.173C11.25 2.96017 11.3218 2.782 11.4655 2.6385C11.609 2.49483 11.7872 2.423 12 2.423C12.2128 2.423 12.391 2.49483 12.5345 2.6385C12.6782 2.782 12.75 2.96017 12.75 3.173V11.25C12.75 11.4628 12.6782 11.641 12.5345 11.7845C12.391 11.9282 12.2128 12 12 12C11.7872 12 11.609 11.9282 11.4655 11.7845ZM8.68475 19.8308C7.65392 19.3846 6.75517 18.7782 5.9885 18.0115C5.22183 17.2448 4.61542 16.3461 4.16925 15.3153C3.72308 14.2846 3.5 13.1795 3.5 12C3.5 11.0025 3.6715 10.0374 4.0145 9.10475C4.3575 8.17208 4.84883 7.325 5.4885 6.5635C5.627 6.38783 5.801 6.30417 6.0105 6.3125C6.22017 6.32083 6.40767 6.40767 6.573 6.573C6.7115 6.7115 6.77242 6.87883 6.75575 7.075C6.73908 7.27117 6.66667 7.45708 6.5385 7.63275C6.03717 8.24558 5.65542 8.92792 5.39325 9.67975C5.13108 10.4318 5 11.2052 5 12C5 13.95 5.67917 15.6042 7.0375 16.9625C8.39583 18.3208 10.05 19 12 19C13.95 19 15.6042 18.3208 16.9625 16.9625C18.3208 15.6042 19 13.95 19 12C19 11.1948 18.8715 10.4138 18.6145 9.65675C18.3573 8.89975 17.9679 8.21483 17.4462 7.602C17.3179 7.4365 17.2454 7.25667 17.2288 7.0625C17.2121 6.86833 17.273 6.702 17.4115 6.5635C17.5667 6.40833 17.7491 6.32817 17.9587 6.323C18.1682 6.318 18.3422 6.39817 18.4807 6.5635C19.1307 7.325 19.6298 8.1695 19.9778 9.097C20.3259 10.0247 20.5 10.9923 20.5 12C20.5 13.1795 20.2769 14.2846 19.8307 15.3153C19.3846 16.3461 18.7782 17.2448 18.0115 18.0115C17.2448 18.7782 16.3461 19.3846 15.3152 19.8308C14.2846 20.2769 13.1795 20.5 12 20.5C10.8205 20.5 9.71542 20.2769 8.68475 19.8308Z"/></g>
+      <g id="g-beep"><path d="M18.4994 11.7546C18.4994 10.4029 18.1378 9.16998 17.4147 8.05571C16.6918 6.94127 15.7219 6.10912 14.505 5.55926C14.3162 5.46994 14.1772 5.33652 14.0879 5.15902C13.9985 4.98168 13.9885 4.80172 14.0577 4.61914C14.1369 4.42037 14.2765 4.28262 14.4766 4.20589C14.6766 4.129 14.8793 4.1353 15.0844 4.22478C16.5643 4.89669 17.7489 5.90781 18.638 7.25816C19.527 8.60851 19.9715 10.1073 19.9715 11.7546C19.9715 13.4019 19.527 14.9007 18.638 16.251C17.7489 17.6014 16.5643 18.6125 15.0844 19.2844C14.8793 19.3739 14.6766 19.3802 14.4766 19.3033C14.2765 19.2266 14.1369 19.0888 14.0577 18.8901C13.9885 18.7075 13.9985 18.5275 14.0879 18.3502C14.1772 18.1727 14.3162 18.0393 14.505 17.9499C15.7219 17.4001 16.6918 16.5679 17.4147 15.4535C18.1378 14.3392 18.4994 13.1063 18.4994 11.7546ZM7.22994 14.2331H4.47387C4.22094 14.2331 4.00982 14.1485 3.84049 13.9791C3.67133 13.81 3.58675 13.5989 3.58675 13.3458V10.2125C3.58675 9.95943 3.67133 9.7483 3.84049 9.57914C4.00982 9.40981 4.22094 9.32515 4.47387 9.32515H7.22994L10.1671 6.38797C10.4024 6.15272 10.6732 6.09889 10.9796 6.2265C11.2861 6.35427 11.4393 6.58552 11.4393 6.92025V16.638C11.4393 16.9728 11.2861 17.204 10.9796 17.3318C10.6732 17.4594 10.4024 17.4056 10.1671 17.1703L7.22994 14.2331ZM15.8564 11.7791C15.8564 12.3907 15.7293 12.9702 15.4751 13.5178C15.221 14.0652 14.8781 14.5257 14.4464 14.8994C14.308 14.9913 14.1623 15.0002 14.0093 14.9259C13.8565 14.8516 13.7801 14.7289 13.7801 14.5578V8.95141C13.7801 8.78029 13.8565 8.65759 14.0093 8.58331C14.1623 8.50904 14.308 8.51787 14.4464 8.60981C14.8781 8.99362 15.221 9.46487 15.4751 10.0236C15.7293 10.5824 15.8564 11.1676 15.8564 11.7791Z"/></g>
+      <g id="g-lock-body"><path d="M6.30775 21.5C5.80908 21.5 5.38308 21.3234 5.02975 20.9703C4.67658 20.6169 4.5 20.1909 4.5 19.6923V10.3077C4.5 9.80908 4.67658 9.38308 5.02975 9.02975C5.38308 8.67658 5.80908 8.5 6.30775 8.5H17.6923C18.1909 8.5 18.6169 8.67658 18.9703 9.02975C19.3234 9.38308 19.5 9.80908 19.5 10.3077V19.6923C19.5 20.1909 19.3234 20.6169 18.9703 20.9703C18.6169 21.3234 18.1909 21.5 17.6923 21.5H6.30775Z"/><path d="M6.30775 20H17.6923C17.7821 20 17.8558 19.9712 17.9135 19.9135C17.9712 19.8558 18 19.7821 18 19.6923V10.3077C18 10.2179 17.9712 10.1442 17.9135 10.0865C17.8558 10.0288 17.7821 10 17.6923 10H6.30775C6.21792 10 6.14417 10.0288 6.0865 10.0865C6.02883 10.1442 6 10.2179 6 10.3077V19.6923C6 19.7821 6.02883 19.8558 6.0865 19.9135C6.14417 19.9712 6.21792 20 6.30775 20Z"/><path d="M13.2395 16.2395C13.5798 15.899 13.75 15.4858 13.75 15C13.75 14.5142 13.5798 14.101 13.2395 13.7605C12.899 13.4202 12.4858 13.25 12 13.25C11.5142 13.25 11.101 13.4202 10.7605 13.7605C10.4202 14.101 10.25 14.5142 10.25 15C10.25 15.4858 10.4202 15.899 10.7605 16.2395C11.101 16.5798 11.5142 16.75 12 16.75C12.4858 16.75 12.899 16.5798 13.2395 16.2395Z"/></g>
+      <!-- Bottom-tab glyphs, Figma 2621:29533 / 2621:29377. Inlined as symbols
+           rather than shipped as .svg files: a standalone SVG loaded through
+           <img> needs an xmlns to parse, and the build rejects any absolute URL —
+           which is exactly what that namespace declaration is. As symbols they
+           inherit currentColor too, so the live tab tints without a second asset.
+           (This comment said the scheme out loud at first and failed the build on
+           its own text.) -->
+      <g id="g-tab-tasks"><path d="M5.30775 20.5C4.81058 20.5 4.385 20.323 4.031 19.969C3.677 19.615 3.5 19.1894 3.5 18.6923V5.30775C3.5 4.81058 3.677 4.385 4.031 4.031C4.385 3.677 4.81058 3.5 5.30775 3.5H9.75775C9.82058 2.94483 10.0629 2.47275 10.4848 2.08375C10.9064 1.69458 11.4131 1.5 12.0048 1.5C12.5964 1.5 13.1032 1.69458 13.525 2.08375C13.9468 2.47275 14.1859 2.94483 14.2423 3.5H18.6923C19.1894 3.5 19.615 3.677 19.969 4.031C20.323 4.385 20.5 4.81058 20.5 5.30775V18.6923C20.5 19.1894 20.323 19.615 19.969 19.969C19.615 20.323 19.1894 20.5 18.6923 20.5H5.30775ZM5.30775 19H18.6923C18.7693 19 18.8398 18.9679 18.9038 18.9038C18.9679 18.8398 19 18.7693 19 18.6923V5.30775C19 5.23075 18.9679 5.16025 18.9038 5.09625C18.8398 5.03208 18.7693 5 18.6923 5H5.30775C5.23075 5 5.16025 5.03208 5.09625 5.09625C5.03208 5.16025 5 5.23075 5 5.30775V18.6923C5 18.7693 5.03208 18.8398 5.09625 18.9038C5.16025 18.9679 5.23075 19 5.30775 19ZM8 16.6345H13C13.2125 16.6345 13.3906 16.5626 13.5343 16.4187C13.6781 16.2751 13.75 16.0969 13.75 15.8842C13.75 15.6717 13.6781 15.4937 13.5343 15.35C13.3906 15.2065 13.2125 15.1348 13 15.1348H8C7.7875 15.1348 7.60942 15.2066 7.46575 15.3503C7.32192 15.4941 7.25 15.6723 7.25 15.885C7.25 16.0975 7.32192 16.2756 7.46575 16.4193C7.60942 16.5628 7.7875 16.6345 8 16.6345ZM8 12.75H16C16.2125 12.75 16.3906 12.6781 16.5343 12.5343C16.6781 12.3904 16.75 12.2123 16.75 11.9998C16.75 11.7871 16.6781 11.609 16.5343 11.4655C16.3906 11.3218 16.2125 11.25 16 11.25H8C7.7875 11.25 7.60942 11.3219 7.46575 11.4658C7.32192 11.6096 7.25 11.7878 7.25 12.0003C7.25 12.2129 7.32192 12.391 7.46575 12.5345C7.60942 12.6782 7.7875 12.75 8 12.75ZM8 8.86525H16C16.2125 8.86525 16.3906 8.79342 16.5343 8.64975C16.6781 8.50592 16.75 8.32767 16.75 8.115C16.75 7.9025 16.6781 7.72442 16.5343 7.58075C16.3906 7.43725 16.2125 7.3655 16 7.3655H8C7.7875 7.3655 7.60942 7.43742 7.46575 7.58125C7.32192 7.72492 7.25 7.90308 7.25 8.11575C7.25 8.32825 7.32192 8.50633 7.46575 8.65C7.60942 8.7935 7.7875 8.86525 8 8.86525ZM12.5375 4.13375C12.6792 3.99208 12.75 3.81292 12.75 3.59625C12.75 3.37958 12.6792 3.20042 12.5375 3.05875C12.3958 2.91708 12.2167 2.84625 12 2.84625C11.7833 2.84625 11.6042 2.91708 11.4625 3.05875C11.3208 3.20042 11.25 3.37958 11.25 3.59625C11.25 3.81292 11.3208 3.99208 11.4625 4.13375C11.6042 4.27542 11.7833 4.34625 12 4.34625C12.2167 4.34625 12.3958 4.27542 12.5375 4.13375Z"/></g>
+      <!-- The same info glyph the ⋮'s Bike info row uses. Same destination, so
+           the same mark — a second drawing of "information" would read as a
+           different thing. -->
+      <g id="g-tab-info"><path d="M11.25 16.5h1.5v-6h-1.5v6ZM12 8.77q.33 0 .55-.22t.22-.55-.22-.55T12 7.23t-.55.22-.22.55.22.55.55.22ZM12 22a9.7 9.7 0 0 1-3.9-.79 10.1 10.1 0 0 1-5.31-5.31A9.7 9.7 0 0 1 2 12a9.7 9.7 0 0 1 .79-3.9 10.1 10.1 0 0 1 5.31-5.31A9.7 9.7 0 0 1 12 2a9.7 9.7 0 0 1 3.9.79 10.1 10.1 0 0 1 5.31 5.31A9.7 9.7 0 0 1 22 12a9.7 9.7 0 0 1-.79 3.9 10.1 10.1 0 0 1-5.31 5.31A9.7 9.7 0 0 1 12 22Zm0-1.5q3.55 0 6.02-2.48T20.5 12t-2.48-6.02T12 3.5 5.98 5.98 3.5 12t2.48 6.02T12 20.5Z"/></g>
+      <g id="g-tab-bike"><path d="M3.14225 9.37125L6.23075 3.89225C6.32442 3.72825 6.43825 3.60933 6.57225 3.5355C6.70642 3.46183 6.8555 3.425 7.0195 3.425C7.1835 3.425 7.33242 3.46183 7.46625 3.5355C7.60025 3.60933 7.71408 3.72825 7.80775 3.89225L10.8963 9.37125C10.9796 9.52258 11.0171 9.674 11.0088 9.8255C11.0004 9.977 10.9573 10.1209 10.8795 10.2572C10.8018 10.3934 10.6964 10.5032 10.5633 10.5865C10.4301 10.6698 10.2778 10.7115 10.1063 10.7115H3.93225C3.76075 10.7115 3.60842 10.6698 3.47525 10.5865C3.34208 10.5032 3.23667 10.3934 3.159 10.2572C3.08117 10.1209 3.03808 9.977 3.02975 9.8255C3.02142 9.674 3.05892 9.52258 3.14225 9.37125ZM4.36725 19.6615C3.63525 18.9295 3.26925 18.0437 3.26925 17.004C3.26925 15.9488 3.63525 15.0578 4.36725 14.3308C5.09942 13.6039 5.98658 13.2405 7.02875 13.2405C8.07108 13.2405 8.95825 13.6065 9.69025 14.3385C10.4224 15.0705 10.7885 15.9577 10.7885 17C10.7885 18.0423 10.4224 18.9295 9.69025 19.6615C8.95825 20.3935 8.07108 20.7595 7.02875 20.7595C5.98658 20.7595 5.09942 20.3935 4.36725 19.6615ZM8.62875 18.6C9.06858 18.1603 9.2885 17.627 9.2885 17C9.2885 16.373 9.06858 15.8397 8.62875 15.4C8.18908 14.9602 7.65575 14.7402 7.02875 14.7402C6.40192 14.7402 5.86858 14.9602 5.42875 15.4C4.98908 15.8397 4.76925 16.373 4.76925 17C4.76925 17.627 4.98908 18.1603 5.42875 18.6C5.86858 19.0398 6.40192 19.2598 7.02875 19.2598C7.65575 19.2598 8.18908 19.0398 8.62875 18.6ZM4.948 9.2115H9.1L7.01925 5.56725L4.948 9.2115ZM13.2598 19.8558V14.1442C13.2598 13.8881 13.3463 13.6734 13.5195 13.5002C13.6927 13.3271 13.9073 13.2405 14.1635 13.2405H19.875C20.131 13.2405 20.3457 13.3271 20.519 13.5002C20.6922 13.6734 20.7788 13.8881 20.7788 14.1442V19.8558C20.7788 20.1119 20.6922 20.3266 20.519 20.4997C20.3457 20.6729 20.131 20.7595 19.875 20.7595H14.1635C13.9073 20.7595 13.6927 20.6729 13.5195 20.4997C13.3463 20.3266 13.2598 20.1119 13.2598 19.8558ZM14.7595 19.2598H19.2788V14.7402H14.7595V19.2598ZM16.4365 10.2288L15.3423 9.3155C14.3334 8.48333 13.5947 7.77692 13.126 7.19625C12.6573 6.61542 12.423 5.98017 12.423 5.2905C12.423 4.61733 12.6519 4.0545 13.1098 3.602C13.5674 3.14933 14.143 2.923 14.8365 2.923C15.2608 2.923 15.6576 3.024 16.0268 3.226C16.3961 3.428 16.7269 3.71867 17.0193 4.098C17.3116 3.725 17.6456 3.43592 18.0213 3.23075C18.3968 3.02558 18.7935 2.923 19.2115 2.923C19.8962 2.923 20.468 3.15442 20.927 3.61725C21.3858 4.08008 21.6153 4.64742 21.6153 5.31925C21.6153 6.00258 21.381 6.63142 20.9125 7.20575C20.4438 7.78008 19.7051 8.48333 18.6963 9.3155L17.602 10.2288C17.4375 10.3763 17.2432 10.45 17.019 10.45C16.7948 10.45 16.6007 10.3763 16.4365 10.2288ZM17.0193 8.75C18.2001 7.80133 19.0113 7.08342 19.453 6.59625C19.8947 6.10908 20.1155 5.6905 20.1155 5.3405C20.1155 5.0725 20.0338 4.85258 19.8703 4.68075C19.7068 4.50892 19.4943 4.423 19.2328 4.423C19.0418 4.423 18.8555 4.4785 18.674 4.5895C18.4927 4.70033 18.2533 4.9045 17.9558 5.202L17.0193 6.10775L16.0828 5.202C15.7789 4.89817 15.5382 4.69233 15.3605 4.5845C15.183 4.47683 14.9981 4.423 14.8058 4.423C14.5378 4.423 14.3237 4.50408 14.1635 4.66625C14.0032 4.82842 13.923 5.04675 13.923 5.32125C13.923 5.68408 14.1438 6.10908 14.5855 6.59625C15.0272 7.08342 15.8384 7.80133 17.0193 8.75Z"/></g>
+      <g id="g-lock-shackle"><path d="M8.5 8.5V6.5C8.5 5.53 8.8417 4.7083 9.525 4.025C10.2083 3.3417 11.0333 3 12 3C12.9667 3 13.7917 3.3417 14.475 4.025C15.1583 4.7083 15.5 5.53 15.5 6.5V8.5H14V6.5C14 5.95 13.8042 5.4792 13.4125 5.0875C13.0208 4.6958 12.55 4.5 12 4.5C11.45 4.5 10.9792 4.6958 10.5875 5.0875C10.1958 5.4792 10 5.95 10 6.5V8.5H8.5Z"/></g>
+    </defs>
+  </svg>
+
+
+    <!-- The chrome. Transparent throughout now: the page no longer scrolls, so
+         there is never anything passing underneath it to hide. -->
+    <div class="rnbar" id="rnBar">
+        <!-- Figma 2470:40223. Absolutely centred rather than a third flex child:
+             the two round buttons are not the same width as each other once the
+             label under them grows, and a flex centre would drift with it. -->
+        <div class="rntimer" id="rnTimer">
+          <!-- The words are written by enterRnm, because this dashboard serves two
+               flows and they are not the same job — "Live repair" in the
+               mechanic's, "Bike assessment" in the QCA's. -->
+          <span class="rntimer__label t-label-md700"><span
+                id="rnTimerWhat">Live repair</span><span
+                class="rntimer__bike" id="rnTimerBike"></span></span>
+          <span class="rntimer__clock" id="rnTimerClock">0m 00s</span>
+        </div>
+        <button class="btn-round" id="btnBack" type="button" aria-label="Back">
+          <img src="assets/rnm/back.svg" alt="">
+        </button>
+        <button class="btn-round" id="btnMore" type="button" aria-label="More options"
+                  data-opt-more aria-haspopup="dialog" aria-expanded="false">
+          <img src="assets/rnm/more.svg" alt="">
+        </button>
+      </div>
+
+    <!-- Gradient backdrop and the bike, 0 → 476. It shrinks to 426 when the
+         open-tasks sheet is up; the bike rides 6px with it. -->
+    <div class="hero">
+      <!-- Figma 2620:29006 / 2621:29241. The backdrop is a two-slide carousel now.
+           The bike is what you look at while working; the part exchange summary is
+           what you check before you close — one is continuous, the other is a
+           moment, so they take turns in one place rather than each claiming a
+           band of the screen. -->
+      <div class="rncar" id="rnCar">
+        <div class="rncar__track" id="rnCarTrack">
+
+          <div class="rncar__slide">
+            <div class="hero-media" aria-hidden="true">
+              <video id="vidSeatOpen"  class="is-playing" muted playsinline preload="auto" src="assets/rnm/bike-seat-open.mp4"></video>
+              <video id="vidSeatClose" muted playsinline preload="auto" src="assets/rnm/bike-seat-close.mp4"></video>
+              <video id="vidPowerOn"   muted playsinline preload="auto" src="assets/rnm/bike-power-on.mp4"></video>
+              <video id="vidPowerOff"  muted playsinline preload="auto" src="assets/rnm/bike-power-off.mp4"></video>
+            </div>
+          </div>
+
+          <!-- Figma 2621:29546. The barcode is the bike's, so the card reads as
+               paperwork about this machine rather than a generic summary. Counts
+               come from the same issue records the overlay lists, so the
+               summary and the detail cannot disagree. -->
+          <div class="rncar__slide">
+            <button class="pxcard" id="btnPxOpen" type="button">
+              <span class="pxcard__head">
+                <span class="pxcard__title">Part Exchange</span>
+                <img class="pxcard__go" src="assets/rnm/cmd-forward.svg" alt="">
+              </span>
+              <span class="pxcard__rule" aria-hidden="true"></span>
+              <span class="pxcard__code"><img src="assets/rnm/px-barcode.png" alt=""></span>
+            </button>
+          </div>
+
+        </div>
+        <div class="rncar__dots" id="rnCarDots" aria-hidden="true"><i class="is-on"></i><i></i></div>
+      </div>
+    </div>
+
+    <!-- ── Tab 2: Bike essentials — Figma 2621:29241 ────────────────────────
+         The readings and the controls, together. They belong on one tab because
+         they are the same conversation with the bike: what it reports, and what
+         you can tell it to do. -->
+    <div class="rntabpanel" id="rnPanelBike" role="tabpanel"
+         aria-labelledby="rnTabBike" hidden>
+
+    <!-- Figma 2470:40693. The same card the Bike commands sheet carries — one
+         component, shared/vcard.css. The old 72px full-bleed strip is gone: the
+         readings are a card on the backdrop now, so they belong to the bike
+         above them rather than banding the screen across. -->
+    <div class="vcard" id="rnVitals">
+      <button class="vcard__item" id="vCharge" type="button"
+              aria-label="Battery charge — tap to re-read">
+        <i style="--glyph: url(assets/rnm/v-battery.svg)" aria-hidden="true"></i>
+        <span id="vChargeLabel">75%</span>
+      </button>
+      <div class="vcard__rule" aria-hidden="true"></div>
+      <button class="vcard__item vcard__item--bloom" id="vIot" type="button"
+              aria-label="IoT battery — tap to re-read">
+        <i style="--glyph: url(assets/rnm/v-wifi.svg)" aria-hidden="true"></i>
+        <span id="vIotLabel">4.3 V</span>
+      </button>
+      <div class="vcard__rule" aria-hidden="true"></div>
+      <button class="vcard__item vcard__item--bloom-mid" id="vBt" type="button"
+              aria-label="Bluetooth — tap to disconnect">
+        <i id="vBtIcon" style="--glyph: url(assets/rnm/v-bt-on.svg)" aria-hidden="true"></i>
+        <span id="vBtLabel">Connected</span>
+      </button>
+      <div class="vcard__rule" aria-hidden="true"></div>
+      <button class="vcard__more" id="btnViewAll" type="button" aria-label="View all vitals">
+        <img src="assets/rnm/v-arrow.svg" alt="">
+      </button>
+    </div>
+
+      <!-- Figma 2470:40624. The commands are on the dashboard, not behind a tab:
+           they are the tools a mechanic reaches for while working through the
+           list, and a tab made reaching for one a place you had to go. 342x208 at
+           x24 y488 — three stacked cards, then Seat over two columns and View all
+           on the third.
+           The cards are still cards, not buttons — only the circle inside each
+           one is pressable, so a stray tap on a label cannot cut the bike's
+           power. That was Barun's call and it survives the relayout. -->
+      <div class="commands">
+        <div class="cmd-grid">
+
+          <div class="cmd cmd--stack">
+            <button class="cmd-btn" id="btnPower" type="button" aria-pressed="false" aria-label="Power">
+              <img class="cglyph" src="assets/rnm/cmd-power.svg" alt="">
+            </button>
+            <span class="cmd-title">Power</span>
+            <span class="cmd-state" id="statePower">Off</span>
+          </div>
+
+          <!-- Titled for the thing, not the action: the frame renames this from
+               Lock to Wheel and gives it a state line, which is what Power and
+               Seat already did. His animated shackle is kept — the frame only
+               exports the open glyph, and the sprite carries both states. -->
+          <div class="cmd cmd--stack">
+            <button class="cmd-btn is-unlocked" id="btnLock" type="button" aria-pressed="false" aria-label="Lock the wheel">
+              <svg class="glyph lock" viewBox="0 0 24 24" aria-hidden="true">
+                <use href="#g-lock-body"/>
+                <g class="lock-shackle"><use href="#g-lock-shackle"/></g>
+              </svg>
+            </button>
+            <span class="cmd-title">Wheel</span>
+            <span class="cmd-state" id="stateLock">Unlocked</span>
+          </div>
+
+          <div class="cmd cmd--stack">
+            <span class="cmd-sweep" id="beepSweep" aria-hidden="true"></span>
+            <button class="cmd-btn" id="btnBeep" type="button" aria-pressed="false" aria-label="Beep">
+              <img class="cglyph" src="assets/rnm/cmd-volume.svg" alt="">
+            </button>
+            <span class="cmd-title">Beep</span>
+            <span class="cmd-state" id="stateBeep">&mdash;</span>
+          </div>
+
+          <!-- Two commands, not a state and a command: close on the left, open on
+               the right, each holding its own glyph whatever the seat is doing.
+               Neither latches — they are momentary sends, so pressing open twice
+               sends open twice. The state line follows the last one pressed. -->
+          <div class="cmd cmd--wide">
+            <span class="cmd-text">
+              <span class="cmd-title">Seat</span>
+              <span class="cmd-state" id="stateSeat">Closed</span>
+            </span>
+            <button class="cmd-btn" id="btnSeatClose" type="button" aria-label="Close the seat">
+              <img class="cglyph cglyph--seat-closed" src="assets/rnm/cmd-seat-closed.svg" alt="">
+            </button>
+            <button class="cmd-btn" id="btnSeatOpen" type="button" aria-label="Open the seat">
+              <img class="cglyph cglyph--seat-open" src="assets/rnm/cmd-seat-open.svg" alt="">
+            </button>
+          </div>
+
+          <button class="cmd cmd--viewall" id="btnViewAllCmd" type="button">
+            <img class="cglyph" src="assets/rnm/cmd-forward.svg" alt="">
+            <span class="cmd-state">View all</span>
+          </button>
+
+        </div>
+      </div>
+
+    </div><!-- /#rnPanelBike -->
+
+    <!-- ── Tab 1: Open tasks — Figma 2620:29006 ─────────────────────────────
+         Three rows, not the two cards that were here: the frame splits issues
+         into Mechanical and Electrical, which the issues screen already does
+         internally — the two sections have different closing actions, so a
+         mechanic who only has electrical faults left should be able to see that
+         from here rather than opening a combined count.
+
+         The heading carries the total across all three, so the tab that is open
+         states where the whole repair stands without a bar to read. -->
+    <div class="rntabpanel" id="rnPanelTasks" role="tabpanel"
+         aria-labelledby="rnTabTasks">
+      <!-- The same three readings the Bike Info tab opens with, written by the
+           same paintBikeInfo() — see script.js. They sit at the top of this
+           panel, where the hero has nothing to show on an assessment, so the
+           facts a QCA needs while working the list are on the list's own tab.
+           Assessment only: the repair keeps its bike render up there. -->
+      <div class="bi__stats" id="biStatsTasks"></div>
+      <h2 class="rnpanel__head" id="rnTasksHead">Tasks done · 0/0</h2>
+      <div class="tasksheet__rows">
+        <!-- Step 1 of the assessment, and hidden in the repair flow. The
+             checklist used to be a button under these rows; it is a row like the
+             rest now, because it is one of the five things an assessment is made
+             of and a CTA that names one of them makes it look like the others are
+             optional. Empty tile: the frame draws no art for it, and inventing
+             one would be inventing a design decision. -->
+        <button class="trow" id="rowAssess" type="button">
+          <span class="trow__art" aria-hidden="true"></span>
+          <span class="trow__text">
+            <span class="trow__name">Assessment checklist</span>
+            <span class="trow__count" id="countAssess">Pending</span>
+          </span>
+          <img class="trow__go" src="assets/rnm/cmd-forward.svg" alt="">
+          <span class="trow__tick" aria-hidden="true"></span>
+        </button>
+        <!-- The assessment's ONE fault row. A repair keeps Mechanical and
+             Electrical as two, because a mechanic closes them by different rules
+             and reaches them from different places; an assessment only READS
+             them, and reading one record through two doors on the same list made
+             the dashboard longer without making it clearer. The split survives
+             inside the screen as two tabs. -->
+        <button class="trow" id="rowFaults" type="button">
+          <img class="trow__art" src="assets/rnm/issues.png" alt="">
+          <span class="trow__text">
+            <span class="trow__name">Faults</span>
+            <span class="trow__count" id="countFaults">0 marked</span>
+          </span>
+          <img class="trow__go" src="assets/rnm/cmd-forward.svg" alt="">
+          <span class="trow__tick" aria-hidden="true"></span>
+        </button>
+        <button class="trow" id="rowChecks" type="button">
+          <img class="trow__art" src="assets/rnm/checks.png" alt="">
+          <span class="trow__text">
+            <span class="trow__name">Checklist</span>
+            <span class="trow__count" id="countChecks">0/2</span>
+          </span>
+          <img class="trow__go" src="assets/rnm/cmd-forward.svg" alt="">
+        <span class="trow__tick" aria-hidden="true"></span>
+        </button>
+        <button class="trow" id="rowMech" type="button">
+          <img class="trow__art" src="assets/rnm/issues.png" alt="">
+          <span class="trow__text">
+            <span class="trow__name">Mechanical issues</span>
+            <span class="trow__count" id="countMech">0/2</span>
+          </span>
+          <img class="trow__go" src="assets/rnm/cmd-forward.svg" alt="">
+        <span class="trow__tick" aria-hidden="true"></span>
+        </button>
+        <!-- No illustration: the frame draws this tile empty, and inventing one
+             would be inventing a design decision. The tile still holds the row's
+             rhythm, so the three names stay on one left edge. -->
+        <button class="trow" id="rowElec" type="button">
+          <span class="trow__art" aria-hidden="true"></span>
+          <span class="trow__text">
+            <span class="trow__name">Electrical issues</span>
+            <span class="trow__count" id="countElec">0/3</span>
+          </span>
+          <img class="trow__go" src="assets/rnm/cmd-forward.svg" alt="">
+        <span class="trow__tick" aria-hidden="true"></span>
+        </button>
+        <!-- Assessment only, and hidden in the repair flow — a repair has no
+             penalty to record. Empty tile like Electrical's: no art has been
+             drawn for it, and inventing one would be inventing a design. -->
+        <button class="trow" id="rowPenalty" type="button">
+          <span class="trow__art" aria-hidden="true"></span>
+          <span class="trow__text">
+            <span class="trow__name">Penalty</span>
+            <span class="trow__count" id="countPenalty">No penalty</span>
+          </span>
+          <img class="trow__go" src="assets/rnm/cmd-forward.svg" alt="">
+        <span class="trow__tick" aria-hidden="true"></span>
+        </button>
+      </div>
+      <!-- Figma 2875:23044. Assessment only. The primary thing to do from this
+           dashboard, so it earns a button at the foot of the panel rather than
+           being only a row in the list — the Active checklist row above still
+           opens the same page, and that is deliberate: the row reports how much
+           is left, the button is the way in. -->
+      <!-- One button, walking the five rows above it in order — see
+           ASSESS_FLOW in screens/rnm/script.js. It reads "Start" until something
+           has been done, then names the next step still outstanding, then
+           "Finish". It used to be a fixed "Assessment checklist", which is now
+           the first row. -->
+      <div class="rnfoot" id="rnAssessFoot">
+        <!-- SECONDARY, a stroke. It is the step button on a dashboard that is
+             itself a list of steps: the rows above are where the work is, and a
+             filled black bar under them claimed to be the way forward when it
+             is only the shortcut to whichever row is next. Sagar's call. -->
+        <button class="btn-secondary t-label-md700" id="btnAssessStep" type="button">Start</button>
+      </div>
+    </div><!-- /#rnPanelTasks -->
+
+    <!-- ── Tab 3: Bike info ─────────────────────────────────────────────────
+         Empty on purpose. It was a full overlay reached from the tab, which made
+         the bar lie: a tab that opens a page over the top of the bar and then
+         never highlights is not a tab. It is a real panel now, so the bar tells
+         the truth about where you are — and what goes in it is Sagar's next
+         brief. The overlay itself is untouched and still reached from the ⋮.
+
+         The hero's bike is not drawn here either: the bike belongs to Bike
+         essentials, and this panel is meant to read as empty rather than as a
+         page that failed to load its content. -->
+    <!-- ── Tab 2: Bike Info ──────────────────────────────────────────────────
+         The bike's record: three readings across the top, then the last five
+         repairs. Everything below is written by paintBikeInfo() in script.js
+         from REPAIRS — the rows are differences between consecutive visits, so
+         typing them out would be typing the same numbers twice. -->
+    <div class="rntabpanel rntabpanel--info" id="rnPanelInfo" role="tabpanel"
+         aria-labelledby="rnTabInfo" hidden>
+      <div class="bi__stats" id="biStats"></div>
+      <h2 class="rnpanel__head bi__rhhead">Repair history</h2>
+      <div class="rhlist" id="biRepairs"></div>
+    </div>
+
+    <!-- Bottom tabs — Figma 2621:29373. 88px, bottom-anchored: an 844 frame is
+         now min(844, 100dvh), so anything pinned by a top offset floats off the
+         floor on a short viewport. A 2px marker rides the top hairline, the width
+         of the label it belongs to.
+
+         The repair progress band that used to sit at y714 is gone with the
+         footer that carried it — the frames replace this whole region, and the
+         Open tasks heading now states the same total in words. -->
+    <nav class="rntabbar" id="rnTabBar" role="tablist" aria-label="Dashboard sections">
+      <span class="rntabbar__ink" id="rnTabInk" aria-hidden="true"></span>
+      <button class="rntabbar__tab is-on" id="rnTabTasks" type="button" role="tab"
+              aria-selected="true" aria-controls="rnPanelTasks">
+        <svg class="rntabbar__glyph" viewBox="0 0 24 24" aria-hidden="true"><use href="#g-tab-tasks"/></svg>
+        <span>Tasks done</span>
+      </button>
+      <!-- Assessment only, and the rule that PRECEDES it goes with it — pair
+           them, or a repair shows two dividers with nothing between them. A real
+           tab: it selects #rnPanelInfo and takes the marker, where it used to
+           open the Bike info overlay and leave the marker behind on whichever
+           tab you had been on.
+
+           Second, not third. It is the bike's record — who it is and what has
+           been done to it — which is what a QCA reads before deciding anything,
+           so it sits next to the work rather than after the controls. -->
+      <span class="rntabbar__rule" id="rnTabRule2" aria-hidden="true"></span>
+      <button class="rntabbar__tab" id="rnTabInfo" type="button" role="tab"
+              aria-selected="false" aria-controls="rnPanelInfo">
+        <svg class="rntabbar__glyph" viewBox="0 0 24 24" aria-hidden="true"><use href="#g-tab-info"/></svg>
+        <span>Info</span>
+      </button>
+      <span class="rntabbar__rule" aria-hidden="true"></span>
+      <button class="rntabbar__tab" id="rnTabBike" type="button" role="tab"
+              aria-selected="false" aria-controls="rnPanelBike">
+        <svg class="rntabbar__glyph" viewBox="0 0 24 24" aria-hidden="true"><use href="#g-tab-bike"/></svg>
+        <span>Essentials</span>
+      </button>
+    </nav>
+
+    <!-- ── Bike info — Figma 2695:32811 ──────────────────────────────────────
+         Reached from the vitals strip's arrow on the dashboard. Five bands
+         separated by the flow's 342px dividers: who the bike is, what it is
+         reporting right now, where it was last seen, and the serial-numbered
+         components inside it.
+
+         Everything is flow layout rather than the frame's absolute coordinates,
+         because the list is longer than the frame and has to scroll. The
+         spacing works out to the frame's numbers exactly: header ends at 116,
+         so 16 of padding puts the identity tile at 132, and every band is 24
+         from the divider above it. -->
+    <section class="rnscreen" id="screenVitals" aria-hidden="true">
+      <header class="appbar pxappbar">
+        <div class="appbar__row">
+          <div class="appbar__lead">
+            <div class="leading-action">
+              <button class="icon-btn" id="btnVitalsBack" type="button" aria-label="Back">
+                <img src="assets/rnm/back.svg" alt="">
+              </button>
+            </div>
+            <div class="appbar__title"><p class="t-label-md">Bike Info</p></div>
+          </div>
+          <!-- Refresh. No asset for it: the frames have no such button, so there
+               is no node to pull, and a circular arrow is unambiguous enough that
+               drawing it cannot be wrong — the same call the ⋮ glyph took. The
+               label is the point of the control: a reading is only worth
+               anything alongside how old it is. -->
+          <button class="refresh" type="button" data-refresh aria-label="Refresh readings">
+            <svg class="refresh__ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M17.65 6.35A7.958 7.958 0 0 0 12 4a8 8 0 1 0 7.73 10h-2.08A6 6 0 1 1 12 6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35Z" fill="currentColor"/></svg>
+            <span class="refresh__ago"></span>
+          </button>
+        </div>
+      </header>
+      <div class="screen-body bi">
+
+        <!-- Identity. The number is this flow's bike, not the frame's 654321 —
+             see the note in bikeinfo.css. -->
+        <div class="bi__id">
+          <span class="bi__art"><img src="assets/bikeinfo/bike-dex.svg" alt=""></span>
+          <span class="bi__idtext">
+            <span class="bi__num">543210</span>
+            <span class="bi__model">Dex 3.0</span>
+          </span>
+        </div>
+
+        <hr class="bi__rule">
+
+        <!-- Six readings, 3x2. The top row is a state with an icon; the bottom
+             row is a measurement with its unit set smaller on the same
+             baseline. Both come to 36px of content inside a 68px tile, so one
+             rule sizes them. -->
+        <!-- Readings, 2729:22356. The three states share ONE card divided by
+             hairlines; the three measurements stay separate tiles. That split is
+             the point: battery, voltage and bluetooth are one reading of one
+             radio link, taken together, while odometer, speed and range are three
+             independent numbers. -->
+        <div class="bi__band">
+          <div class="bi__cell">
+            <img class="bi__stati" src="assets/rnm/v-battery.svg" alt="">
+            <span class="bi__statl">75%</span>
+          </div>
+          <div class="bi__cell">
+            <img class="bi__stati" src="assets/rnm/v-wifi.svg" alt="">
+            <span class="bi__statl">4.3 V</span>
+          </div>
+          <div class="bi__cell">
+            <img class="bi__stati" src="assets/rnm/v-bt-searching.svg" alt="">
+            <span class="bi__statl">Connected</span>
+          </div>
+          <span class="bi__bandrule bi__bandrule--a" aria-hidden="true"></span>
+          <span class="bi__bandrule bi__bandrule--b" aria-hidden="true"></span>
+        </div>
+
+        <!-- THE SAME THREE READINGS THE INFO TAB SHOWS, written by the same
+             painter — see paintBikeInfo. It was Odometer / Speed / Range left,
+             which is what the bike is doing right now; this page is read about a
+             bike standing still in a bay, where what matters is how far it has
+             gone, when its pack came out, and how far since the last repair.
+             Two pages describing one bike differently was the thing to fix. -->
+        <div class="bi__stats" id="biStatsVitals"></div>
+
+        <hr class="bi__rule">
+
+        <!-- Last seen. The frame leaves this an empty #f7f7f7 rect — the image was
+             never placed — so the map is drawn rather than fetched: a live tile
+             needs a key and a network request, and this build ships one offline
+             file with every asset inlined. The pin is a separate layer on top so
+             it stays centred whatever the snapshot is swapped for. -->
+        <div class="bi__loc">
+          <div class="bi__map">
+            <!-- Drawn inline rather than shipped as an asset, for one reason: an
+                 SVG loaded through <img> is an isolated document and cannot see
+                 the page's font, so its place names would have rendered in the
+                 system sans — a second typeface in an app that is Satoshi only.
+                 Inline, the <text> inherits like anything else.
+                 Still drawn rather than fetched: a real tile needs a key and a
+                 network request, and this build ships one offline file. -->
+            <svg class="bi__mapsvg" viewBox="0 0 342 160" preserveAspectRatio="xMidYMid slice"
+                 role="img" aria-label="Map showing HSR Layout, Bengaluru">
+              <rect width="342" height="160" fill="#F2F1EC"/>
+              <path d="M0 118 L44 112 L74 128 L86 160 L0 160 Z" fill="#A8CFE8"/>
+              <g fill="#D7E8CE">
+                <rect x="188" y="64" width="48" height="30" rx="3"/>
+                <rect x="258" y="8" width="70" height="30" rx="3"/>
+              </g>
+              <g fill="#E7E5DE">
+                <rect x="8" y="8" width="48" height="34" rx="2"/>
+                <rect x="86" y="8" width="66" height="34" rx="2"/>
+                <rect x="86" y="64" width="66" height="30" rx="2"/>
+                <rect x="188" y="112" width="48" height="40" rx="2"/>
+                <rect x="258" y="112" width="70" height="40" rx="2"/>
+              </g>
+              <!-- Casing under fill, which is what gives a road its edge. -->
+              <g fill="none" stroke-linecap="round">
+                <g stroke="#E0DED6">
+                  <path d="M0 52H342" stroke-width="13"/><path d="M170 0V160" stroke-width="13"/>
+                  <path d="M0 104H342" stroke-width="9"/><path d="M70 42V160" stroke-width="8"/>
+                  <path d="M248 38V160" stroke-width="8"/><path d="M240 160L342 104" stroke-width="8"/>
+                </g>
+                <g stroke="#FFFFFF">
+                  <path d="M0 104H342" stroke-width="7"/><path d="M70 42V160" stroke-width="6"/>
+                  <path d="M248 38V160" stroke-width="6"/><path d="M240 160L342 104" stroke-width="6"/>
+                </g>
+                <g stroke="#FBF1D2">
+                  <path d="M0 52H342" stroke-width="11"/><path d="M170 0V160" stroke-width="11"/>
+                </g>
+              </g>
+              <g fill="#8C8981" font-size="7" font-weight="500" letter-spacing="0.3">
+                <text x="10" y="24">HSR LAYOUT</text>
+                <text x="192" y="82" fill="#6E9A63">Sector 2 Park</text>
+                <text x="262" y="128">BDA Complex</text>
+                <text x="176" y="150" transform="rotate(-90 176 150)">27th Main Rd</text>
+              </g>
+              <text x="12" y="146" fill="#5B87A8" font-size="7" font-weight="500"
+                    letter-spacing="0.3" font-style="italic">Agara Lake</text>
+              <g fill="#B9B5AC">
+                <circle cx="120" cy="118" r="2.5"/><circle cx="300" cy="66" r="2.5"/>
+                <circle cx="46" cy="76" r="2.5"/>
+              </g>
+            </svg>
+            <img class="bi__mappin" src="assets/bikeinfo/map-pin.svg" alt="" aria-hidden="true">
+          </div>
+          <div class="bi__locfoot">
+            <span class="bi__locname">HSR Yulu Center</span>
+            <span class="bi__locwhen">updated 5m ago</span>
+          </div>
+        </div>
+
+        <hr class="bi__rule">
+
+        <!-- The serialised components. The first two carry a chevron because
+             they lead somewhere; the rest are a record. -->
+        <div class="bi__parts">
+          <button class="bi__part bi__part--go" type="button" data-comp="iot">
+            <span class="bi__partart"></span>
+            <span class="bi__parttext">
+              <span class="bi__partname">IoT</span>
+              <span class="bi__partsn">9876-543-210</span>
+            </span>
+            <img class="bi__partgo" src="assets/rnm/cmd-forward.svg" alt="">
+          </button>
+          <button class="bi__part bi__part--go" type="button" data-comp="battery">
+            <span class="bi__partart"></span>
+            <span class="bi__parttext">
+              <span class="bi__partname">Battery</span>
+              <span class="bi__partsn">BA-876-543-2109</span>
+            </span>
+            <img class="bi__partgo" src="assets/rnm/cmd-forward.svg" alt="">
+          </button>
+          <div class="bi__part">
+            <span class="bi__partart"></span>
+            <span class="bi__parttext">
+              <span class="bi__partname">BMS</span>
+              <span class="bi__partsn">AB-123-4567-890</span>
+            </span>
+          </div>
+          <div class="bi__part">
+            <span class="bi__partart"></span>
+            <span class="bi__parttext">
+              <span class="bi__partname">MCU</span>
+              <span class="bi__partsn">BS-9876-543-321</span>
+            </span>
+          </div>
+          <div class="bi__part">
+            <span class="bi__partart"></span>
+            <span class="bi__parttext">
+              <span class="bi__partname">Chassis</span>
+              <span class="bi__partsn">9876-543210-321</span>
+            </span>
+          </div>
+          <div class="bi__part">
+            <span class="bi__partart"></span>
+            <span class="bi__parttext">
+              <span class="bi__partname">Peripheral harness</span>
+              <span class="bi__partsn">876-6543-310</span>
+            </span>
+          </div>
+        </div>
+
+        <hr class="bi__rule">
+
+        <!-- WHAT HAS BEEN DONE TO IT, last five visits. The Info tab has carried
+             this since the tab existed; the full page did not, which made the
+             page the lesser of the two views of one bike. Same list, written by
+             the same painter — see paintBikeInfo. -->
+        <h2 class="rnpanel__head bi__rhhead">Repair history</h2>
+        <div class="rhlist" id="biRepairsVitals"></div>
+      </div>
+    </section>
+
+    <!-- ── Component detail ──────────────────────────────────────────────────
+         One overlay for both IoT and Battery, and for whatever gets a chevron
+         next: the two differ only in their readings, so the screen is a table
+         renderer and the readings are data. See COMPONENT_SPECS in script.js.
+
+         The heading keeps the component's name AND its serial, because a spec
+         sheet is meaningless without knowing which unit it describes — the
+         mechanic is often holding two of them. -->
+    <section class="rnscreen" id="screenComp" aria-hidden="true">
+      <header class="appbar pxappbar">
+        <div class="appbar__row">
+          <div class="appbar__lead">
+            <div class="leading-action">
+              <button class="icon-btn" id="btnCompBack" type="button" aria-label="Back">
+                <img src="assets/rnm/back.svg" alt="">
+              </button>
+            </div>
+            <div class="appbar__title cmpttl">
+              <p class="t-label-md" id="cmpName"></p>
+              <p class="cmpttl__sn" id="cmpSn"></p>
+            </div>
+          </div>
+          <!-- Refresh. No asset for it: the frames have no such button, so there
+               is no node to pull, and a circular arrow is unambiguous enough that
+               drawing it cannot be wrong — the same call the ⋮ glyph took. The
+               label is the point of the control: a reading is only worth
+               anything alongside how old it is. -->
+          <button class="refresh" type="button" data-refresh aria-label="Refresh readings">
+            <svg class="refresh__ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M17.65 6.35A7.958 7.958 0 0 0 12 4a8 8 0 1 0 7.73 10h-2.08A6 6 0 1 1 12 6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35Z" fill="currentColor"/></svg>
+            <span class="refresh__ago"></span>
+          </button>
+        </div>
+      </header>
+      <div class="screen-body cmp" id="cmpBody"></div>
+    </section>
+
+    <!-- Parts exchange. Two view-only lists: what stores issued against the
+         issues marked on this bike, and what the mechanic has sent back. Both
+         are filled by rnm/script.js from the open issues — stores owns this
+         record, so nothing on this panel is a control.
+
+         It was the third tab. With the strip gone it becomes an overlay off the
+         ⋮, built the same way the all-vitals placeholder is: a full sheet with a
+         back bar. A view-only record is a place you go and leave, not a view of
+         the dashboard you switch to. -->
+    <section class="rnscreen" id="screenParts" aria-hidden="true">
+      <!-- The flow's app bar, not the round floating button this overlay used to
+           carry — Figma 2691:32488. No hairline under it: the frame draws one
+           divider on this screen and it is the one below the tabs. -->
+      <header class="appbar pxappbar">
+        <div class="appbar__row">
+          <div class="appbar__lead">
+            <div class="leading-action">
+              <button class="icon-btn" id="btnPartsBack" type="button" aria-label="Back">
+                <img src="assets/rnm/back.svg" alt="">
+              </button>
+            </div>
+            <div class="appbar__title"><p class="t-label-md">Part Exchange</p></div>
+          </div>
+        </div>
+      </header>
+
+      <!-- ── Figma 2710:33743 ─────────────────────────────────────────────
+           Return pending leads, outside the tabs: it is the only band that is a
+           JOB — parts in the mechanic's hands that stores is waiting on. What has
+           already been received or returned is a record, and records go behind a
+           tab.
+
+           Two states in one screen, and no flag for it. While the RnM is open an
+           issue may have a spare in hand and no outcome yet, so which physical
+           part goes back is genuinely unknown and the row says both. Once every
+           issue is closed each row resolves to one word on its own — see
+           paintParts, and the sub-line rule in bikeinfo's sibling parts.css. -->
+      <div class="screen-body">
+        <p class="pxband">Return pending</p>
+        <div class="pxlist pxlist--hold" id="pxHold"></div>
+
+        <div class="pxtabs-wrap">
+          <div class="pxtabs" id="pxTabs" role="tablist" aria-label="Part exchange">
+            <span class="pxtabs__ink" id="pxTabsInk"></span>
+            <button class="pxtab pxtab--on" type="button" role="tab" data-pxtab="returned"
+                    aria-selected="true" aria-controls="pxPanelReturned"><span class="pxtab__in">Returned</span></button>
+            <button class="pxtab" type="button" role="tab" data-pxtab="received"
+                    aria-selected="false" aria-controls="pxPanelReceived"><span class="pxtab__in">Received</span></button>
+          </div>
+        </div>
+
+        <section class="pxsec" id="pxPanelReturned" role="tabpanel">
+          <div class="pxlist" id="pxRet"></div>
+        </section>
+        <section class="pxsec" id="pxPanelReceived" role="tabpanel" hidden>
+          <div class="pxlist" id="pxRecv"></div>
+          <p class="pxband">Get spare...</p>
+          <div class="pxlist" id="pxPend"></div>
+        </section>
+      </div>
+    </section>
+  </section>
