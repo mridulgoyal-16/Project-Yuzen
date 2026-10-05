@@ -72,17 +72,6 @@ const PARTS = [
   {name:"Battery & its mounting",      action:"Tighten",   photo:"pigtail", crop:"pigtail",
    note:"Tighten the bolts and check the strap",
    reasons:["Bolts loose","Rubber pad worn","Rattle","Strap frayed"]},
-
-  /* Monsoon — the wet-weather checks, run alongside the service. Both are brake
-     work, so both carry the brake photo. */
-  {name:"Brake cable",                 action:"Clean",     photo:"brake",   crop:"brake",
-   section:"Monsoon",
-   note:"Clean and re-grease the inner cable",
-   reasons:["Rusting","Fraying","Stiff travel","Housing split"]},
-  {name:"Brakes",                      action:"Test",      photo:"brake",   crop:"brake",
-   section:"Monsoon",
-   note:"Test both brakes for bite and even pull",
-   reasons:["Weak bite","Pulls to one side","Lever bottoms out","Squealing"]},
 ].map((p,i) => ({id:"p"+i, status:"pending", reasons_selected:[],
                  section:"Periodic maintenance", ...p}));
 
@@ -109,21 +98,21 @@ const ICON = {
   rowGood:`<svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#00654F"/><path d="M10.6 16.2 6.4 12l1.4-1.4 2.8 2.8 6-6L18 8.8z" fill="#fff"/></svg>`,
   rowFaulty:`<svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" fill="#C13515"/><path d="M12 13.06l-3.06 3.06-1.06-1.06L10.94 12 7.88 8.94 8.94 7.88 12 10.94l3.06-3.06 1.06 1.06L13.06 12l3.06 3.06-1.06 1.06z" fill="#fff"/></svg>`,
   rowPending:`<svg width="21.5" height="21.5" viewBox="0 0 21.5 21.5" fill="none"><circle cx="10.75" cy="10.75" r="10" stroke="#B0B0B0" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="4 4"/></svg>`,
-  /* Skipped. A solid ring rather than the pending dashes, because a decision was
-     made — but grey rather than green or red, because the decision was not a
-     verdict on the part. The dash inside is the "neither" mark. */
-  rowSkipped:`<svg width="21.5" height="21.5" viewBox="0 0 21.5 21.5" fill="none"><circle cx="10.75" cy="10.75" r="10" stroke="#B0B0B0" stroke-width="1.5"/><path d="M6.75 10.75h8" stroke="#B0B0B0" stroke-width="1.5" stroke-linecap="round"/></svg>`,
   /* Card actions — semantic colour */
   faulty:`<svg viewBox="0 0 24 24" fill="none"><path d="M12 13.0537L15.073 16.127C15.2115 16.2653 15.3856 16.3362 15.5952 16.3395C15.8047 16.3427 15.982 16.2718 16.127 16.127C16.2718 15.982 16.3443 15.8063 16.3443 15.6C16.3443 15.3937 16.2718 15.218 16.127 15.073L13.0538 12L16.127 8.927C16.2653 8.7885 16.3362 8.61442 16.3395 8.40475C16.3427 8.19525 16.2718 8.018 16.127 7.873C15.982 7.72817 15.8063 7.65575 15.6 7.65575C15.3937 7.65575 15.218 7.72817 15.073 7.873L12 10.9462L8.927 7.873C8.7885 7.73467 8.61442 7.66383 8.40475 7.6605C8.19525 7.65733 8.018 7.72817 7.873 7.873C7.72817 8.018 7.65575 8.19367 7.65575 8.4C7.65575 8.60633 7.72817 8.782 7.873 8.927L10.9462 12L7.873 15.073C7.73467 15.2115 7.66383 15.3856 7.6605 15.5952C7.65733 15.8047 7.72817 15.982 7.873 16.127C8.018 16.2718 8.19367 16.3443 8.4 16.3443C8.60633 16.3443 8.782 16.2718 8.927 16.127L12 13.0537ZM12.0017 21.5C10.6877 21.5 9.45267 21.2507 8.2965 20.752C7.14033 20.2533 6.13467 19.5766 5.2795 18.7218C4.42433 17.8669 3.74725 16.8617 3.24825 15.706C2.74942 14.5503 2.5 13.3156 2.5 12.0017C2.5 10.6877 2.74933 9.45267 3.248 8.2965C3.74667 7.14033 4.42342 6.13467 5.27825 5.2795C6.13308 4.42433 7.13833 3.74725 8.294 3.24825C9.44967 2.74942 10.6844 2.5 11.9982 2.5C13.3122 2.5 14.5473 2.74933 15.7035 3.248C16.8597 3.74667 17.8653 4.42342 18.7205 5.27825C19.5757 6.13308 20.2528 7.13833 20.7518 8.294C21.2506 9.44967 21.5 10.6844 21.5 11.9982C21.5 13.3122 21.2507 14.5473 20.752 15.7035C20.2533 16.8597 19.5766 17.8653 18.7218 18.7205C17.8669 19.5757 16.8617 20.2528 15.706 20.7518C14.5503 21.2506 13.3156 21.5 12.0017 21.5Z" fill="#C13515"/></svg>`,
   good:`<svg viewBox="0 0 24 24" fill="none"><path d="M10.5808 14.1463L8.25775 11.823C8.11925 11.6847 7.94517 11.6138 7.7355 11.6105C7.526 11.6073 7.34875 11.6782 7.20375 11.823C7.05892 11.968 6.9865 12.1437 6.9865 12.35C6.9865 12.5563 7.05892 12.732 7.20375 12.877L9.948 15.6212C10.1288 15.8019 10.3398 15.8922 10.5808 15.8922C10.8218 15.8922 11.0327 15.8019 11.2135 15.6212L16.777 10.0577C16.9153 9.91925 16.9862 9.74517 16.9895 9.5355C16.9927 9.326 16.9218 9.14875 16.777 9.00375C16.632 8.85892 16.4563 8.7865 16.25 8.7865C16.0437 8.7865 15.868 8.85892 15.723 9.00375L10.5808 14.1463ZM12.0017 21.5C10.6877 21.5 9.45267 21.2507 8.2965 20.752C7.14033 20.2533 6.13467 19.5766 5.2795 18.7218C4.42433 17.8669 3.74725 16.8617 3.24825 15.706C2.74942 14.5503 2.5 13.3156 2.5 12.0017C2.5 10.6877 2.74933 9.45267 3.248 8.2965C3.74667 7.14033 4.42342 6.13467 5.27825 5.2795C6.13308 4.42433 7.13833 3.74725 8.294 3.24825C9.44967 2.74942 10.6844 2.5 11.9982 2.5C13.3122 2.5 14.5473 2.74933 15.7035 3.248C16.8597 3.74667 17.8653 4.42342 18.7205 5.27825C19.5757 6.13308 20.2528 7.13833 20.7518 8.294C21.2506 9.44967 21.5 10.6844 21.5 11.9982C21.5 13.3122 21.2507 14.5473 20.752 15.7035C20.2533 16.8597 19.5766 17.8653 18.7218 18.7205C17.8669 19.5757 16.8617 20.2528 15.706 20.7518C14.5503 21.2506 13.3156 21.5 12.0017 21.5Z" fill="#00654F"/></svg>`,
+  /* Skip — "do this one later": a dot with an arrow coming back round to it. */
+  skip:`<svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M10.0531 17.9462C9.51773 17.411 9.25006 16.762 9.25006 15.9992C9.25006 15.2363 9.51773 14.5873 10.0531 14.0522C10.5882 13.5168 11.2372 13.2492 12.0001 13.2492C12.7629 13.2492 13.4119 13.5168 13.9471 14.0522C14.4824 14.5873 14.7501 15.2363 14.7501 15.9992C14.7501 16.762 14.4824 17.411 13.9471 17.9462C13.4119 18.4815 12.7629 18.7492 12.0001 18.7492C11.2372 18.7492 10.5882 18.4815 10.0531 17.9462ZM4.63281 11.7492C4.91748 9.96449 5.7489 8.47666 7.12706 7.28566C8.50523 6.09466 10.1212 5.49916 11.9751 5.49916C13.2046 5.49916 14.3327 5.77066 15.3596 6.31366C16.3866 6.85666 17.2379 7.58199 17.9136 8.48966V5.44141H19.4136V11.7492H13.1058V10.2492H17.3251C16.8174 9.27866 16.095 8.49432 15.1578 7.89616C14.2206 7.29816 13.1681 6.99916 12.0001 6.99916C10.5719 6.99916 9.31231 7.45016 8.22131 8.35216C7.13031 9.25399 6.44248 10.3863 6.15781 11.7492H4.63281Z" fill="currentColor"/></svg>`,
   /* Reveal confirmation — 40px filled disc, colour inherited from the reveal */
   confirm:`<svg width="40" height="40" viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="20" fill="currentColor"/><path d="M17.4 26.3 10.9 19.8l2-2 4.5 4.5 9.6-9.6 2 2z" fill="#fff"/></svg>`,
   /* Placeholder for parts whose photography has not been shot yet */
   noPhoto:size=>`<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 5h16a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Zm1 2v9.2l3.6-3.6 2.7 2.7 3.4-3.4L19 15.5V7H5Z" fill="currentColor" opacity=".55"/><circle cx="9" cy="10" r="1.4" fill="currentColor" opacity=".55"/></svg>`,
 };
 
+/* Skipped parts wear the pending ring: skipping is not a verdict, the part is
+   still owed, and the row already says Pending under its name. */
 const statusIcon = s => s === "good" ? ICON.rowGood : s === "faulty" ? ICON.rowFaulty
-                      : s === "skipped" ? ICON.rowSkipped : ICON.rowPending;
+                      : ICON.rowPending;
 
 /* Judged = a verdict was given. Skipping is NOT one: the row says "Pending" and it
    is gathered at the top of its section precisely because it is still owed, so
@@ -253,7 +242,7 @@ function expandedHTML(part){
                    Done, because it is not an outcome for the part — it is a decision
                    not to judge it now. Grouping it with the other two would read as
                    a third verdict. -->
-              <button class="ck-btn-skip t-label-md" data-action="skip">Skip</button>
+              <button class="ck-btn-skip" data-action="skip" aria-label="Skip">${ICON.skip}</button>
             </div>
             ${mediaHTML(part)}
           </div>
@@ -261,13 +250,14 @@ function expandedHTML(part){
             <button class="ck-btn-faulty" data-action="faulty">
               <span class="ck-btn-label">${ICON.faulty}<span class="t-label-md ck-txt-negative">Faulty</span></span>
             </button>
+            <!-- The same 1px rule the RnM tab bar puts between its two tabs. -->
+            <span class="ck-card__rule" aria-hidden="true"></span>
             <button class="ck-btn-good" data-action="good">
               <span class="ck-btn-good__inner">
-                <!-- "Done", not the part's verb. The verb moved to the instruction
-                     line under the name, where it can say what the job actually is;
-                     the button only has to say the job is finished. It also stops
-                     the button changing width from part to part. -->
-                <span class="ck-btn-label">${ICON.good}<span class="t-label-md ck-txt-positive">Done</span></span>
+                <!-- "Good", the verdict opposite Faulty, not the part's verb. The
+                     verb is on the instruction line under the name, and a fixed
+                     word keeps the button the same width from part to part. -->
+                <span class="ck-btn-label">${ICON.good}<span class="t-label-md ck-txt-positive">Good</span></span>
               </span>
             </button>
           </div>
@@ -281,47 +271,15 @@ function expandedHTML(part){
    heading. They are side by side now: one is on screen at a time and the strip
    says which. The headings are gone with the stacking — a title above a list that
    is already named by its selected tab says it twice. */
-const tabsEl      = document.getElementById("ckTabs");
-const underlineEl = document.getElementById("ckTabsUnderline");
 let activeSection = SECTIONS[0];
 
-function buildTabs(){
-  /* Idempotent by habit — this file is served as-is rather than pre-rendered, but
-     the flow build ships a rendered DOM and doubled tabs there three times. */
-  tabsEl.querySelectorAll(".ck-tab").forEach(t => t.remove());
-  SECTIONS.forEach(sec => {
-    const b = document.createElement("button");
-    b.type = "button";
-    b.className = "ck-tab";
-    b.setAttribute("role", "tab");
-    b.dataset.section = sec;
-    b.innerHTML = `${esc(sec)} <span class="ck-tab__n"></span>`;
-    tabsEl.insertBefore(b, underlineEl);
-  });
-}
-
-function moveUnderline(){
-  const on = tabsEl.querySelector(".ck-tab.ck-is-active");
-  if (!on) return;
-  underlineEl.style.width = on.offsetWidth + "px";
-  underlineEl.style.transform = `translateX(${on.offsetLeft}px)`;
-}
-
-/* The count each tab carries is the one the section header used to show: judged
-   of total, so it can be driven to zero-remaining. Skipped parts are not counted
-   as judged, which is what keeps a tab reading 4/6 while two rows say Pending. */
-function paintTabs(){
-  tabsEl.querySelectorAll(".ck-tab").forEach(b => {
-    const sec   = b.dataset.section;
-    const inSec = PARTS.filter(p => p.section === sec);
-    const on    = sec === activeSection;
-    b.classList.toggle("ck-is-active", on);
-    b.setAttribute("aria-selected", String(on));
-    b.querySelector(".ck-tab__n").textContent =
-      inSec.filter(judged).length + "/" + inSec.length;
-  });
-  moveUnderline();
-  suffixEl.textContent = " / " + activeSection;
+/* ONE CHECKLIST, ONE HEADING. The tab strip went with Monsoon: with a single
+   list there is nothing to switch between, so its name and count are a heading
+   at the top of the list instead, and it scrolls away with the rows. */
+function headingHTML(){
+  const inSec = PARTS.filter(p => p.section === activeSection);
+  return `<h2 class="ck-heading">${esc(activeSection)} <span class="ck-heading__n">${
+    inSec.filter(judged).length}/${inSec.length}</span></h2>`;
 }
 
 /* PARTS stays in its authored order — activeIndex, the advance order and every
@@ -354,21 +312,12 @@ function selectSection(sec){
   setScrolled(false);
 }
 
-tabsEl.addEventListener("click", e => {
-  const b = e.target.closest("[data-section]");
-  if (!b || b.dataset.section === activeSection) return;
-  if (busy || sheetState) return;
-  selectSection(b.dataset.section);
-});
-
 function render(){
   /* The section on screen, skipped rows first. No headers in the list any more —
      the tab is the heading. */
-  listEl.innerHTML = displayOrder()
+  listEl.innerHTML = headingHTML() + displayOrder()
     .map(({p,i}) => i === activeIndex ? expandedHTML(p) : collapsedHTML(p,i))
     .join("");
-
-  paintTabs();
   const done = PARTS.filter(judged).length;
   document.getElementById("ckProgressFill").style.width = (done / PARTS.length * 100) + "%";
   /* Progress spans every section — the task is not finished until both checklists
@@ -711,16 +660,10 @@ listEl.addEventListener("click", e => {
    the rest of the bundle's scripts down with it. */
 const screenEl  = document.getElementById("scrChecks");
 const appbarEl  = screenEl.querySelector(".appbar");
-const suffixEl  = appbarEl.querySelector(".appbar__suffix");
 
-/* The suffix is no longer a migrating heading — there are no in-list headings to
-   migrate. It names the open tab, and paintTabs() keeps it current. */
-suffixEl.setAttribute("aria-hidden", "false");
 
 /* ── Header collapse ──────────────────────────────────────────────────────────
-   Scroll down and the app bar row folds away; scroll back up and it returns. The
-   tabs never move — they are how you know which list you are in and how you reach
-   the other one, so they outrank the bar for the space.
+   Scroll down and the app bar row folds away; scroll back up and it returns.
 
    Direction, not absolute position: the bar comes back the moment you head
    upward, rather than making you scroll all the way to the top for it. The
@@ -729,6 +672,10 @@ suffixEl.setAttribute("aria-hidden", "false");
    Same rule and same threshold as Add issues in the flow. */
 const SCROLL_THRESHOLD = 8;
 let scrolled = false, sLastY = 0, sAccum = 0;
+/* The build ships the pre-rendered DOM, and the pre-render can leave the bar
+   folded. `scrolled` starts false, so the class has to start that way too or
+   setScrolled(false) no-ops and the bar never comes back. */
+screenEl.classList.remove("ck-is-scrolled");
 
 function setScrolled(next){
   if (next === scrolled) return;
@@ -868,18 +815,15 @@ doneBtn.addEventListener("click", () => {
 });
 
 /* ═══════════════════════════════════════════════════════════════════════════ */
-buildTabs();
 render();
 revealActive();
-/* Satoshi lands after first paint and the tab labels change width with it, so the
-   underline is measured again once the font is in. */
-if (document.fonts && document.fonts.ready) document.fonts.ready.then(moveUnderline);
+
+document.getElementById("ckCmdBtn").addEventListener("click", () => setCommandsSheet(true));
 
   enterChecks = function(){
-    /* Re-measure the underline on entry: the tabs are laid out while this screen
-       is off-frame, where offsetWidth is still correct, but the fonts may not have
-       landed the first time through. */
-    paintTabs();
+    /* Repaint on entry so the heading's count is current. */
+    const h = listEl.querySelector(".ck-heading");
+    if (h) h.outerHTML = headingHTML();
   };
 
   /* Parts, not checklists. The dashboard card said 0/2 and 2 is the number of

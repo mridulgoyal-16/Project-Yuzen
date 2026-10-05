@@ -11,6 +11,8 @@
   /* x24 y420, 342x68. The host places the card; the card carries no margin of
      its own. y374 with the open-tasks sheet up (2470:40979) — it rides up 46 so
      the sheet has 450 to start from and the readings stay clear of it. */
+  /* No forward arrow on this screen's card — three readings, two rules. Bike
+     info is still on the ⋮. The Bike commands sheet's copy keeps its arrow. */
   #scrRnm .vcard{
     position: absolute;
     left: var(--s6);

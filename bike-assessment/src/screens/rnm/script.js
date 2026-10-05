@@ -199,9 +199,56 @@ let rnmShowCommands = () => {};
     /* Index 2, not 1 — Bike Info took the middle seat, so Bike essentials is the
      third tab now. rnTabs below is in VISUAL order and this reads off it. */
   rnScreenEl.classList.toggle('is-tab-bike', i === 2);
+    /* THE TABS DRIVE THE HERO. Tasks done shows the part exchange card on its
+       own, Essentials shows the bike. It used to be a two-dot carousel you
+       turned yourself; the tab bar is the one toggle now. */
+    setRnCar(i === 0 ? 1 : 0);
     moveRnTabInk();
   }
-  rnTabs.forEach((t, i) => t.btn.addEventListener('click', () => { tap(); setRnTab(i); }));
+  /* THE PANELS SLIDE WITH THE HERO. A tab press moves the content under the hero
+     the same way, same 320ms and same easing as the hero's track, so the card,
+     the bike and everything beneath them read as one surface turning a page.
+     Only on a press: entering the screen or the flow resetting the tab lands
+     without motion.
+
+     The destination is guaranteed by a timer, not by transitionend. Headless
+     Chrome does not tick transitions under virtual time, and a panel left
+     mid-slide would read as the wrong panel. When the timer fires the styles are
+     cleared and `hidden` decides, whatever the transition did. */
+  let rnSlideTimer = 0, rnSliding = [];
+  function rnSlideEnd(){
+    clearTimeout(rnSlideTimer);
+    rnSliding.forEach(p => {
+      p.style.transition = '';
+      p.style.transform = '';
+      p.classList.remove('is-leaving');
+    });
+    rnSliding = [];
+  }
+  function slideRnPanels(from, to){
+    rnSlideEnd();
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const dir = to > from ? 1 : -1;      /* rnTabs is in visual order */
+    const out = rnTabs[from].panel, inn = rnTabs[to].panel;
+    /* setRnTab has already hidden it, and it stays hidden as far as the page
+       state goes; .is-leaving only keeps it drawn while it slides away. */
+    out.classList.add('is-leaving');
+    [out, inn].forEach(p => { p.style.transition = 'none'; });
+    out.style.transform = 'translateX(0)';
+    inn.style.transform = 'translateX(' + (dir * 100) + '%)';
+    void inn.offsetWidth;                /* commit the start before transitioning */
+    [out, inn].forEach(p => { p.style.transition = 'transform 320ms var(--ease-out)'; });
+    out.style.transform = 'translateX(' + (-dir * 100) + '%)';
+    inn.style.transform = 'translateX(0)';
+    rnSliding = [out, inn];
+    rnSlideTimer = setTimeout(rnSlideEnd, 340);
+  }
+  rnTabs.forEach((t, i) => t.btn.addEventListener('click', () => {
+    tap();
+    const from = rnTabs.findIndex(x => x.btn.classList.contains('is-on'));
+    setRnTab(i);
+    if (from !== -1 && from !== i) slideRnPanels(from, i);
+  }));
 
   /* Bike info used to open the vitals overlay from here, which meant a tab that
      covered the bar it belongs to and then never highlighted — a destination
@@ -215,80 +262,15 @@ let rnmShowCommands = () => {};
      sheet, so asking for them selects that tab. */
   rnmShowCommands = () => setRnTab(2);
 
-  /* ---- Hero carousel ----------------------------------------------------- */
-  /* Two slides, dots only — no swipe. The band sits under the app bar and over
-     the panels; a horizontal drag here would fight the vertical scroll of
-     whatever is below it, and the dots are a 44px-tall target either way. */
-  const rnCarDots = [...document.querySelectorAll('#rnCarDots i')];
-  let rnCarAt = 0;
-  /* One slide in the assessment flow, so there is nowhere to go — see hero.css.
-     Guarded here as well as hidden there, because CSS can take the second slide
-     off screen but cannot stop a drag from sliding the track onto where it was. */
+  /* ---- Hero ---------------------------------------------------------------- */
+  /* Two slides — the bike, and the part exchange card — chosen by the tab (see
+     setRnTab), not by dots or a swipe. */
+  /* One slide in the assessment flow, so there is nowhere to go — see hero.css. */
   const rnCarLive = () => !rnScreenEl.classList.contains('is-assessment');
   function setRnCar(i){
     if (!rnCarLive()) i = 0;
-    rnCarAt = i;
     rnScreenEl.classList.toggle('is-car2', i === 1);
-    rnCarDots.forEach((d, n) => d.classList.toggle('is-on', n === i));
   }
-  document.getElementById('rnCarDots')
-    .addEventListener('click', e => {
-      const i = rnCarDots.indexOf(e.target);
-      if (i !== -1) { tap(); setRnCar(i); }
-    });
-  /* Swipe. Dots alone were not enough — the band looks like something you drag,
-     so it has to be. The track follows the finger and snaps on release.
-     Guarded the same way the sheet's drag was: nothing moves until the finger has
-     travelled DRAG_MIN and is going more sideways than up, so a tap on the card's
-     CTA still lands. */
-  (() => {
-    const car   = document.getElementById('rnCar');
-    const track = document.getElementById('rnCarTrack');
-    const DRAG_MIN = 8;    /* travel before the track moves at all */
-    const SNAP_MIN = 40;   /* travel that counts as a page turn on release */
-    let d = null;
-
-    /* A drag may start anywhere, the card included — the click-swallow on release
-       is what tells a swipe from a tap, so the card does not need excluding. */
-    car.addEventListener('pointerdown', e => {
-      if (!rnCarLive()) return;
-      d = {x0: e.clientX, y0: e.clientY, dx: 0, moved: false};
-    });
-    car.addEventListener('pointermove', e => {
-      if (!d) return;
-      const dx = e.clientX - d.x0, dy = e.clientY - d.y0;
-      if (!d.moved){
-        if (Math.abs(dx) < DRAG_MIN || Math.abs(dx) <= Math.abs(dy)) return;
-        d.moved = true;
-        car.setPointerCapture(e.pointerId);
-        track.style.transition = 'none';
-      }
-      d.dx = dx;
-      track.style.transform = 'translateX(calc(' + (rnCarAt * -50) + '% + ' + dx + 'px))';
-    });
-    const end = () => {
-      if (!d) return;
-      const {dx, moved} = d;
-      d = null;
-      track.style.transition = '';
-      track.style.transform = '';
-      if (!moved) return;
-      if (dx <= -SNAP_MIN && rnCarAt === 0) setRnCar(1);
-      else if (dx >= SNAP_MIN && rnCarAt === 1) setRnCar(0);
-      /* Swallow the click the browser fires after a drag, or the tap-to-turn
-         below would immediately undo the swipe. */
-      car.addEventListener('click', ev => ev.stopPropagation(), {capture: true, once: true});
-    };
-    car.addEventListener('pointerup', end);
-    car.addEventListener('pointercancel', end);
-
-    /* Tapping the bike turns to the summary and back, so the carousel is also
-       reachable without hitting a 6px dot with a gloved thumb. */
-    track.addEventListener('click', e => {
-      if (e.target.closest('.pxcard')) return;   /* the card has its own controls */
-      setRnCar(rnCarAt === 1 ? 0 : 1);
-    });
-  })();
   document.getElementById('btnPxOpen')
     .addEventListener('click', () => { tap(); rnmShowParts(); });
 
@@ -769,11 +751,6 @@ let rnmShowCommands = () => {};
   /* ---- App bar and cards ------------------------------------------------ */
   document.getElementById('btnBack').addEventListener('click', () => { tap(); window.YuzenRnM.onBack(); });
   document.getElementById('btnMore').addEventListener('click', () => { tap(); window.YuzenRnM.onMore(); });
-  document.getElementById('btnViewAll').addEventListener('click', () => {
-    tap();
-    setVitalsScreen(true);
-    window.YuzenRnM.onViewAll();
-  });
   /* ---- Repair progress -------------------------------------------------- */
   /* One bar for both cards, because the task is not done until both are: every
      check and every issue is one unit, so 15 units here and the bar is how many
@@ -1142,6 +1119,9 @@ let rnmShowCommands = () => {};
 
   function paintRepair() {
     rnScreen.classList.toggle('is-assessment', rnmKind === 'assessment');
+    /* The hero follows the tab, but which slides exist depends on the flow just
+       set — so pick again, or a repair's card would carry into an assessment. */
+    setRnCar(rnTabs[0].btn.classList.contains('is-on') ? 1 : 0);
     if (rnmKind === 'assessment'){ paintAssessment(); return; }
     /* The tab is deliberately not reset on entry — a mechanic coming back should
        land where they left off. But Bike info is the assessment's tab and is
@@ -1503,7 +1483,6 @@ let rnmShowCommands = () => {};
      The commands underneath are a tool, and a tool can wait behind a menu row;
      see the ⋮'s Bike commands, which sends this back down to reveal them. */
   setRnTab(0);
-  setRnCar(0);
 
   /* The one export: called by the router when this screen is shown. */
   /* ---- Live repair timer ------------------------------------------------- */

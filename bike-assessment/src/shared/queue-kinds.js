@@ -510,7 +510,16 @@ const QUEUE_KINDS = {
     /* No pack reading. Every bike on this list is one the Sr. Mechanic pulled
        out of the yard, and the number in the title identifies it. */
     battery: false,
-    head: b => `${b.model} &bull; ${b.id}`,
+    /* NUMBER FIRST, then the model — the same order the bike-in-hand pill at
+       the foot of the list uses, and the number is what a mechanic matches
+       against the plate in front of them. */
+    head: b => `${b.id} &bull; ${b.model}`,
+    /* No average wait. The mechanic works down their own list; a mean across
+       it is a number about the yard, not about the next bike. */
+    noAvg: true,
+    /* The bike in hand floats as a pill above the list rather than a band
+       across its floor — see .mini-float in shared/minitask.css. */
+    miniFloat: true,
     /* The same three states the Sr. Mechanic watches, said the same way — one
        builder, so the two profiles cannot describe one bike differently. */
     sub:  b => allocStateHTML(b)

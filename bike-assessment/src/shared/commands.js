@@ -1,10 +1,9 @@
 /* ═══════════════════════════════════════════════════════════════════════════
    BIKE COMMANDS — the persistent sheet
    Opened from the ⋮ on any screen whose SHEET_FOR list carries `commands`. It
-   stays where it is put: it is chrome, not a screen, so goTo() never touches it
-   and the mechanic can navigate the whole app with it still open, working in the
-   part of the frame above it. Sliding the grabber down is the only way to send
-   it away — there is no scrim to tap, by design.
+   stays where it is put: it is chrome, not a screen, so goTo() never touches it.
+   A 30% scrim dims the screen behind it; tapping the scrim or sliding the
+   grabber down sends it away.
 
    NOT shared state with the RnM dashboard's identical-looking controls. The two
    sets of tiles show what each was last told to do, and nothing here reads the
@@ -17,8 +16,11 @@
 const cmdSheet = document.getElementById("cmdSheet");
 const cmdBikeEl = document.getElementById("cmdBike");
 
+const cmdScrim = document.getElementById("cmdScrim");
+
 function setCommandsSheet(open){
   cmdSheet.classList.toggle("is-open", open);
+  cmdScrim.classList.toggle("is-open", open);
   cmdSheet.setAttribute("aria-hidden", String(!open));
   /* Named on open, because the sheet outlives the screen it was opened from and
      "which bike am I sending this to" stops being obvious the moment you
@@ -77,8 +79,11 @@ csBeep.addEventListener("click", () => {
 document.getElementById("csViewAll").addEventListener("click",
   () => toast("All bike commands — not wired yet"));
 
+/* Tapping the dimmed screen behind the sheet closes it. */
+cmdScrim.addEventListener("click", () => setCommandsSheet(false));
+
 /* ── Drag the grabber down to dismiss ────────────────────────────────────────
-   The same gesture the options sheet uses, and the only way out of this one.
+   The same gesture the options sheet uses.
    Downward only: dragging up would suggest the sheet expands, and it does not. */
 (() => {
   const zone = document.getElementById("cmdGrab");

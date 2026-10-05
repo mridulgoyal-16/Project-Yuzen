@@ -445,6 +445,8 @@ function renderQueue(){
   const hasAvg = !def.noAvg && !(tabSec && tabSec.noAvg);
   document.getElementById("qAvgBar").hidden = !hasAvg;
   qScreenEl.classList.toggle("has-avg", hasAvg);
+  /* The bike-in-hand band as a floating pill instead — see miniFloat. */
+  qScreenEl.classList.toggle("mini-float", !!def.miniFloat);
   /* Shorter rows, for a listing read inside an accordion — see `tight`. */
   qScreenEl.classList.toggle("q-tight", !!def.tight);
   /* And the scan button — see noFab. Hidden rather than disabled: a control you

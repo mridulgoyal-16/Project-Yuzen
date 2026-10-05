@@ -1328,7 +1328,6 @@ try {
      the one that is still up. Asserting from wherever the suite happens to arrive
      made three assertions read the hidden panel and report zeros. */
   document.getElementById('rnTabTasks').click();
-  document.querySelectorAll('#rnCarDots i')[0].click();
   await new Promise(r=>setTimeout(r,400));
 
   /* Measured off the frame's floor, which is what the CSS actually pins them to —
@@ -1375,13 +1374,13 @@ try {
        return h.x===26 && r.y > h.y + h.h;})(),
      JSON.stringify(at('#rnTasksHead')));
   ok('three 60px rows on a 76px pitch, the first on the 24px inset',
-     (()=>{const y=['#rowChecks','#rowMech','#rowElec'].map(q=>at(q));
+     (()=>{const y=['#rowChecks','#rowElec','#rowMech'].map(q=>at(q));
        /* The row is full-bleed and carries its own 24px padding, so its box
           starts at 0 — the tile inside it is what sits on the inset, asserted
           in the next check. */
        return y.every(k=>k.h===60) && y[0].x===0
          && y[1].y-y[0].y===76 && y[2].y-y[1].y===76;})(),
-     ['#rowChecks','#rowMech','#rowElec'].map(q=>at(q).y).join(' / '));
+     ['#rowChecks','#rowElec','#rowMech'].map(q=>at(q).y).join(' / '));
   /* ── The assessment's shape of this panel ──────────────────────────────────
      Four rows instead of three, the last of them Penalty, then the CTA, then 24
      to the bar. The rows keep the repair's 76px pitch — the same component — so
@@ -1482,17 +1481,15 @@ try {
      && at('#rowChecks .trow__go').w===24,
      at('#rowChecks .trow__art').w+' / '+Math.round(S().right - R('#rowChecks .trow__go').right));
 
-  // ── the carousel — 2621:29546. Slide two is the part-exchange summary.
-  document.querySelectorAll('#rnCarDots i')[1].click();
-  await new Promise(r=>setTimeout(r,400));
-  ok('the summary card is 342x172 on the frame\u2019s inset',
+  // ── the hero on Tasks done — 2621:29546. The part-exchange summary.
+  ok('the summary card is 280x145, centred where the bike sits',
      (()=>{const c=at('#scrRnm .pxcard');
-       return c.x===24 && c.w===W()-48 && c.h===172;})(),
+       return c.w===280 && c.h===145 && Math.abs((c.x + c.w/2) - W()/2) <= 1
+         && c.y===211;})(),
      JSON.stringify(at('#scrRnm .pxcard')));
   /* The whole card is the control, so the assertion is its internal rhythm:
-     24 header, 24, hairline, 24, 52 barcode, 24 = 172. The two counts that used
-     to close it out are gone, and the 8 + 20 they held went with them — so the
-     barcode is now the last block and 24 sits under it. */
+     20 header, 20, hairline, 20, 40 barcode, 20 = 145 — the 24 / 52 rhythm
+     scaled down with the card. */
   ok('header, rule and barcode keep the frame\u2019s rhythm inside it',
      (()=>{const c=at('#scrRnm .pxcard'), h=at('#scrRnm .pxcard__head'),
              r=at('#scrRnm .pxcard__rule'), b=at('#scrRnm .pxcard__code');
@@ -1500,21 +1497,19 @@ try {
           hairline is 1px tall and the barcode window lands on a half pixel, so
           exact equality here fails on rounding rather than on layout. */
        const near = (a, b) => Math.abs(a - b) <= 1;
-       return near(h.y - c.y, 24) && h.h === 24
-         && near(r.y - (h.y + h.h), 24)
-         && near(b.y - (r.y + r.h), 24) && near(b.h, 52)
-         && near((c.y + c.h) - (b.y + b.h), 24)
+       return near(h.y - c.y, 20) && h.h === 24
+         && near(r.y - (h.y + h.h), 20)
+         && near(b.y - (r.y + r.h), 20) && near(b.h, 40)
+         && near((c.y + c.h) - (b.y + b.h), 20)
          && !document.querySelector('#scrRnm .pxcard__counts');})(),
      [at('#scrRnm .pxcard__head').y, at('#scrRnm .pxcard__rule').y,
       at('#scrRnm .pxcard__code').y].join(' / '));
   ok('the title leads and a 24px chevron takes the far edge',
      (()=>{const c=at('#scrRnm .pxcard'), t=at('#scrRnm .pxcard__title'),
              g=at('#scrRnm .pxcard__go');
-       return t.x - c.x === 24 && g.w === 24
-         && (c.x + c.w) - (g.x + g.w) === 24;})(),
+       return t.x - c.x === 20 && g.w === 24
+         && (c.x + c.w) - (g.x + g.w) === 20;})(),
      JSON.stringify(at('#scrRnm .pxcard__go')));
-  document.querySelectorAll('#rnCarDots i')[0].click();
-  await new Promise(r=>setTimeout(r,400));
 
   // ── Bike essentials panel — 2621:29241.
   document.getElementById('rnTabBike').click();

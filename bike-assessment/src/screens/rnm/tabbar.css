@@ -6,10 +6,8 @@
   /* The bike is what you glance at while working; the part-exchange summary is
      what you check before closing. One is continuous and one is a moment, so
      they take turns in the same 476px rather than each claiming a band. */
-  /* pan-y: vertical gestures still belong to the page, horizontal ones are ours.
-     Without it a touch drag is claimed by the browser as a scroll and pointermove
-     never arrives. */
-  #scrRnm .rncar{ position: absolute; inset: 0; overflow: hidden; touch-action: pan-y; }
+  /* The tab picks the slide (setRnTab) — Tasks done the card, Essentials the bike. */
+  #scrRnm .rncar{ position: absolute; inset: 0; overflow: hidden; }
   #scrRnm .rncar__track{
     display: flex;
     width: 200%;
@@ -17,29 +15,11 @@
     transition: transform 320ms var(--ease-out);
   }
   #scrRnm .rncar__slide{ position: relative; width: 50%; height: 100%; }
-  #scrRnm.is-car2 .rncar__track{ transform: translateX(-50%); }
-
-  /* x182 y390, 26x6 — the active pill is wider rather than darker, so the two
-     read apart at a glance and on a screen being looked at through a visor. */
-  #scrRnm .rncar__dots{
-    position: absolute;
-    left: 50%;
-    top: 390px;
-    transform: translateX(-50%);
-    display: flex;
-    align-items: center;
-    gap: var(--s1);
-    z-index: 2;
-  }
-  #scrRnm .rncar__dots i{
-    display: block;
-    width: 6px;
-    height: 6px;
-    border-radius: 3px;
-    background: var(--content-disabled);
-    transition: width 200ms var(--ease-out), background-color 200ms var(--ease-out);
-  }
-  #scrRnm .rncar__dots i.is-on{ width: 16px; background: var(--content-primary); }
+  /* The card comes first and the bike after it, in the same order as the tabs
+     under them, so going from Tasks done to Essentials brings the bike in from
+     the right. At rest the track shows the bike; is-car2 slides back to the card. */
+  #scrRnm .rncar__track{ transform: translateX(-50%); }
+  #scrRnm.is-car2 .rncar__track{ transform: none; }
 
   /* ---- Part exchange summary — Figma 2660:29639 -------------------------- */
   /* 342x200 at x24 y150. The whole card is the control now — a header naming it
@@ -52,16 +32,20 @@
      remains measures 24 header, 24, hairline, 24, 52 barcode, 24 = 172. They
      said what the screen behind the card says better, and said it in tertiary
      grey on a card whose whole job is to be pressed. */
+  /* SMALLER, AND SITTING WHERE THE BIKE SITS. 280x145, centred on the bike's
+     own centre on Essentials (x195, y283), so switching tabs swaps one thing
+     for another in the same place rather than moving the eye. Scaled down from
+     342x172 as a whole: 20 header, 20, hairline, 20, 40 barcode, 20 = 145. */
   #scrRnm .pxcard{
     position: absolute;
-    left: var(--s6);
-    right: var(--s6);
-    top: 150px;
-    height: 172px;
+    left: calc(50% - 140px);
+    width: 280px;
+    top: 211px;
+    height: 145px;
     box-sizing: border-box;
-    /* 23, not 24: border-box puts the 1px border inside the declared box, so
-       padding starts after it and 24 measured 25 from the card's own edge. */
-    padding: calc(var(--s6) - 1px);
+    /* 19, not 20: border-box puts the 1px border inside the declared box, so
+       padding starts after it and 20 measured 21 from the card's own edge. */
+    padding: 19px;
     display: flex;
     flex-direction: column;
     text-align: left;
@@ -81,17 +65,17 @@
     justify-content: space-between;
     height: 24px;
   }
+  #scrRnm .pxcard__go{ display: block; width: 24px; height: 24px; }
   #scrRnm .pxcard__title{
     font-weight: 700;
     font-size: 16px;
     line-height: 20px;
     color: var(--content-primary);
   }
-  #scrRnm .pxcard__go{ display: block; width: 24px; height: 24px; }
 
   #scrRnm .pxcard__rule{
     height: 1px;
-    margin-top: var(--s6);
+    margin-top: 20px;
     background: var(--border-primary);
   }
 
@@ -105,8 +89,8 @@
   #scrRnm .pxcard__code{
     display: block;
     position: relative;
-    margin-top: var(--s6);
-    height: 52px;
+    margin-top: 20px;
+    height: 40px;
     overflow: hidden;
   }
   #scrRnm .pxcard__code img{
@@ -122,9 +106,8 @@
 
   /* ---- Tab panels -------------------------------------------------------- */
   /* Each panel is the whole screen; its contents keep the absolute positions the
-     frames draw them at. `hidden` is enough to swap them — there is no transition
-     between tabs, because a tab bar says "you are in one of two places", and
-     sliding between them would say they are one scrolling surface. */
+     frames draw them at. `hidden` decides which is up. A tab press slides the
+     two past each other in step with the hero; see slideRnPanels in script.js. */
   /* The panel is the whole screen so its contents can keep the absolute positions
      the frames draw them at — which means it lies over the carousel band too, and
      at z-index 1 it swallowed every pointer the hero should have got. It cannot
@@ -140,6 +123,10 @@
      device. Stacking from the floor up instead puts the content a fixed distance
      above the bar on any height and leaves the slack at the top, where the hero
      already is. 124 = the 88 bar plus the 36 of air. */
+  /* The outgoing panel during a tab slide: hidden in state, still drawn. */
+  /* !important to beat the global [hidden]{display:none !important} in
+     screens/tokens/style.css. */
+  #scrRnm .rntabpanel.is-leaving[hidden]{ display: flex !important; }
   #scrRnm .rntabpanel{
     position: absolute;
     inset: 0;

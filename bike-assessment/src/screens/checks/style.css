@@ -14,7 +14,7 @@
 /* The screen root. His .phone carried the canvas colour and the frame; the frame
    belongs to the shell now, but the canvas does not — without it the shell's grey
    showed through behind the list. */
-#scrChecks{--tabs-h:56px;background:var(--canvas-primary)}
+#scrChecks{--tabs-h:0px;background:var(--canvas-primary)}
 
 /* Barun's four part photographs, carried over from his :root and renamed.
    --img-tyre COLLIDES with the flow's own tyre photo: cutting his token block
@@ -48,35 +48,7 @@
   z-index:20;
 }/* Everything under the bar is positioned off --chrome-h, so collapsing the bar is
    one variable change and the progress bar, the tabs and the list all follow. They
-   transition `top`, which does animate when the custom property it reads changes. */#scrChecks{--chrome-h:var(--header-h)}#scrChecks.ck-is-scrolled{--chrome-h:calc(var(--status-h) + 1px)}#scrChecks.ck-is-scrolled .appbar{height:calc(var(--status-h) + 1px)}/* ── Tabs ─────────────────────────────────────────────────────────────────── *//* One strip per checklist. It never scrolls away: the app bar can go, but losing
-   the tabs would leave the mechanic with no way to tell which list they are in or
-   to reach the other one. */#scrChecks .ck-tabs-wrap{
-  position:absolute;left:0;right:0;
-  top:calc(var(--chrome-h) + var(--progress-h));
-  height:var(--tabs-h);
-  background:var(--surface-inverse);
-  border-bottom:1px solid var(--border-primary);
-  transition:top 260ms var(--ease-out);
-  z-index:16;
-}/* Type and metrics copied from the flow's tabs (#scrIssues .iq-tab) rather than
-   invented here: 16/500/24, secondary until selected and primary when, with the
-   weight held at 500 both ways. Selection is carried by colour and the underline —
-   bolding the active label as well made this strip read heavier than every other
-   tab strip in the product. First tab is inset 24px from the frame edge. */#scrChecks .ck-tabs{position:relative;display:flex;align-items:stretch;height:100%}#scrChecks .ck-tab{
-  position:relative;flex:0 0 auto;
-  display:inline-flex;align-items:center;gap:var(--s2);
-  height:55px;padding:16px;border:0;background:none;cursor:pointer;
-  font-family:inherit;font-size:16px;font-weight:500;line-height:24px;
-  color:var(--content-secondary);white-space:nowrap;
-  transition:color .18s ease;
-}#scrChecks .ck-tab:first-of-type{padding-left:var(--s6)}#scrChecks .ck-tab.ck-is-active{color:var(--content-primary)}#scrChecks .ck-tab__n{color:var(--content-secondary)}/* One underline that slides, rather than a border per tab — a border would jump
-   between tabs, and the slide is what tells you the lists are side by side. */#scrChecks .ck-tabs__underline{
-  position:absolute;left:0;bottom:0;height:2px;width:0;
-  border-radius:1px;background:var(--content-primary);
-  transition:transform 220ms cubic-bezier(.4,0,.2,1),
-             width     220ms cubic-bezier(.4,0,.2,1);
-  pointer-events:none;
-}#scrChecks .appbar__row{
+   transition `top`, which does animate when the custom property it reads changes. */#scrChecks{--chrome-h:var(--header-h)}#scrChecks.ck-is-scrolled{--chrome-h:calc(var(--status-h) + 1px)}#scrChecks.ck-is-scrolled .appbar{height:calc(var(--status-h) + 1px)}#scrChecks .appbar__row{
   height:72px;display:flex;align-items:center;width:100%;
   padding:var(--s2) var(--s6) var(--s2) 4px;
   background:#fff;
@@ -158,14 +130,18 @@
    off the spacer scale — there is no 12px token here, so the padding is 8 and 16
    rather than a hand-typed in-between. */#scrChecks .ck-btn-skip{
   flex:0 0 auto;
-  margin:calc(var(--s2) * -1) calc(var(--s4) * -1) 0 0;
-  padding:var(--s2) var(--s4);
+  /* An icon now, not the word: a 40px round target with the 24px glyph at its
+     centre, pulled up and out by 8 so the glyph lines up with the card's text. */
+  display:flex;align-items:center;justify-content:center;
+  margin:calc(var(--s2) * -1) calc(var(--s2) * -1) 0 0;
+  padding:var(--s2);
   border:0;background:none;border-radius:100px;
-  font-family:inherit;font-size:16px;font-weight:500;line-height:20px;
-  color:var(--content-secondary);
+  /* The same grey as the skipped row's plus, so the button and the mark it
+     leaves behind read as one thing. */
+  color:var(--content-disabled);
   cursor:pointer;-webkit-tap-highlight-color:transparent;
   transition:background-color .15s ease;
-}#scrChecks .ck-btn-skip:active{background:var(--surface-secondary)}/* Figma: a 353x198 photo at x=-21, y=0 inside a 310x220 box.
+}#scrChecks .ck-btn-skip:active{background:var(--surface-secondary)}#scrChecks .ck-btn-skip svg{display:block;width:24px;height:24px}/* Figma: a 353x198 photo at x=-21, y=0 inside a 310x220 box.
    As a background layer that is size 113.871% x 90%, positioned so the left
    edge lands at -21px:  -21 / (310 - 353) = 48.837%.
    Ratios rather than pixels, so the crop is identical at 390pt and still
@@ -178,7 +154,7 @@
   border-radius:var(--s2);overflow:hidden;
   display:flex;align-items:center;justify-content:center;
   color:var(--content-tertiary);
-}#scrChecks .ck-card__actions{display:flex;align-items:center;gap:var(--s6);width:100%}#scrChecks .ck-btn-faulty{
+}#scrChecks .ck-card__actions{display:flex;align-items:center;gap:var(--s6);width:100%}#scrChecks .ck-card__rule{flex:0 0 1px;align-self:stretch;background:var(--border-primary)}#scrChecks .ck-btn-faulty{
   flex:1 0 0;min-width:0;
   display:flex;align-items:center;justify-content:center;
   padding:12px var(--s2);border-radius:100px;border:0;background:none;cursor:pointer;
@@ -194,9 +170,12 @@
    which would otherwise park a lone button on the left. *//* Symmetric 24px, so the full-width button lands on the frame's margins. The
    inherited 16px left was for the text-button-left / primary-right pair. */#scrChecks .ck-footer .ck-footer__content--end{justify-content:stretch;padding:0 var(--s6)}/* ── App bar titles + fading suffix ───────────────────────────────────────── *//* Carried over from bike-assessment so the two checklists behave identically:
    the bike number never leaves, and the screen name fades in only once the big
-   heading has scrolled up past the bar — so the title is never shown twice. */#scrChecks .appbar__lhs{display:flex;align-items:center;flex:1 1 auto;min-width:0}#scrChecks .appbar__titles{flex:1 1 auto;min-width:0;display:flex;align-items:center}#scrChecks .appbar__titles p{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}/* Always on now. It used to fade in only once the in-list heading had scrolled
-   past — there is no in-list heading to duplicate any more, and the open tab is
-   worth naming in the bar for the same reason the tabs themselves never leave. */#scrChecks .appbar__suffix{display:inline-block;color:var(--content-tertiary)}#scrChecks .appbar__more{flex:0 0 auto;margin-right:-12px}#scrChecks .appbar__row{justify-content:space-between}/* ── Options sheet (three dots) ───────────────────────────────────────────── */#scrChecks .ck-scrim{
+   heading has scrolled up past the bar — so the title is never shown twice. */#scrChecks .appbar__lhs{display:flex;align-items:center;flex:1 1 auto;min-width:0}#scrChecks .appbar__titles{flex:1 1 auto;min-width:0;display:flex;align-items:center}#scrChecks .appbar__titles p{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}#scrChecks .ck-actions{flex:0 0 auto;display:flex;align-items:center;margin-right:-12px}
+/* The checklist's name and count, at the top of the list — it scrolls away with
+   the rows. 20/700 like the flow's page titles, the count in secondary. */
+#scrChecks .ck-heading{margin:0;padding:var(--s6) var(--s6) var(--s2);
+  font-size:20px;font-weight:700;line-height:28px;color:var(--content-primary)}
+#scrChecks .ck-heading__n{font-weight:500;color:var(--content-secondary)}#scrChecks .appbar__row{justify-content:space-between}/* ── Options sheet (three dots) ───────────────────────────────────────────── */#scrChecks .ck-scrim{
   position:absolute;inset:0;background:rgba(0,0,0,.4);
   opacity:0;pointer-events:none;transition:opacity .26s ease;z-index:30;
 }#scrChecks .ck-scrim.ck-is-open{opacity:1;pointer-events:auto}#scrChecks .sheet-opt{

@@ -135,12 +135,12 @@
      assessment, and with it gone there is one slide left — so the dots go too.
      A one-page carousel is a control that cannot do anything.
 
-     Hidden rather than removed, because the repair flow still has both. The
-     swipe is disarmed in script.js to match: CSS can take the second slide off
-     screen but not stop a drag from sliding the track onto where it was.
+     Hidden rather than removed, because the repair flow still has both.
+     setRnCar in script.js forces the first slide to match.
      ─────────────────────────────────────────────────────────────────────────── */
-  #scrRnm.is-assessment .rncar__slide:nth-child(2){ display: none; }
-  #scrRnm.is-assessment #rnCarDots{ display: none; }
+  #scrRnm.is-assessment .rncar__slide--px{ display: none; }
+  /* With the card gone the bike is the only slide, so it sits at 0. */
+  #scrRnm.is-assessment .rncar__track{ transform: none; }
 
   /* ── The bike belongs to Bike essentials ───────────────────────────────────
      Sagar's call, and the assessment's only. The render is what you look at

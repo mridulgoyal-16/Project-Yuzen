@@ -1148,12 +1148,10 @@ ok('the repair still opens on the two reports it was sent for',
    the swipe is disarmed rather than merely hidden. */
 ok('no part-exchange card and no carousel on the assessment',
    (()=>{const px = document.getElementById('btnPxOpen');
-     const dots = document.getElementById('rnCarDots');
      const hidden = el => el.offsetParent === null;
-     /* setRnCar is inside the RnM screen's IIFE, so the swipe guard is exercised
-        the way a finger would: the dot for slide 2 is the only handle, and it is
-        gone. Which is the assertion. */
-     return hidden(px) && hidden(dots)
+     /* No dots anywhere now — the tabs pick the slide, and setRnCar forces the
+        bike here whatever tab is up. */
+     return hidden(px) && !document.getElementById('rnCarDots')
        && !document.getElementById('scrRnm').classList.contains('is-car2');})(),
    document.getElementById('scrRnm').className);
 /* The third section is a real tab now: it selects a panel under the bar and takes
@@ -1515,8 +1513,8 @@ ok('no Filters / Sort bar anywhere in the app now',
 ok('but the scan FAB is', !!document.getElementById('qScanFab'), 'FAB missing');
 
 const rpRows = () => [...document.querySelectorAll('#qList .qrow')];
-ok('rows read model and number, like the yard\u2019s own boards',
-   rpRows().every(r=>/^(Miracle|Dex GR|Dex NV) . \d{7}$/.test(r.querySelector('.id').textContent.trim())),
+ok('rows read number then model, like the bike-in-hand pill',
+   rpRows().every(r=>/^\d{7} . (Miracle|Dex GR|Dex NV)$/.test(r.querySelector('.id').textContent.trim())),
    rpRows()[0].querySelector('.id').textContent.trim());
 /* No pack reading: every bike here came out of the yard and the number in the
    title identifies it. */
@@ -1595,7 +1593,7 @@ ok('the title reads Repairable bike, hero and header otherwise unchanged',
    compare the pair rather than the string. */
 ok('the bike picked follows through to the subtitle',
    (()=>{const sub=document.querySelector('.jb__title .s').textContent.replace(/\s+/g,' ').trim();
-     const [model, id] = rpPicked.split(' • ');
+     const [id, model] = rpPicked.split(' • ');
      return sub === `${model} • ${id}`;})(),
    document.querySelector('.jb__title .s').textContent.replace(/\s+/g,' ').trim()+' from '+rpPicked);
 ok('the stepper is the four repair steps',
@@ -1927,27 +1925,20 @@ ok('and the strip before it is gone too, panels and all',
 ok('and the ⋮ no longer offers a version switch',
    !document.querySelector('#optList [data-opt="variant"]')
    && typeof SHEET_ITEMS.variant === 'undefined', 'clean');
-/* The hero is a carousel: the bike, and a part-exchange summary whose counts come
-   from the same table the overlay lists. */
-ok('the hero carousel rests on the bike slide',
-   !_rnm.classList.contains('is-car2')
-   && document.querySelector('#rnCarDots i').classList.contains('is-on'),
-   _rnm.className);
-document.querySelectorAll('#rnCarDots i')[1].click();
-await new Promise(r=>setTimeout(r,420));
-/* The card carries no counts any more — they said what the screen behind it says
-   better. So the assertion is that the slide turned and the card is still the
-   pressable thing that opens Part exchange. */
-ok('and the second dot turns to the part-exchange summary',
+/* The tabs drive the hero: Tasks done shows the part-exchange card on its own,
+   Essentials shows the bike. No dots, no swipe. The card is still the pressable
+   thing that opens Part exchange, with no chevron and no counts. */
+ok('Tasks done shows the part-exchange card, with no dots',
    _rnm.classList.contains('is-car2')
    && !!document.getElementById('btnPxOpen')
+   && !document.getElementById('rnCarDots')
    && !document.querySelector('#scrRnm .pxcard__counts'),
    _rnm.className);
-document.querySelectorAll('#rnCarDots i')[0].click();
-await new Promise(r=>setTimeout(r,420));
 /* Switching tabs swaps the panel and moves the marker. */
 document.getElementById('rnTabBike').click();
 await new Promise(r=>setTimeout(r,420));
+ok('and Essentials shows the bike',
+   !_rnm.classList.contains('is-car2'), _rnm.className);
 ok('the Bike essentials tab swaps the panel and takes the marker',
    document.getElementById('rnPanelBike').hidden === false
    && document.getElementById('rnPanelTasks').hidden === true

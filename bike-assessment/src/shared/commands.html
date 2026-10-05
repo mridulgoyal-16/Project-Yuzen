@@ -1,15 +1,17 @@
   <!-- ══════════════════════════════════════════════════════════════════════
        BIKE COMMANDS — persistent bottom sheet
-       Opened from the ⋮ on any screen that offers it. Unlike the options sheet
-       it is NOT modal: it carries no scrim, it does not trap the pointer, and it
-       lives out here in shell chrome rather than inside a screen — so the
-       mechanic keeps working above it and it survives goTo() untouched.
+       Opened from the ⋮ on any screen that offers it, and from the checklist's
+       Bike commands icon. It dims the screen behind it with a 30% black scrim;
+       tapping the scrim closes it, as does dragging the grabber down. It lives
+       out here in shell chrome rather than inside a screen, so it survives
+       goTo() untouched.
 
        Its controls are a second instance of the RnM dashboard's, not the same
        nodes: ids have to be unique in one document, so these carry a cs- prefix
        and shared/commands.js drives them. The two are deliberately independent —
        see the note at the top of that file.
        ══════════════════════════════════════════════════════════════════════ -->
+    <div class="cmdscrim" id="cmdScrim" aria-hidden="true"></div>
     <section class="cmdsheet" id="cmdSheet" aria-label="Bike commands" aria-hidden="true">
       <div class="cmdsheet__grabzone" id="cmdGrab"><div class="sheet__grab"></div></div>
       <div class="cmdsheet__head">

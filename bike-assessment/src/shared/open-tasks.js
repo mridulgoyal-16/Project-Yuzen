@@ -1,8 +1,8 @@
 /* ═══════════════════════════════════════════════════════════════════════════
    OPEN TASKS — the repair's three pieces of work, and what comes next
 
-   The RnM dashboard lists three rows: the checklist, mechanical issues,
-   electrical issues. Each has its own screen, and each screen used to end in a
+   The RnM dashboard lists three rows: the checklist, electrical issues,
+   mechanical issues. Each has its own screen, and each screen used to end in a
    Done that returned to the dashboard — so finishing one meant going back to a
    list, reading it, and picking the next thing. Three times.
 
@@ -21,12 +21,12 @@ const OPEN_TASKS = [
   {id:"checks", label:"Checklist",
    tally: () => checksTally(),
    open:  () => goTo("checks")},
-  {id:"mech",   label:"Mechanical issues",
-   tally: () => issuesTallyBy("Mechanical"),
-   open:  () => { goTo("issues"); issuesShowSection("Mechanical"); }},
   {id:"elec",   label:"Electrical issues",
    tally: () => issuesTallyBy("Electrical"),
    open:  () => { goTo("issues"); issuesShowSection("Electrical"); }},
+  {id:"mech",   label:"Mechanical issues",
+   tally: () => issuesTallyBy("Mechanical"),
+   open:  () => { goTo("issues"); issuesShowSection("Mechanical"); }},
 ];
 
 /* A task with nothing in it is finished, not pending: 0/0 is "nothing to do

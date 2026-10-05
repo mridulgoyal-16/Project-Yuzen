@@ -85,6 +85,27 @@
 }
 .minitask__expand svg{display:block;width:24px;height:24px}
 
+/* ── Floating variant ───────────────────────────────────────────────────────
+   The Mechanic's Repair tasks list (QUEUE_KINDS.repair.miniFloat). The bike in
+   hand floats as a dark pill, 24 in from the frame and lifted by a soft shadow,
+   rather than a band across the floor. The progress bar runs along the pill's
+   bottom edge and the pill's own radius clips its ends. */
+.screen--queue.mini-float .minitask{padding:0 var(--s6) var(--s6)}
+.screen--queue.mini-float .minitask__card{
+  height:96px;border-radius:48px;overflow:hidden;
+  padding:0 var(--s6) 0 36px;
+  box-shadow:0 8px 24px rgba(0,0,0,.18), 0 2px 6px rgba(0,0,0,.10);
+}
+.screen--queue.mini-float .minitask__bar{top:auto;bottom:0}
+.screen--queue.mini-float .minitask__expand{
+  width:40px;height:40px;border-radius:50%;
+  background:rgba(255,255,255,.2);
+  display:flex;align-items:center;justify-content:center;
+}
+/* Clearance is pill 96 + 24 below it + 24 of air above. */
+.screen--queue.mini-float.has-mini .qlist{padding-bottom:144px}
+.screen--queue.mini-float.has-mini .qempty{bottom:120px}
+
 
 /* ── Confirm dialog ─────────────────────────────────────────────────────────
    A centred modal, not a bottom sheet: the sheet is for choosing among actions,

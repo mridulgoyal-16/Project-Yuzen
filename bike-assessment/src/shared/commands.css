@@ -13,8 +13,8 @@
   position:absolute;left:0;right:0;bottom:0;
   background:var(--surface-inverse);
   border-radius:var(--s6) var(--s6) 0 0;
-  /* Its own shadow, because there is no scrim to separate it from the screen
-     underneath — without one the tiles read as part of whatever is behind.
+  /* Its own shadow as well as the scrim, so the sheet's top edge reads
+     against the dimmed screen behind it.
 
      Only while it is open. Parked, the sheet sits exactly on the frame's bottom
      edge and translateY(100%) takes the BOX off-screen but not the shadow it
@@ -32,6 +32,12 @@
   pointer-events:none;
 }
 .cmdsheet.is-open{transform:translateY(0);pointer-events:auto;box-shadow:0 -8px 24px rgba(0,0,0,.12)}
+/* 30% black behind the open sheet. Fades with the slide; inert while closed. */
+.cmdscrim{
+  position:absolute;inset:0;background:rgba(0,0,0,.3);z-index:28;
+  opacity:0;pointer-events:none;transition:opacity .3s var(--ease-out);
+}
+.cmdscrim.is-open{opacity:1;pointer-events:auto}
 .cmdsheet--dragging{transition:none}
 
 .cmdsheet__grabzone{
