@@ -2,7 +2,7 @@
 <html><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
 <title>Yuzen · Bike Assessment</title>
-<meta name="build-id" content="a0400b90a1c0">
+<meta name="build-id" content="27b3a82c3fd4">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#ffffff">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -20548,7 +20548,19 @@ const SH_DUTY = ["On Duty", "Off duty"];
    list you pick yourself out of: the person choosing knows their own job title,
    not where it sits in a sequence. Sr. Mechanic is Mechanic plus allocation (see
    HM_FOR_ROLE in home/script.js), so the two stay adjacent either way. */
-const SH_ROLES = ["Captain", "Quality Associate", "Sr. Mechanic", "Mechanic"];
+let SH_ROLES = ["Captain", "Quality Associate", "Sr. Mechanic", "Mechanic"];
+
+/* ONE-PROFILE LINKS. `?role=mechanic` (or sr-mechanic, quality-associate,
+   captain) opens the app as that profile and leaves it the only one on offer,
+   so a tester handed the Mechanic link cannot wander into another profile's
+   flow. The same build serves both — /mechanic/ at the site root just redirects
+   here with the parameter — so there is no second copy to keep in step. */
+{
+  const want = new URLSearchParams(location.search).get("role");
+  const role = SH_ROLES.find(r => r.toLowerCase().replace(/[^a-z]+/g, "-")
+                                   .replace(/^-|-$/g, "") === want);
+  if (role){ SHIFT.role = role; SH_ROLES = [role]; }
+}
 
 const SH_TICK = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.55 17.1 4.4 11.95l1.32-1.32 3.83 3.83 8.73-8.73 1.32 1.33z" fill="currentColor"/></svg>`;
 

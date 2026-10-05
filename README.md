@@ -5,6 +5,9 @@ through at the bike, and the one a captain runs a service token through.
 
 **Live:** https://mridulgoyal-16.github.io/Project-Yuzen/yuzen-flow/
 
+**Mechanic only:** https://mridulgoyal-16.github.io/Project-Yuzen/mechanic/ opens
+the same app as the Mechanic profile, with no other profile to pick.
+
 ## What's where
 
 Each kind of content lives in one place only.
@@ -15,6 +18,7 @@ Each kind of content lives in one place only.
 | `yuzen-flow/` | The published app: the built `index.html`, `version.txt`, and the files that make it installable | `yuzen-flow/README.md` (opening and installing it) |
 | `archive/` | Earlier standalone prototypes that fed into or were replaced by the main flow | `archive/README.md` |
 | `index.html` | The site root, which redirects to `yuzen-flow/` | |
+| `mechanic/` | Redirects to `yuzen-flow/?role=mechanic`. Any profile works the same way: `?role=sr-mechanic`, `quality-associate` or `captain` | `bike-assessment/src/screens/shift/script.js` |
 
 `bike-assessment/src/build.py` writes `yuzen-flow/index.html` and
 `yuzen-flow/version.txt` directly, so there is no second copy of the build to
