@@ -19,7 +19,7 @@ HERE = pathlib.Path(__file__).parent
 FLOW = HERE.parent            # mechanic-rnm-flow/
 REPO = FLOW.parent            # the repo root, where the sibling screens live
 SIB  = REPO / "mechanic-checks/prototype.html"
-PICS = REPO / "bike-assessment/src/assets"
+PICS = REPO.parent / "bike-assessment/src/assets"   # REPO is archive/ since the move
 
 if not SIB.exists():
     sys.exit(f"build: {SIB} not found — the shell is lifted from it.")

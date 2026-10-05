@@ -24,21 +24,22 @@ Seven screens, one self-contained HTML file (390×844 mobile frame):
    which ticks the step and returns to the job.
 
 Screens 1 and 2 are assembled from the two prototypes already in this repo:
-[`assessment-flow`](../assessment-flow/) (Barun Sethi) supplies screen 1,
-[`mark-faults`](../mark-faults/) (Sagar Malik) supplies screen 2. Screen 0 is
+[`assessment-flow`](../archive/assessment-flow/) (Barun Sethi) supplies screen 1,
+[`mark-faults`](../archive/mark-faults/) (Sagar Malik) supplies screen 2. Screen 0 is
 built from Figma `2108:27680`.
 
 ## Run it
 
-```bash
-open prototype.html
-```
-
-No build step, no server, no network — Satoshi and every photo are embedded.
+Open the published build at https://mridulgoyal-16.github.io/Project-Yuzen/yuzen-flow/,
+or the local copy `../yuzen-flow/index.html`. It needs no server and no network,
+because Satoshi and every photo are embedded.
 
 > **Open it in an actual browser.** Inline preview panes sandbox JavaScript, and
 > some ignore the frame's `overflow:hidden`, which makes the Submit button look
 > permanently visible when it is not. AirDrop it to a phone to feel the swipe.
+
+How to build, test and change it is in [`src/MAP.md`](src/MAP.md). This README
+covers what the flow does and why.
 
 ## The flow
 
@@ -118,7 +119,7 @@ its own state and Revive + Assessment always add up to All. The header average
 recomputes per filter.
 
 Model names (`Miracle 2.5`, `Miracle 3.0`, `DeX 2.5`, `DeX 3.0`) and the bike-number
-scheme are Vaishnavi's from [`qc-task-list`](../qc-task-list/), so a bike reads the
+scheme are Vaishnavi's from [`qc-task-list`](../archive/qc-task-list/), so a bike reads the
 same in both prototypes.
 
 **Picking a bike is what enters the flow** — it sets `BIKE` and opens Start, so the
@@ -997,9 +998,6 @@ context for the severity call.
   flow yet. Currently toasts.
 - **`Report issues on bike`** (was `Add issues`) — inert. Is it for reporting a
   fault on something *not* on the checklist?
-- **`Bike commands`** — inert. This is almost certainly the entry point to
-  Amitesh's [Wynn XP vehicle control prototype](../prototype.html): power on/off,
-  seat open/close, lock/unlock. Worth confirming before either is built out.
 - **The job page does not have enough content to collapse on its own.** Three steps
   are 208px against a 395px hero, so the tail padding that makes the gesture
   reachable is ~396px of white space you scroll into. The scroll now *ends* in the
@@ -1051,7 +1049,7 @@ context for the severity call.
 - **`Filters`, `Sort by`**, the queue's **search** and the **scan FAB** are inert.
   `Sort by` is now slightly misleading — the list already has a default sort it
   cannot change.
-- The queue duplicates a lot of [`qc-task-list`](../qc-task-list/) — tabs with
+- The queue duplicates a lot of [`qc-task-list`](../archive/qc-task-list/) — tabs with
   counts, rows, the same models and id scheme. Vaishnavi's `Assessment • 14` tab and
   this `Assessment • 15` are arguably the same screen at two depths. Worth settling
   with her which one owns it before both grow.
@@ -1068,89 +1066,41 @@ context for the severity call.
   by path — there is no manifest to keep in sync any more.
 - The four customer photos are two real Figma photos plus two crops of one of
   them. Needs the real set of four.
+- **The commands sheet doesn't share state with the RnM dashboard's tiles.**
+  If you open it on top of the dashboard, the two Power tiles can disagree.
+  Nothing reads the bike's state back, so syncing them would show a state the
+  prototype doesn't actually know. Which one is authoritative is a product
+  call.
+- **`markissues` still offers Bike commands in its ⋮ while `issues` doesn't.**
+  `sheet-config.js` flags this as hard to defend. Unresolved.
+- **On a genuinely short viewport, content above a bottom bar is clipped, not
+  scrolled.** On RnM at 640 the command tiles are cut off behind the footer.
+  This is deliberate, so the bar you need stays reachable. Making those screens
+  scroll would be a bigger change.
+- **QC pending and RTD pending have no home-card icon.** The Figma frame only
+  covers the four original cards.
+- **A saved note on the complaint screen can't be unlocked.** This is by
+  design, but it means a typo is permanent for that token.
+- **Editing an existing issue on Add issues has no way to save the change.** A
+  part that already has issues gets "Remove issues", so changing its reasons
+  means removing them and adding them again.
+- **The Issues screen has a second, incompatible design** by another designer
+  on the team. Don't reconcile them without asking. It's an open product
+  decision, not a merge that hasn't happened yet.
+- **None of the design work is measured.** There's been no usability study, no
+  telemetry and no mechanic interviews. Every "this is better" is design
+  reasoning. Keep that distinction explicit in anything written for
+  presentation.
 
 ## Source
 
-The prototype is **authored as a folder and shipped as one file**. Screens are
-split by feature, not by language — to change the job page you open
-`src/screens/job/`, not three regions eight hundred lines apart.
+Authored as a folder under `src/` and shipped as one file. Build, tests,
+file layout and traps are in [`src/MAP.md`](src/MAP.md).
 
-```
-prototype.html         the deliverable; self-contained, open this
-src/shell.html         document skeleton with {{STYLES}} {{MARKUP}} {{SCRIPTS}} slots
-src/build.py           assembles, inlines assets, pre-renders
-src/shared/            base.css + the state, icons, router and boot every screen uses
-src/screens/<name>/    style.css · markup.html · script.js, one folder per screen
-src/assets/            part renders (PNG, alpha), customer photos, Satoshi
-tests/                 379 checks over all eight screens and the hand-offs
-```
-
-Concatenation order lives in `build.py`, not in filenames. It is load-bearing in
-two ways that disagree: CSS order is cascade order, JS order is execution order.
-One numeric prefix cannot carry both, so both are declared where they can be seen.
-A file on disk that no order list mentions **fails the build** rather than being
-silently dropped.
-
-This replaced a single 2,680-line `template.html` on 2026-08-04. The largest file
-is now 213 lines. The split was verified by rebuilding and confirming the output
-was **byte-identical** to the monolith's — same SHA-256, same 1,657,549 bytes — so
-it changed how the source is organised and nothing about what ships.
-
-### Why a broken build cannot get out
-
-Assets are referenced by **relative path** — `url(assets/part_mcu.png)` — and
-inlined by reading that path. The source therefore renders exactly like the build,
-so opening either is safe and neither can masquerade as the other.
-
-That is the second design. The first used `__IMG_MCU__` placeholder tokens, which
-meant the source rendered as a complete, working prototype with every image
-missing — the one broken state that looks like a working one. It cost several
-rounds of "the images are gone" before anyone noticed the file was simply the
-wrong one. A JavaScript guard was added to catch it, then had to be abandoned:
-preview panes render these as static snapshots, so the guard could not run in the
-one place the mistake actually happened. Relative paths need no guard.
-
-Two checks remain, both about the *deliverable*:
-
-1. **`build.py` refuses to write a file that still points at the filesystem.** A
-   surviving `assets/…` reference works perfectly on the machine that built it and
-   shows nothing on anyone else's.
-2. **`flowtest` asserts the result** — no `url(assets/`, exactly 14 embedded
-   images, all 3 Satoshi weights embedded.
-
-Satoshi is vendored into `src/assets/fonts/`, so the build no longer needs it
-installed system-wide. The built file always embedded it anyway.
-
-### Rebuilding
-
-```bash
-python3 src/build.py
-```
-
-Requires macOS with Google Chrome. [Satoshi](https://fontshare.com/fonts/satoshi)
-no longer has to be installed — Medium, Bold and Black are vendored into
-`src/assets/fonts/`. The build assembles the parts, inlines every asset as base64,
-then pre-renders screen 1 with headless Chrome so the screen is visible even where
-scripts are sandboxed.
-
-### Tests
-
-```bash
-python3 tests/flowtest.py && python3 tests/geomtest.py
-```
-
-`flowtest` drives the whole flow — the start screen and router, the list-heading
-hand-off, swipe outcomes, which parts reach screen 2, status icons, the damage
-exclusivity rules in both directions, the four-side capture, whole-task progress
-across all three steps, the back-and-forth hand-offs, the all-good path. `geomtest` asserts the geometry that sits behind a transition, with
-transitions disabled.
-
-`flowtest` reports **161/162**. The one failure — "carousel pushes list by 248" —
-is the harness, not the flow: headless Chrome does not tick CSS transitions
-under virtual time, so a mid-transition measurement returns the start value.
-`geomtest` asserts the same property with transitions off and passes 102/102 —
-it owns every assertion that sits behind a transition. Judging how the motion
-*feels* still needs a real device.
+This replaced a single 2,680-line `template.html` on 2026-08-04. The split was
+checked by rebuilding and confirming the output was **byte-identical** to the
+single file's (same SHA-256, same 1,657,549 bytes), so it changed how the source
+is organised and nothing about what ships.
 
 ## Figma
 

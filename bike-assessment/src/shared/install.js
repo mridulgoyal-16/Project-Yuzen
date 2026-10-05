@@ -3,7 +3,7 @@
    ═══════════════════════════════════════════════════════════════════════════
    Two halves.
 
-   1. Register the pass-through worker (src/pwa/sw.js, published beside
+   1. Register the pass-through worker (yuzen-flow/sw.js, published beside
       index.html). It caches nothing; it exists because Chrome only fires
       beforeinstallprompt for a page that has a fetch handler. See that file.
 
@@ -19,7 +19,7 @@
    page can automate), and dismissing it sticks for the session so it cannot
    nag through a demo.
 
-   Guarded to a no-op on file://: the emailed prototype.html has no worker beside
+   Guarded to a no-op on file://: an emailed copy of index.html has no worker beside
    it, and the build pre-renders over file:// with headless Chrome.
    ═══════════════════════════════════════════════════════════════════════════ */
 (() => {

@@ -71,8 +71,8 @@ window.YuzenIQ = {
 /* Two, not five. The three electrical rows carry no photo, so pigtail, mcu and
    throttle went with them — the built file is smaller for it. */
 const PHOTOS = {
-  wheel:    "assets/extracted/7ea0db2dd2.png",
-  tyre:     "assets/extracted/8cb24b3a8a.png",
+  wheel:    "assets/part_front_wheel.png",
+  tyre:     "assets/part_tyre.png",
 };
 
 /* A row filed from Add issues or the checklist brings its own picture: the three

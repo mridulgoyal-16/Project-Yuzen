@@ -21,7 +21,7 @@
    the reload genuinely lands the new document rather than the cached one.
 
    Everything is guarded to a no-op rather than an error, because this same
-   script ships inside prototype.html — the file that gets emailed, and the one
+   script ships inside the built index.html — the file that gets emailed, and the one
    headless Chrome pre-renders over file:// at build time. Neither has a
    version.txt beside it and neither should try to reload.
    ═══════════════════════════════════════════════════════════════════════════ */

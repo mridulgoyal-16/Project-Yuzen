@@ -1,5 +1,5 @@
 import html as H, json, pathlib, subprocess, tempfile
-SRC=pathlib.Path(__file__).resolve().parents[1]/"prototype.html"
+SRC=pathlib.Path(__file__).resolve().parents[2]/"yuzen-flow"/"index.html"
 def _find_chrome():
     """Chrome, wherever it is. Hard-coding the macOS bundle path meant the build
     silently degraded to a JS-only ship on any other machine, and the two test

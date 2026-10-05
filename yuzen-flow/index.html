@@ -2,7 +2,7 @@
 <html><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
 <title>Yuzen · Bike Assessment</title>
-<meta name="build-id" content="a88b57bbdc39">
+<meta name="build-id" content="bfd8ae75e64b">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#ffffff">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -2906,7 +2906,7 @@ body{
 #scrComplaint .cp-key--wide{flex:1.5 1 0;background:#adb3bd;font-size:15px;font-weight:500}
 #scrComplaint .cp-key--space{flex:5 1 0}
 /* ========================================================================
-   RnM DASHBOARD — ported from RnM-home-page/prototype.html
+   RnM DASHBOARD — ported from archive/RnM-home-page/prototype.html
    Every rule is scoped under #scrRnm as well as renamed. Renaming stops his
    declarations landing on this app's elements; scoping stops this app's rules
    landing on his, which renaming alone would not — an unscoped `.appbar` here
@@ -15362,7 +15362,7 @@ document.getElementById("visitBack").addEventListener("click", () => goTo("rnm")
 })();
 
 /* ========================================================================
-   RnM DASHBOARD — ported from RnM-home-page/prototype.html
+   RnM DASHBOARD — ported from archive/RnM-home-page/prototype.html
    Wrapped so none of his ~40 consts reach this app's globals; enterRnm() is the
    only thing that leaves. His outbound hook table is window.YuzenRnM here, NOT
    window.Yuzen: the token queue is also a port of his work and also defines
@@ -22579,7 +22579,7 @@ syncListHeading();
    the reload genuinely lands the new document rather than the cached one.
 
    Everything is guarded to a no-op rather than an error, because this same
-   script ships inside prototype.html — the file that gets emailed, and the one
+   script ships inside the built index.html — the file that gets emailed, and the one
    headless Chrome pre-renders over file:// at build time. Neither has a
    version.txt beside it and neither should try to reload.
    ═══════════════════════════════════════════════════════════════════════════ */
@@ -22644,7 +22644,7 @@ syncListHeading();
    ═══════════════════════════════════════════════════════════════════════════
    Two halves.
 
-   1. Register the pass-through worker (src/pwa/sw.js, published beside
+   1. Register the pass-through worker (yuzen-flow/sw.js, published beside
       index.html). It caches nothing; it exists because Chrome only fires
       beforeinstallprompt for a page that has a fetch handler. See that file.
 
@@ -22660,7 +22660,7 @@ syncListHeading();
    page can automate), and dismissing it sticks for the session so it cannot
    nag through a demo.
 
-   Guarded to a no-op on file://: the emailed prototype.html has no worker beside
+   Guarded to a no-op on file://: an emailed copy of index.html has no worker beside
    it, and the build pre-renders over file:// with headless Chrome.
    ═══════════════════════════════════════════════════════════════════════════ */
 (() => {

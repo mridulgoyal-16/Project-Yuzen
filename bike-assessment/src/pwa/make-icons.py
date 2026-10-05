@@ -30,6 +30,7 @@ from PIL import Image, ImageDraw
 
 HERE   = pathlib.Path(__file__).parent
 SOURCE = HERE / "source-icon.png"
+OUT    = HERE.parents[2] / "yuzen-flow"   # the published app, the icons' only home
 ORANGE = (254, 182, 64)          # sampled from the tile face
 
 
@@ -73,7 +74,7 @@ def main():
                        (192, "icon-192.png"),
                        (512, "icon-512.png")):
         out = tile.resize((size, size), Image.LANCZOS)
-        out.save(HERE / name, "PNG", optimize=True)
+        out.save(OUT / name, "PNG", optimize=True)
         print(f"  {name}  {size}x{size}")
 
     # Maskable: the tile at 80% on its own colour, so a circular mask can only
@@ -81,7 +82,7 @@ def main():
     canvas = Image.new("RGB", (512, 512), ORANGE)
     inner  = tile.resize((410, 410), Image.LANCZOS)
     canvas.paste(inner, ((512 - 410) // 2, (512 - 410) // 2))
-    canvas.save(HERE / "icon-maskable-512.png", "PNG", optimize=True)
+    canvas.save(OUT / "icon-maskable-512.png", "PNG", optimize=True)
     print("  icon-maskable-512.png  512x512 (tile at 80%)")
 
 

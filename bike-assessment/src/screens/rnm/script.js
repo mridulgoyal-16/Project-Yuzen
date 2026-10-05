@@ -1,6 +1,6 @@
 
 /* ========================================================================
-   RnM DASHBOARD — ported from RnM-home-page/prototype.html
+   RnM DASHBOARD — ported from archive/RnM-home-page/prototype.html
    Wrapped so none of his ~40 consts reach this app's globals; enterRnm() is the
    only thing that leaves. His outbound hook table is window.YuzenRnM here, NOT
    window.Yuzen: the token queue is also a port of his work and also defines

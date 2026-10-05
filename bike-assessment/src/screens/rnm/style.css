@@ -1,5 +1,5 @@
 /* ========================================================================
-   RnM DASHBOARD — ported from RnM-home-page/prototype.html
+   RnM DASHBOARD — ported from archive/RnM-home-page/prototype.html
    Every rule is scoped under #scrRnm as well as renamed. Renaming stops his
    declarations landing on this app's elements; scoping stops this app's rules
    landing on his, which renaming alone would not — an unscoped `.appbar` here

@@ -1,30 +1,44 @@
-# Yuzen Project
+# Project Yuzen
 
-A combination of two repos, copied on 5 Oct 2026:
+An interactive prototype of the Yulu partner app: the flow a mechanic works
+through at the bike, and the one a captain runs a service token through.
 
-- **[yulusagar/Project-Zero](https://github.com/yulusagar/Project-Zero)** at `eaa9f64`: the source. It's everything at this folder's root, and the main flow is in `bike-assessment/`.
-- **[yulusagar/yuzen-flow](https://github.com/yulusagar/yuzen-flow)** at `ad5d46e`: the published build behind https://yulusagar.github.io/yuzen-flow/. It's in `yuzen-flow/`.
+**Live:** https://mridulgoyal-16.github.io/Project-Yuzen/yuzen-flow/
 
-This copy starts its own git history and has no remotes, so nothing here pushes to the original repos.
+## What's where
 
-## How the two halves relate
+Each kind of content lives in one place only.
 
-`yuzen-flow/` isn't separate work. It's a snapshot of `bike-assessment/`:
-`yuzen-flow/index.html` is `bike-assessment/prototype.html` renamed, and its
-sidecar files (`version.txt`, `manifest.webmanifest`, `sw.js` and the icons) are
-copied as they are. To refresh the build after you change the source:
+| Path | What it is | Read |
+|---|---|---|
+| `bike-assessment/` | The source of the flow, with its tests and design reasoning | `bike-assessment/README.md` (what it does and why), `bike-assessment/src/MAP.md` (how to build, test and change it) |
+| `yuzen-flow/` | The published app: the built `index.html`, `version.txt`, and the files that make it installable | `yuzen-flow/README.md` (opening and installing it) |
+| `archive/` | Earlier standalone prototypes that fed into or were replaced by the main flow | `archive/README.md` |
+| `index.html` | The site root, which redirects to `yuzen-flow/` | |
+
+`bike-assessment/src/build.py` writes `yuzen-flow/index.html` and
+`yuzen-flow/version.txt` directly, so there is no second copy of the build to
+keep in sync.
+
+## Publishing
+
+GitHub Pages serves this repo from `main`, so pushing is publishing. After a
+change to the flow:
 
 ```bash
-S=bike-assessment; D=yuzen-flow
-cp "$S/prototype.html" "$D/index.html"
-cp "$S/version.txt" "$S/manifest.webmanifest" "$S/sw.js" \
-   "$S/icon-192.png" "$S/icon-512.png" "$S/icon-maskable-512.png" \
-   "$S/apple-touch-icon.png" "$D/"
+cd bike-assessment
+python3 src/build.py && python3 tests/flowtest.py && python3 tests/geomtest.py
+cd ..
+git add -A && git commit -m "…" && git push
 ```
 
-Commit `index.html` and every sidecar together. The page compares its built-in
-id with `version.txt`, so if they ship separately, installed copies either
-show an old version or keep reloading.
+`yuzen-flow/index.html` and `yuzen-flow/version.txt` must be in the **same
+commit**, and `git add -A` makes sure they are. The reason is in
+`bike-assessment/src/MAP.md` § The PWA sidecars.
 
-See `bike-assessment/README.md` and `bike-assessment/HANDOFF.md` for the source,
-the build (`bike-assessment/src/build.py`) and the tests.
+## Origin
+
+This repo combines [yulusagar/Project-Zero](https://github.com/yulusagar/Project-Zero)
+(source, `eaa9f64`) and [yulusagar/yuzen-flow](https://github.com/yulusagar/yuzen-flow)
+(published build, `ad5d46e`), copied on 5 Oct 2026, with its own history from
+there.
