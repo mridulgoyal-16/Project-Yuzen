@@ -1523,11 +1523,11 @@ ok('rows read model and number, like the yard\u2019s own boards',
 ok('and no pack reading on any of them',
    rpRows().every(r=>!r.querySelector('.pct')), 'a reading is present');
 /* THE THREE STATES, said the same way the Sr. Mechanic says them — one builder,
-   so the two profiles cannot describe one bike differently. Still to do first,
-   then the one in hand, then what is behind them. */
+   so the two profiles cannot describe one bike differently. The one in hand
+   first, then what is still to do, then what is behind them. */
 ok('every row carries its state, and they read in work order',
    (()=>{const subs = rpRows().map(r=>r.querySelector('.sub').textContent.trim());
-     const rank = s => s.startsWith('Pending') ? 0 : s === 'On-going' ? 1 : 2;
+     const rank = s => s === 'On-going' ? 0 : s.startsWith('Pending') ? 1 : 2;
      return subs.every(s=>/^(Pending since|On-going|Finished in)/.test(s))
        && subs.every((s,i)=>i===0||rank(subs[i-1])<=rank(s));})(),
    rpRows().map(r=>r.querySelector('.sub').textContent.trim()).join(' / '));
@@ -1551,13 +1551,17 @@ await new Promise(r=>setTimeout(r,420));
    title, number underneath — so the pair is read from both. */
 /* The row carries the whole pair on its title now — "Dex GR • 5092925" — where
    it used to split model and number across two lines. */
-const rpRow0 = document.querySelectorAll('#qList .qrow')[0];
+/* The first WAITING row — the live one now leads the list, and tapping it just
+   reopens the bike in hand. */
+const rpPending = () => [...document.querySelectorAll('#qList .qrow')]
+  .find(r => r.querySelector('.sub').textContent.trim().startsWith('Pending'));
+const rpRow0 = rpPending();
 const rpPicked = rpRow0.querySelector('.id').textContent.trim();
 /* ONE BIKE IN HAND AT A TIME. The fixture has one on-going, so tapping a
    waiting bike raises the discard-or-cancel dialog rather than starting it —
    the same rule and the same wording a parked task gets. Asserted here because
    it is the first thing a mechanic will do. */
-document.querySelectorAll('#qList .qrow')[0].click();
+rpPending().click();
 await new Promise(r=>setTimeout(r,120));
 ok('starting a bike while one is on-going asks first',
    document.getElementById('dlg').classList.contains('is-open')
@@ -1569,7 +1573,7 @@ ok('and Cancel leaves everything where it was',
      return !document.getElementById('dlg').classList.contains('is-open')
        && current==='repair';})(), current);
 /* Discard takes the bike in hand back to waiting and starts the tapped one. */
-document.querySelectorAll('#qList .qrow')[0].click();
+rpPending().click();
 await new Promise(r=>setTimeout(r,120));
 document.getElementById('dlgGo').click();
 await new Promise(r=>setTimeout(r,460));

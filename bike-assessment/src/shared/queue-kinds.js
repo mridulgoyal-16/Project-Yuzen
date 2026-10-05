@@ -521,11 +521,12 @@ const QUEUE_KINDS = {
            fmtLive(allocLiveFrom(b))}</span>`,
     rowClass: b => b.state === "done" ? "qrow--past" : "",
     tight: true,
-    /* What is still to do first, then the one in hand, then what is behind
-       them — the order the work moves in. No Sort control on this screen, so
-       this is the only ordering there is. */
+    /* The one in hand first, then what is still to do, then what is behind
+       them. The bike being worked on is the one the mechanic came back for, so
+       it leads. No Sort control on this screen, so this is the only ordering
+       there is. (The Sr. Mechanic's Allocated board keeps pending first.) */
     sort:  (a, b) => {
-      const rank = {pending:0, live:1, done:2};
+      const rank = {live:0, pending:1, done:2};
       return (rank[a.state] - rank[b.state]) || (b.mins - a.mins);
     },
     kind:  "repair",
