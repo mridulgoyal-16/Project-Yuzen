@@ -172,10 +172,9 @@
    the bike number never leaves, and the screen name fades in only once the big
    heading has scrolled up past the bar — so the title is never shown twice. */#scrChecks .appbar__lhs{display:flex;align-items:center;flex:1 1 auto;min-width:0}#scrChecks .appbar__titles{flex:1 1 auto;min-width:0;display:flex;align-items:center}#scrChecks .appbar__titles p{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}#scrChecks .ck-actions{flex:0 0 auto;display:flex;align-items:center;margin-right:-12px}
 /* The checklist's name and count, at the top of the list — it scrolls away with
-   the rows. 20/700 like the flow's page titles, the count in secondary. */
+   the rows. The same type as the dashboard's Tasks done heading: 20/28/700. */
 #scrChecks .ck-heading{margin:0;padding:var(--s6) var(--s6) var(--s2);
-  font-size:20px;font-weight:700;line-height:28px;color:var(--content-primary)}
-#scrChecks .ck-heading__n{font-weight:500;color:var(--content-secondary)}#scrChecks .appbar__row{justify-content:space-between}/* ── Options sheet (three dots) ───────────────────────────────────────────── */#scrChecks .ck-scrim{
+  font-size:20px;font-weight:700;line-height:28px;color:var(--content-primary)}#scrChecks .appbar__row{justify-content:space-between}/* ── Options sheet (three dots) ───────────────────────────────────────────── */#scrChecks .ck-scrim{
   position:absolute;inset:0;background:rgba(0,0,0,.4);
   opacity:0;pointer-events:none;transition:opacity .26s ease;z-index:30;
 }#scrChecks .ck-scrim.ck-is-open{opacity:1;pointer-events:auto}#scrChecks .sheet-opt{

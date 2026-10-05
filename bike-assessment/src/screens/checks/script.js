@@ -278,8 +278,10 @@ let activeSection = SECTIONS[0];
    at the top of the list instead, and it scrolls away with the rows. */
 function headingHTML(){
   const inSec = PARTS.filter(p => p.section === activeSection);
-  return `<h2 class="ck-heading">${esc(activeSection)} <span class="ck-heading__n">${
-    inSec.filter(judged).length}/${inSec.length}</span></h2>`;
+  /* Written exactly like the dashboard's "Tasks done · 0/11": one weight, one
+     colour, a middle dot between the name and the count. */
+  return `<h2 class="ck-heading">${esc(activeSection)} \u00b7 ${
+    inSec.filter(judged).length}/${inSec.length}</h2>`;
 }
 
 /* PARTS stays in its authored order — activeIndex, the advance order and every
