@@ -1,7 +1,8 @@
 /* ═══ BIKE VITALS CARD — one component, every host ═══════════════════════════
-   Figma 2470:40693 (dashboard) and 2470:40592 (commands sheet) are the same
-   node: a 342x68 white card, 2px border, radius 16, holding four 64px columns
-   over hairline rules with a forward arrow on the end.
+   Figma 2470:40693 (dashboard). The Bike commands sheet carried a copy too
+   (2470:40592) until it was taken out of the sheet. The node is a 342x68
+   white card, 2px border, radius 16, holding four 64px columns over hairline
+   rules with a forward arrow on the end.
 
    It is written once here rather than per screen because the two frames draw it
    identically, and the last time this screen had two copies of one control they
@@ -103,6 +104,3 @@
 .vcard__item:active,
 .vcard__more:active{ opacity: .6; }
 
-/* Hosts place it; the card never carries its own margin. The sheet insets it on
-   the same 24px its grid uses, so the two stack on one edge. */
-.cmdsheet .vcard{ margin: 0 var(--s6) var(--s4); }

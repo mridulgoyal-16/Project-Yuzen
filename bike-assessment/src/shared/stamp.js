@@ -1,6 +1,7 @@
 /* Stamp the vehicle into every place that shows it. */
 function stampBike(){
   document.querySelectorAll("[data-bike-id]").forEach(el => el.textContent = BIKE.id);
+  document.querySelectorAll("[data-bike-model]").forEach(el => el.textContent = BIKE.model);
   document.querySelectorAll("[data-bike-battery]").forEach(el => el.textContent = BIKE.battery + "%");
   document.querySelectorAll("[data-assignee]").forEach(el => el.textContent = BIKE.assignee);
 }

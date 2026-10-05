@@ -76,8 +76,14 @@ csBeep.addEventListener("click", () => {
   });
 });
 
-document.getElementById("csViewAll").addEventListener("click",
-  () => toast("All bike commands — not wired yet"));
+/* View all opens Bike info, which lives on the RnM dashboard. From any other
+   screen the app goes there first, and Bike info's back comes home again. */
+document.getElementById("csViewAll").addEventListener("click", () => {
+  setCommandsSheet(false);
+  const from = current;
+  if (from !== "rnm") goTo("rnm");
+  rnmShowVitals(from);
+});
 
 /* Tapping the dimmed screen behind the sheet closes it. */
 cmdScrim.addEventListener("click", () => setCommandsSheet(false));

@@ -1456,7 +1456,14 @@ let rnmShowCommands = () => {};
     if (open) armRefresh(screenVitals);
   }
   /* What the ⋮ routes here — see shared/sheet-config.js. */
-  rnmShowVitals = () => setVitalsScreen(true);
+  /* `from` is the screen asking, when it is not this one: the Bike commands
+     sheet's View all can be pressed anywhere, and Bike info lives here. Back then
+     returns to where the mechanic was rather than leaving them on the dashboard. */
+  let vitalsReturnTo = null;
+  rnmShowVitals = from => {
+    vitalsReturnTo = from && from !== 'rnm' ? from : null;
+    setVitalsScreen(true);
+  };
   /* Two ways in now: the arrow in the vitals strip and this rncard. Both open the
      same rnscreen — flagged in the README, since two affordances for one thing on
      one rnscreen is a decision to make rather than a thing to leave. */
@@ -1464,7 +1471,11 @@ let rnmShowCommands = () => {};
     .addEventListener('click', () => { tap(); setVitalsScreen(true); window.YuzenRnM.onViewAll(); });
 
   document.getElementById('btnVitalsBack')
-    .addEventListener('click', () => { tap(); setVitalsScreen(false); });
+    .addEventListener('click', () => {
+      tap();
+      setVitalsScreen(false);
+      if (vitalsReturnTo){ const to = vitalsReturnTo; vitalsReturnTo = null; goTo(to); }
+    });
 
   /* The bike is linked and read: charge, IoT voltage and bluetooth all rest in
      their good state. It used to open with all three red — nothing read and no
